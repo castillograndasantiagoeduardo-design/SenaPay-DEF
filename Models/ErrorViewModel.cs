@@ -1,0 +1,9 @@
+namespace SENA_PAY__PRUEBAS.Models
+{
+    public class ErrorViewModel
+    {
+        public string? RequestId { get; set; }
+
+        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    }
+}

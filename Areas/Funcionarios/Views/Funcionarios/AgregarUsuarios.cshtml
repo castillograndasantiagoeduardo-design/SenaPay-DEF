@@ -1,0 +1,417 @@
+﻿@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    ViewData["Breadcrumb"] = "Gestión de Usuarios";
+}
+            <!-- PAGE BODY -->
+            <div class="page-body" id="pageBody">
+
+                <!-- ─── TARJETAS DE ESTADÍSTICAS ─── -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(109,40,217,.1); color:#6D28D9;">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="stat-value" id="stat-total">—</div>
+                        <div class="stat-label">Usuarios totales</div>
+                        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Activos</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(57,169,0,.1); color:#39A900;">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <div class="stat-value" id="stat-aprendiz">—</div>
+                        <div class="stat-label">Aprendices</div>
+                        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Registrados</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(232,108,0,.1); color:#E86C00;">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                        <div class="stat-value" id="stat-tienda">—</div>
+                        <div class="stat-label">Tiendas</div>
+                        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Habilitadas</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(234,179,8,.1); color:#ca8a04;">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div class="stat-value" id="stat-saldo">—</div>
+                        <div class="stat-label">Saldo en circulación</div>
+                        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> COP</div>
+                    </div>
+                </div>
+
+                <div id="section-usuarios">
+
+                    <!-- ── Header de sección ── -->
+                    <div class="section-header" style="justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="section-icon"><i class="bi bi-people-fill"></i></div>
+                            <div>
+                                <div class="section-title">Gestión de Usuarios</div>
+                                <div class="section-sub">Administra los usuarios del ecosistema SenaPay</div>
+                            </div>
+                        </div>
+                        <!-- ── Botón principal: abre modal en modo AGREGAR ── -->
+                        <button class="btn-primary" onclick="abrirModalAgregar()">
+                            <div class="btn-icon-box"><i class="bi bi-person-plus-fill"></i></div>
+                            <span>Agregar Usuario</span>
+                        </button>
+                    </div>
+
+                    <div class="card">
+
+                        <!-- ── Tabla centralizada ── -->
+                        <div class="table-wrap">
+                            <table class="sp-table" id="tablaUsuarios">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Documento</th>
+                                        <th>Rol</th>
+                                        <th>Saldo</th>
+                                        <th style="text-align:right;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyUsuarios">
+                                    <tr id="emptyRow">
+                                        <td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">
+                                            <i class="bi bi-inbox" style="font-size:1.6rem; display:block; margin-bottom:10px; opacity:.4;"></i>
+                                            Aún no hay usuarios registrados
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- ═══════════════════════════════════════════════
+                     MODAL UNIFICADO — AGREGAR / EDITAR USUARIO
+                     Diseño: dark mode, bordes sutiles, inputs estilizados
+                     Compatible con el sistema de tokens CSS del panel
+                ═══════════════════════════════════════════════ -->
+                <div id="modalUsuario" class="modal-backdrop" onclick="cerrarModalSiBackdrop(event)">
+                    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+
+                        <!-- ── Header del modal ── -->
+                        <div class="modal-header">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div class="modal-icon" id="modalIcono">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="modal-title" id="modalTitulo">Agregar Usuario</div>
+                                    <div class="modal-sub" id="modalSub">Completa los datos del nuevo usuario</div>
+                                </div>
+                            </div>
+                            <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- ── Cuerpo del modal ── -->
+                        <div class="modal-body">
+
+                            <!-- Campo oculto para distinguir crear vs editar -->
+                            <input type="hidden" id="modal-idUsuario" value="" />
+                            <!-- Token antifalsificación -->
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-grid">
+
+                                <!-- NOMBRE -->
+                                <div class="field-group">
+                                    <label class="field-label" for="modal-nombre">Nombre completo</label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-person field-icon"></i>
+                                        <input type="text" class="form-control" id="modal-nombre"
+                                               placeholder="Ej. María Fernanda López" autocomplete="off"
+                                               oninput="modalLimpiarError('merr-nombre')" />
+                                    </div>
+                                    <div class="field-error" id="merr-nombre">
+                                        <i class="bi bi-exclamation-circle"></i> Ingresa el nombre completo
+                                    </div>
+                                </div>
+
+                                <!-- ROL — solo visible al crear; oculto al editar -->
+                                <div class="field-group" id="modal-grupo-rol">
+                                    <label class="field-label" for="modal-rol">Rol del usuario</label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-shield-fill-check field-icon"></i>
+                                        <select class="form-select" id="modal-rol"
+                                                oninput="modalLimpiarError('merr-rol')">
+                                            <option value="">— Selecciona un rol —</option>
+                                            <option value="1">Aprendiz</option>
+                                            <option value="2">Funcionario</option>
+                                            <option value="3">AdminTienda</option>
+                                        </select>
+                                    </div>
+                                    <div class="field-error" id="merr-rol">
+                                        <i class="bi bi-exclamation-circle"></i> Selecciona un rol
+                                    </div>
+                                </div>
+
+                                <hr class="form-divider" />
+
+                                <!-- CORREO -->
+                                <div class="field-group">
+                                    <label class="field-label" for="modal-correo">Correo electrónico</label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-envelope field-icon"></i>
+                                        <input type="email" class="form-control" id="modal-correo"
+                                               placeholder="usuario@soy.sena.edu.co" autocomplete="off"
+                                               oninput="modalLimpiarError('merr-correo')" />
+                                    </div>
+                                    <div class="field-error" id="merr-correo">
+                                        <i class="bi bi-exclamation-circle"></i> Ingresa un correo válido
+                                    </div>
+                                </div>
+
+                                <!-- TELÉFONO -->
+                                <div class="field-group">
+                                    <label class="field-label" for="modal-telefono">Teléfono</label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-telephone field-icon"></i>
+                                        <input type="text" class="form-control" id="modal-telefono"
+                                               placeholder="300 000 0000" maxlength="10" autocomplete="off"
+                                               onkeypress="return soloNumeros(event)"
+                                               oninput="modalLimpiarError('merr-telefono')" />
+                                    </div>
+                                    <div class="field-error" id="merr-telefono">
+                                        <i class="bi bi-exclamation-circle"></i> Número inválido
+                                    </div>
+                                </div>
+
+                                <!-- DOCUMENTO — solo al crear -->
+                                <div class="field-group" id="modal-grupo-documento">
+                                    <label class="field-label" for="modal-documento">Número de documento</label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-hash field-icon"></i>
+                                        <input type="text" class="form-control" id="modal-documento"
+                                               placeholder="0000000000" maxlength="12" autocomplete="off"
+                                               onkeypress="return soloNumeros(event)"
+                                               oninput="modalLimpiarError('merr-documento')" />
+                                    </div>
+                                    <div class="field-error" id="merr-documento">
+                                        <i class="bi bi-exclamation-circle"></i> Solo números
+                                    </div>
+                                </div>
+
+                                <!-- SALDO -->
+                                <div class="field-group" id="modal-grupo-saldo">
+                                    <label class="field-label" for="modal-saldo">Saldo (COP)</label>
+                                    <div class="field-wrap">
+                                        <span class="field-prefix">$</span>
+                                        <input type="number" class="form-control with-prefix"
+                                               id="modal-saldo" placeholder="0" min="0" step="100" value="0"
+                                               oninput="modalLimpiarError('merr-saldo')" />
+                                    </div>
+                                    <div class="field-error" id="merr-saldo">
+                                        <i class="bi bi-exclamation-circle"></i> No puede ser negativo
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ── Footer del modal ── -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn-modal-cancel" onclick="cerrarModal()">
+                                Cancelar
+                            </button>
+                            <button type="button" class="btn-modal-save" id="btnGuardarModal"
+                                    onclick="submitModal()">
+                                <div class="spinner" id="spinnerModal"></div>
+                                <span id="textoGuardar">Guardar usuario</span>
+                                <div class="btn-icon-box"><i class="bi bi-floppy-fill"></i></div>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div><!-- /page-body -->
+@section Styles {
+    <style>
+        /* ─── MODAL ──────────────────────────────────────────────── */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+            .modal-backdrop.open {
+                display: flex;
+            }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            width: 100%;
+            max-width: 580px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 64px rgba(0,0,0,.3);
+            animation: slideUp .4s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(109,40,217,.12);
+            color: var(--c);
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+        }
+
+            .modal-icon.edit-mode {
+                background: rgba(245,158,11,.12);
+                color: #d97706;
+            }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-sub {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background .2s, color .2s;
+        }
+
+            .modal-close:hover {
+                background: rgba(239,68,68,.1);
+                color: #ef4444;
+            }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-modal-cancel {
+            padding: 11px 22px;
+            border-radius: 11px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, border-color .2s;
+        }
+
+            .btn-modal-cancel:hover {
+                background: rgba(100,116,139,.08);
+                border-color: #94a3b8;
+            }
+
+        .btn-modal-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 11px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--cg);
+            transition: background .2s, transform .2s;
+        }
+
+            .btn-modal-save:hover:not(:disabled) {
+                background: var(--cd);
+                transform: translateY(-1px);
+            }
+
+            .btn-modal-save:disabled {
+                opacity: .6;
+                cursor: not-allowed;
+            }
+
+            .btn-modal-save.edit-mode {
+                background: #d97706;
+                box-shadow: 0 6px 20px rgba(245,158,11,.25);
+            }
+
+                .btn-modal-save.edit-mode:hover:not(:disabled) {
+                    background: #b45309;
+                }
+
+        /* SweetAlert2 dark theme */
+        .swal-btn-confirm {
+            background: #ef4444 !important;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+
+        .swal-btn-cancel {
+            background: rgba(100,116,139,.15) !important;
+            color: #94a3b8;
+            border: 1px solid rgba(100,116,139,.2);
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+    </style>
+}
+@section Scripts {
+    <script src="~/js/Funcionarios.js"></script>
+}
+

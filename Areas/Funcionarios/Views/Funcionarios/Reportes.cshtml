@@ -1,0 +1,314 @@
+﻿@model IEnumerable<SenaPay.Application.UseCases.Funcionarios.DTOs.ReporteItemDto>
+@{
+    ViewData["Title"] = "Reportes";
+    ViewData["Breadcrumb"] = "Reportes / Soporte";
+
+    var stats = ViewBag.Estadisticas as SenaPay.Domain.ValueObjects.ReporteEstadisticas
+                ?? SenaPay.Domain.ValueObjects.ReporteEstadisticas.Vacio();
+}
+
+@* ══ CARDS DE ESTADÍSTICAS ══════════════════════════════════════ *@
+<div class="stats-row">
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(109,40,217,.1); color:#6D28D9;">
+            <i class="bi bi-ticket-detailed-fill"></i>
+        </div>
+        <div class="stat-value">@stats.Total</div>
+        <div class="stat-label">Reportes totales</div>
+        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Total</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(234,179,8,.1); color:#d97706;">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-value">@stats.Pendientes</div>
+        <div class="stat-label">Pendientes</div>
+        <div class="stat-delta" style="color:#fbbf24;"><i class="bi bi-clock"></i> Sin atender</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(59,130,246,.1); color:#2563eb;">
+            <i class="bi bi-search"></i>
+        </div>
+        <div class="stat-value">@stats.EnRevision</div>
+        <div class="stat-label">En revisión</div>
+        <div class="stat-delta" style="color:#60a5fa;"><i class="bi bi-eye"></i> En proceso</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(34,197,94,.1); color:#16a34a;">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="stat-value">@stats.Resueltos</div>
+        <div class="stat-label">Resueltos</div>
+        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Cerrados</div>
+    </div>
+
+</div>
+
+@* ══ TABLA DE REPORTES ═══════════════════════════════════════════ *@
+<div class="card" style="padding:0; overflow:hidden;">
+
+    @* Cabecera *@
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:24px 24px 0; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div class="section-icon"><i class="bi bi-flag-fill"></i></div>
+            <div>
+                <div class="section-title">Reportes de soporte</div>
+                <div class="section-sub">Gestiona y atiende los reportes enviados por los usuarios</div>
+            </div>
+        </div>
+        <div style="position:relative;">
+            <i class="bi bi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#64748b; font-size:14px; pointer-events:none;"></i>
+            <input type="text" id="buscar" placeholder="Buscar radicado, documento..."
+                   oninput="filtrarTabla()"
+                   style="padding:9px 14px 9px 34px; background:rgba(109,40,217,.05); border:1.5px solid rgba(109,40,217,.15); border-radius:10px; color:var(--text-main); font-size:.82rem; outline:none; width:260px; transition:border-color .2s; font-family:'Inter',sans-serif;" />
+        </div>
+    </div>
+
+    @* Filtros de estado *@
+    <div style="display:flex; gap:8px; padding:16px 24px; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+        <button class="rpt-filter active" onclick="filtrarPorEstado('todos',this)">
+            Todos <span class="rpt-badge">@stats.Total</span>
+        </button>
+        <button class="rpt-filter" onclick="filtrarPorEstado('Pendiente',this)">
+            Pendiente <span class="rpt-badge" style="background:rgba(234,179,8,.15); color:#fbbf24;">@stats.Pendientes</span>
+        </button>
+        <button class="rpt-filter" onclick="filtrarPorEstado('En revisión',this)">
+            En revisión <span class="rpt-badge" style="background:rgba(59,130,246,.15); color:#60a5fa;">@stats.EnRevision</span>
+        </button>
+        <button class="rpt-filter" onclick="filtrarPorEstado('Resuelto',this)">
+            Resuelto <span class="rpt-badge" style="background:rgba(34,197,94,.15); color:#4ade80;">@stats.Resueltos</span>
+        </button>
+    </div>
+
+    @* Tabla *@
+    <div style="overflow-x:auto;">
+        <table class="sp-table" id="tablaReportes">
+            <thead>
+                <tr>
+                    <th>Radicado</th>
+                    <th>Documento</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Evidencia</th>
+                    <th>Cambiar estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr data-estado="@r.Estado"
+                        data-search="@r.Radicado @r.DocumentoUsuario @r.TipoReporte">
+
+                        <td>
+                            <span style="font-family:'Outfit',sans-serif; font-size:.78rem; font-weight:700; color:#a78bfa; letter-spacing:.5px;">
+                                @r.Radicado
+                            </span>
+                        </td>
+
+                        <td style="font-size:.82rem;">@r.DocumentoUsuario</td>
+
+                        <td>
+                            <span style="background:rgba(109,40,217,.1); color:#a78bfa; border-radius:6px; padding:3px 9px; font-size:.72rem; font-weight:600; white-space:nowrap;">
+                                @r.TipoReporte
+                            </span>
+                        </td>
+
+                        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:help;" title="@r.Descripcion">
+                            @r.Descripcion
+                        </td>
+
+                        <td style="white-space:nowrap; font-size:.78rem; color:var(--text-muted);">
+                            @r.FechaCreacion
+                        </td>
+
+                        <td>
+                            @{
+                                var (bg, fg, bd) = r.Estado switch
+                                {
+                                    "Pendiente" => ("rgba(234,179,8,.12)", "#fbbf24", "rgba(234,179,8,.25)"),
+                                    "En revisión" => ("rgba(59,130,246,.12)", "#60a5fa", "rgba(59,130,246,.25)"),
+                                    "Resuelto" => ("rgba(34,197,94,.12)", "#4ade80", "rgba(34,197,94,.25)"),
+                                    _ => ("rgba(100,116,139,.1)", "#94a3b8", "rgba(100,116,139,.2)")
+                                };
+                            }
+                            <span class="estado-pill"
+                                  style="background:@bg; color:@fg; border:1px solid @bd; display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:600; white-space:nowrap;">
+                                @r.Estado
+                            </span>
+                        </td>
+
+                        <td>
+                            @if (!string.IsNullOrEmpty(r.EvidenciaPath))
+                            {
+                                <a href="@r.EvidenciaPath" target="_blank"
+                                   style="display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:rgba(59,130,246,.12); color:#60a5fa; text-decoration:none; transition:background .2s;"
+                                   title="Ver evidencia">
+                                    <i class="bi bi-image"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                <span style="color:#334155;">—</span>
+                            }
+                        </td>
+
+                        <td>
+                            <select class="estado-select" onchange="cambiarEstado(@r.IdReporte, this)">
+                                <option value="Pendiente" selected="@(r.Estado == "Pendiente"   ? "selected" : null)">Pendiente</option>
+                                <option value="En revisión" selected="@(r.Estado == "En revisión" ? "selected" : null)">En revisión</option>
+                                <option value="Resuelto" selected="@(r.Estado == "Resuelto"    ? "selected" : null)">Resuelto</option>
+                            </select>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!Model.Any())
+        {
+            <div style="text-align:center; padding:48px 20px; color:var(--text-muted);">
+                <i class="bi bi-inbox" style="font-size:3rem; display:block; margin-bottom:12px; opacity:.4;"></i>
+                <p>No hay reportes registrados aún.</p>
+            </div>
+        }
+    </div>
+
+</div>
+
+@* Token antiforgery para el fetch *@
+<form id="af-form" style="display:none">@Html.AntiForgeryToken()</form>
+
+@section Styles {
+    <style>
+        /* Filtros */
+        .rpt-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: transparent;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .rpt-filter.active,
+            .rpt-filter:hover {
+                border-color: var(--c);
+                color: #a78bfa;
+                background: rgba(109,40,217,.08);
+            }
+
+        .rpt-badge {
+            background: rgba(255,255,255,.08);
+            border-radius: 20px;
+            padding: 1px 7px;
+            font-size: .7rem;
+        }
+
+        /* Select de cambio de estado */
+        .estado-select {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: var(--text-main);
+            font-size: .78rem;
+            cursor: pointer;
+            outline: none;
+            transition: border-color .2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+            .estado-select:hover {
+                border-color: var(--c);
+            }
+
+        /* Buscador focus */
+        #buscar:focus {
+            border-color: var(--c) !important;
+            box-shadow: 0 0 0 3px var(--cr);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        /* ── Estado de filtros ── */
+        let _estadoActivo = 'todos';
+        let _busqueda     = '';
+
+        function filtrarPorEstado(estado, btn) {
+            _estadoActivo = estado;
+            document.querySelectorAll('.rpt-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            aplicarFiltros();
+        }
+
+        function filtrarTabla() {
+            _busqueda = document.getElementById('buscar').value.toLowerCase();
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            document.querySelectorAll('#tablaReportes tbody tr').forEach(tr => {
+                const estadoOk  = _estadoActivo === 'todos' || tr.dataset.estado === _estadoActivo;
+                const searchOk  = tr.dataset.search.toLowerCase().includes(_busqueda);
+                tr.style.display = estadoOk && searchOk ? '' : 'none';
+            });
+        }
+
+        /* ── Cambiar estado via AJAX ── */
+        async function cambiarEstado(idReporte, selectEl) {
+            const nuevoEstado = selectEl.value;
+            const fila        = selectEl.closest('tr');
+
+            try {
+                const fd = new FormData();
+                fd.append('idReporte',   idReporte);
+                fd.append('nuevoEstado', nuevoEstado);
+
+                const token = document.querySelector('#af-form input[name="__RequestVerificationToken"]')?.value;
+                if (token) fd.append('__RequestVerificationToken', token);
+
+                const res  = await fetch('/Funcionarios/Funcionarios/CambiarEstadoReporte', { method: 'POST', body: fd });
+                const data = await res.json();
+
+                if (data.ok) {
+                    // Actualizar pill de estado en la fila
+                    const pill = fila.querySelector('.estado-pill');
+                    const colores = {
+                        'Pendiente':   { bg:'rgba(234,179,8,.12)',  fg:'#fbbf24', bd:'rgba(234,179,8,.25)'  },
+                        'En revisión': { bg:'rgba(59,130,246,.12)', fg:'#60a5fa', bd:'rgba(59,130,246,.25)' },
+                        'Resuelto':    { bg:'rgba(34,197,94,.12)',  fg:'#4ade80', bd:'rgba(34,197,94,.25)'  }
+                    };
+                    const c = colores[nuevoEstado] ?? { bg:'rgba(100,116,139,.1)', fg:'#94a3b8', bd:'rgba(100,116,139,.2)' };
+                    pill.style.background = c.bg;
+                    pill.style.color      = c.fg;
+                    pill.style.border     = `1px solid ${c.bd}`;
+                    pill.textContent      = nuevoEstado;
+                    fila.dataset.estado   = nuevoEstado;
+
+                    // Reutiliza el toast global del layout
+                    showToast('Estado actualizado', `Reporte marcado como "${nuevoEstado}"`, 'success');
+                } else {
+                    showToast('Error', data.msg, 'error');
+                }
+            } catch {
+                showToast('Error', 'No se pudo conectar con el servidor.', 'error');
+            }
+        }
+    </script>
+}

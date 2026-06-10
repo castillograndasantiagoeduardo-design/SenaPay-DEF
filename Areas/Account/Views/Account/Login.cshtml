@@ -1,0 +1,772 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | Acceso Seguro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<style>
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0
+    }
+
+    :root {
+        --c: #39A900;
+        --cg: rgba(57,169,0,.18);
+        --cr: rgba(57,169,0,.07);
+        --speed: .55s
+    }
+
+    /* REF-40: Adaptabilidad Modo Oscuro */
+    @@media (prefers-color-scheme: dark) {
+        body {
+            background: #060608;
+        }
+
+        .l-panel {
+            background: #111114 !important;
+            border-color: #222 !important;
+        }
+
+        .card {
+            background: #1a1a1e !important;
+            border-color: rgba(255,255,255,.05) !important;
+            color: #fff;
+        }
+
+        .brand-text h1 {
+            color: #fff !important;
+        }
+
+        .r-text h2 {
+            color: #fff !important;
+        }
+
+        .form-control, .form-select {
+            background: #252529 !important;
+            border-color: #333 !important;
+            color: #eee !important;
+        }
+
+        .role-tabs {
+            background: #252529 !important;
+        }
+
+        .tab-glider {
+            background: #333 !important;
+        }
+
+        .field-label {
+            color: #64748b;
+        }
+
+        .card-footer {
+            border-top-color: #252529;
+        }
+        /* Cambios para el panel derecho en modo oscuro */
+
+        .r-panel {
+            background: #060608 !important;
+        }
+
+        .r-text p {
+            color: rgba(255,255,255,.7);
+        }
+
+        .r-pill {
+            color: rgba(255,255,255,.8) !important;
+            background: rgba(255,255,255,.06) !important;
+            border-color: rgba(255,255,255,.1) !important;
+        }
+
+        .r-overlay {
+            background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(4,4,6,.6) 80%), linear-gradient(180deg,transparent 45%,rgba(4,4,6,.92)) !important;
+        }
+    }
+
+    body, html {
+        height: 100%;
+        overflow: hidden;
+        font-family: 'Inter',sans-serif;
+        background: #060608;
+        -webkit-font-smoothing: antialiased
+    }
+
+    input::-ms-reveal,
+    input::-ms-clear {
+        display: none;
+    }
+
+    .shell {
+        display: flex;
+        height: 100vh;
+        width: 100%; /* Asegura que ocupe todo el ancho */
+        background-color: white;
+    }
+
+    .l-panel {
+        width: 42%;
+        min-width: 420px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 20;
+        padding: 40px 28px;
+        overflow: hidden
+    }
+
+        .l-panel::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(180deg,transparent,rgba(0,0,0,.07) 40%,rgba(0,0,0,.07) 60%,transparent)
+        }
+
+    .panel-ripple {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%,-50%) scale(0);
+        z-index: 0
+    }
+
+    .card-tilt {
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        z-index: 1;
+        transform-style: preserve-3d;
+        perspective: 900px;
+        animation: slideUp .7s cubic-bezier(.22,1,.36,1) both
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(32px)
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 36px 32px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+        border: 1px solid rgba(0,0,0,.045);
+        transform-style: preserve-3d;
+        will-change: transform
+    }
+
+    .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 32px
+    }
+
+    .brand-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: var(--c);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 22px;
+        flex-shrink: 0;
+        box-shadow: 0 8px 24px var(--cg);
+        transition: background var(--speed),box-shadow var(--speed)
+    }
+
+    .brand-text h1 {
+        font-family: 'Outfit',sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f0f0f;
+        line-height: 1;
+        letter-spacing: -.5px
+    }
+
+    .brand-text span {
+        font-size: .72rem;
+        color: #94a3b8;
+        letter-spacing: .5px;
+        display: block;
+        margin-top: 3px
+    }
+
+    .role-tabs {
+        display: flex;
+        gap: 5px;
+        background: #f4f6f8;
+        border-radius: 14px;
+        padding: 6px;
+        margin-bottom: 26px;
+        position: relative;
+        overflow: hidden
+    }
+
+    .tab-glider {
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.09);
+        transition: left .38s cubic-bezier(.34,1.2,.64,1),width .38s cubic-bezier(.34,1.2,.64,1);
+        pointer-events: none;
+        z-index: 0
+    }
+
+    .role-tab {
+        flex: 1;
+        border: none;
+        background: transparent;
+        border-radius: 10px;
+        padding: 12px 6px;
+        font-family: 'Outfit',sans-serif;
+        font-size: .85rem;
+        font-weight: 700;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: color .3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+        position: relative;
+        z-index: 1
+    }
+
+        .role-tab.active {
+            color: var(--c)
+        }
+
+    .field-group {
+        margin-bottom: 16px
+    }
+
+    .field-label {
+        display: block;
+        font-family: 'Outfit',sans-serif;
+        font-size: .68rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 6px
+    }
+
+    .field-wrap {
+        position: relative
+    }
+
+    .field-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #c8d3dc;
+        font-size: 14px;
+        pointer-events: none;
+        transition: color .3s
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 13px 13px 13px 38px;
+        border: 1.5px solid #edf0f4;
+        border-radius: 12px;
+        font-family: 'Inter',sans-serif;
+        font-size: .88rem;
+        color: #1e293b;
+        background: #fafbfc;
+        appearance: none;
+        outline: none;
+        transition: border-color .25s,box-shadow .25s
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--c);
+            box-shadow: 0 0 0 3.5px var(--cr);
+            background: #fff
+        }
+
+    .pwd-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #c8d3dc;
+        font-size: 14px;
+        padding: 4px
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 14px;
+        background: var(--c);
+        color: #fff;
+        font-family: 'Outfit',sans-serif;
+        font-size: .82rem;
+        font-weight: 600;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 26px;
+        box-shadow: 0 10px 30px var(--cg);
+        transition: all var(--speed);
+        position: relative;
+        overflow: hidden
+    }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+    .btn-arrow {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: rgba(255,255,255,.2);
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        transition: transform .3s
+    }
+
+    /* REF-05/12: Alertas */
+    .alert-ui {
+        font-size: 0.72rem;
+        color: #ef4444;
+        margin-top: 5px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+    }
+
+    .card-footer {
+        margin-top: 28px;
+        padding-top: 18px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 12px
+    }
+
+    .footer-links {
+        display: flex;
+        /*justify-content: space-between;*/
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: .2s;
+        }
+
+            .footer-links a:hover {
+                color: var(--c);
+            }
+
+    /* Estilos base claros para el panel derecho */
+    .r-panel {
+        flex: 1;
+        position: relative;
+        background: #f8fafc;
+        overflow: hidden;
+        display: flex;
+        align-items: flex-end
+    }
+
+    #geo-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1
+    }
+
+    .r-spotlight {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none
+    }
+
+    .r-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+        background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(255,255,255,.4) 80%),linear-gradient(180deg,transparent 45%,rgba(255,255,255,.95))
+    }
+
+    .r-text {
+        position: relative;
+        z-index: 5;
+        padding: 52px 56px;
+        max-width: 520px;
+        margin-bottom: 40px;
+    }
+
+        .r-text p {
+            color: #64748b;
+        }
+
+    .r-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(0,0,0,.04);
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 100px;
+        padding: 6px 14px 6px 8px;
+        font-size: .72rem;
+        color: #475569;
+        backdrop-filter: blur(8px);
+        margin-bottom: 20px
+    }
+
+    .r-pill-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 8px var(--c);
+        animation: sPulse 2s infinite
+    }
+
+    .r-text h2 {
+        font-family: 'Outfit',sans-serif;
+        font-size: clamp(2rem,3vw,2.9rem);
+        font-weight: 800;
+        color: #0f0f0f;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        margin-bottom: 14px
+    }
+
+        .r-text h2 em {
+            font-style: normal;
+            color: var(--c);
+            transition: color var(--speed)
+        }
+
+    @@keyframes sPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(34,197,94,.45)
+        }
+
+        55% {
+            box-shadow: 0 0 0 5px rgba(34,197,94,0)
+        }
+    }
+
+</style>
+<body>
+
+    <div class="shell">
+        <div class="l-panel" id="lPanel">
+            <div class="panel-ripple" id="panelRipple"></div>
+            <div class="card-tilt" id="tiltWrap">
+                <div class="card" id="loginCard">
+                    <!--Titulo-->
+                    <div class="brand-row">
+                        <div class="brand-icon" id="brandIcon">
+                            <i class="bi bi-person-badge-fill" id="brandIco"></i>
+                        </div>
+                        <div class="brand-text">
+                            <h1>SenaPay</h1>
+                            <span>Ecosistema Digital de Pagos</span>
+                        </div>
+                    </div>
+                    <!--Mensaje de error que llega desde el controlador en caso de que la vista este en desarrollo o existan errores en el documento o contraseña-->
+                    @if (ViewBag.Mensaje != null)
+                    {
+                        <div class="alert-message" style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; border: 1px solid #ffeeba;">
+                            <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.Mensaje
+                        </div>
+                    }
+                    <!--Roles con onclick="setRole(1,this)" que al hacer click cumple la funcion setrole y va a esa funcion con los parametros y en esa funcion el numero que se elija se le asigna al input selector para que mande el dato al controlador-->
+                    <div class="role-tabs" id="roleTabs">
+                        <div class="tab-glider" id="tabGlider"></div>
+                        <button type="button" class="role-tab active" data-role="Aprendiz" onclick="setRole(1,this)">
+                            <i class="bi bi-person-badge-fill"></i> Aprendiz
+                        </button>
+                        <button type="button" class="role-tab" data-role="Funcionario" onclick="setRole(2,this)">
+                            <i class="bi bi-briefcase-fill"></i> Admin
+                        </button>
+                        <button type="button" class="role-tab" data-role="Tienda" onclick="setRole(3,this)">
+                            <i class="bi bi-shop"></i> Tienda
+                        </button>
+                    </div>
+                    <!--Formulario que se envia al controlador con todos los datos-->
+                    <form id="loginForm" method="post" asp-area="Account" asp-controller="Account" asp-action="ValidarAcceso" onsubmit="return validateFinal(event)">
+                        @Html.AntiForgeryToken()
+                        <!--Input selector que envia el rol que elijan los usuarios al controlador-->
+                        <input type="hidden" id="rolSelector" name="idRol" value="1" />
+                        <!--Seleccion de tipo de documento-->
+                        <div class="input-row" style="display:flex; gap:10px;">
+                            <div class="field-group" style="width:44%">
+                                <label class="field-label">Tipo doc.</label>
+                                <div class="field-wrap">
+                                    <i class="bi bi-card-text field-icon"></i>
+                                    <select class="form-select" name="idRol">
+                                        <option value="CC">CC</option>
+                                        <option value="TI">TI</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!--Campo de documento que va al controlador por medio del name "documento"-->
+                            <div class="field-group" style="flex:1">
+                                <label class="field-label">Documento</label>
+                                <div class="field-wrap">
+                                    <i class="bi bi-hash field-icon"></i>
+                                    <input autocomplete="off" type="text" class="form-control" id="docField" name="documento" placeholder="0000000000" maxlength="12" autofocus
+                                           onkeypress="return isNumKey(event)"
+                                           value="@(Model?.Documento ?? "")" />
+                                </div>
+                                <div id="err-doc" class="alert-ui"><i class="bi bi-exclamation-circle"></i> Ingrese documento</div>
+                            </div>
+                        </div>
+                        <!--Campo de clave que va al controlador por medio del name "password"-->
+                        <div class="field-group">
+                            <label class="field-label">Clave de seguridad</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-lock-fill field-icon"></i>
+                                <input autocomplete="off" type="password" class="form-control" id="pwdField" name="password"
+                                        style="padding-right:44px"
+                                       onpaste="return false" onkeyup="checkCaps(event)" />
+                                <button type="button" class="pwd-toggle" onclick="togglePwd()"><i class="bi bi-eye" id="eyeIco"></i></button>
+                            </div>
+                            <div id="err-pwd" class="alert-ui"><i class="bi bi-exclamation-circle"></i> Ingrese clave</div>
+                            <div id="caps-warning" class="alert-ui" style="color:#eab308"><i class="bi bi-capslock-fill"></i> Bloq Mayús activado</div>
+                        </div>
+                        <!--Boton de tipo submit que envia los datos al controlador AccountController y a la accion Validar Acceso-->
+                            <button type="submit" class="btn-submit" id="submitBtn" onclick="btnRipple(event)">
+                            <span id="btnText">Acceder ahora</span>
+                            <div class="btn-arrow"><i class="bi bi-arrow-right"></i></div>
+                        </button>
+
+                        <div style="text-align: center; margin-top: 15px;">
+                            <a asp-area="Account"  asp-controller="Account" asp-action="Soporte" style="font-size: .72rem; color: #94a3b8; text-decoration: none;">¿Necesitas ayuda para entrar?</a>
+                        </div>
+                    </form>
+
+                    <div class="card-footer">
+                        <div class="footer-links">
+                            <a asp-area="Account" asp-controller="Account" asp-action="RecuperarPassword" class="forgot-password-link">
+                                Recuperar contraseña
+                            </a>
+
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="footer-brand" style="font-size:.72rem; color:#cbd5e1">By <strong>CTA S.S.C</strong></div>
+                            <div class="secure-badge" style="display:flex; align-items:center; gap:5px; font-size:.68rem; color:#94a3b8">
+                                <div class="secure-dot" style="width:6px; height:6px; border-radius:50%; background:#22c55e"></div>
+                                SSL Seguro
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="r-panel" id="rPanel">
+            <svg id="geo-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="r-spotlight" id="spotlight"></div>
+            <div class="r-overlay"></div>
+            <div class="r-text">
+                <div class="r-pill"><div class="r-pill-dot"></div> SENA · Colombia</div>
+                <h2>Transformación<br><em id="heroWord">digital</em> SENA</h2>
+                <p>Gestiona tu identidad y realiza tus pagos en una sola plataforma segura y moderna.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const T = {
+          1:   {c:'#39A900',r:57, g:169,b:0,   cg:'rgba(57,169,0,.18)',  cr:'rgba(57,169,0,.07)',  icon:'bi-person-badge-fill',word:'digital'},
+          2:     {c:'#6D28D9',r:109,g:40, b:217,cg:'rgba(109,40,217,.2)',cr:'rgba(109,40,217,.07)',icon:'bi-briefcase-fill', word:'avanzada'},
+          3:   {c:'#E86C00',r:232,g:108,b:0,   cg:'rgba(232,108,0,.2)', cr:'rgba(232,108,0,.07)', icon:'bi-shop',            word:'segura'}
+        };
+        let role = 1;
+        let animFr;
+
+        function isNumKey(e){
+            const c=e.which||e.keyCode;
+            return (c>=48 && c<=57);
+        }
+
+        function checkCaps(e) {
+            const warn = document.getElementById('caps-warning');
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                warn.style.display = 'flex';
+            } else {
+                warn.style.display = 'none';
+            }
+        }
+
+        function validateFinal(e) {
+            const doc = document.getElementById('docField').value.trim();
+            const pwd = document.getElementById('pwdField').value;
+            let valid = true;
+
+            if(!doc) { document.getElementById('err-doc').style.display='flex'; valid=false; }
+            else { document.getElementById('err-doc').style.display='none'; }
+
+            if(!pwd) { document.getElementById('err-pwd').style.display='flex'; valid=false; }
+            else { document.getElementById('err-pwd').style.display='none'; }
+
+            if(valid) {
+                if(!window.navigator.onLine) {
+                    alert("No tienes conexión a internet.");
+                    return false;
+                }
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                document.getElementById('btnText').innerText = "Verificando...";
+            }
+            return valid;
+        }
+
+        const tiltWrap= document.getElementById('tiltWrap');
+        let tx=0,ty=0,ttx=0,tty=0;
+        document.getElementById('lPanel').addEventListener('mousemove',e=>{
+          const r=tiltWrap.getBoundingClientRect();
+          ttx=(e.clientY-r.top -r.height/2)/r.height*-9;
+          tty=(e.clientX-r.left-r.width /2)/r.width * 9;
+        });
+        document.getElementById('lPanel').addEventListener('mouseleave',()=>{ttx=0;tty=0});
+
+        function lerp(a,b,t){return a+(b-a)*t}
+        (function loop(){
+          const t=T[role];
+          tx=lerp(tx,ttx,.08);ty=lerp(ty,tty,.08);
+          tiltWrap.style.transform=`perspective(900px) rotateX(${tx.toFixed(2)}deg) rotateY(${ty.toFixed(2)}deg)`;
+          requestAnimationFrame(loop);
+        })();
+
+        const NS='http://www.w3.org/2000/svg';
+        const cvs=document.getElementById('geo-canvas');
+        function drawGeo(){
+          cancelAnimationFrame(animFr);
+          cvs.innerHTML='';
+          const W=document.getElementById('rPanel').clientWidth, H=document.getElementById('rPanel').clientHeight;
+          const t=T[role];
+        }
+
+        //Funcion para asignar rol al input selector y enviarlo al controlador
+        function setRole(roleId, element) {
+            console.log("Cambiando a Rol:", roleId);
+
+            // Actualizar el input oculto con el dato roleId que viene por parametro de los botones de roles
+            var input = document.getElementById('rolSelector');
+            if (input) {
+                input.value = roleId;
+            }
+
+            // Cambiar la apariencia visual de las pestañas
+            var tabs = document.querySelectorAll('.role-tab');
+            tabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+
+            // Activar la pestaña actual
+            element.classList.add('active');
+        }
+    
+
+        function setRole(newRole, tabEl){
+          role=newRole;
+          const t=T[role];
+
+          // Actualización de variables y logo
+          document.documentElement.style.setProperty('--c',t.c);
+          document.documentElement.style.setProperty('--cg',t.cg);
+          document.documentElement.style.setProperty('--cr',t.cr);
+          document.getElementById('heroWord').textContent=t.word;
+          document.getElementById('rolSelector').value=role;
+
+          // CAMBIO DEL ICONO DEL LOGO GRANDE
+          document.getElementById('brandIco').className = `bi ${t.icon}`;
+
+          document.querySelectorAll('.role-tab').forEach(b=>b.classList.remove('active'));
+          tabEl.classList.add('active');
+          moveGlider(tabEl);
+        }
+
+        function moveGlider(tab){
+          const g=document.getElementById('tabGlider');
+          const tr=document.getElementById('roleTabs').getBoundingClientRect();
+          const tb=tab.getBoundingClientRect();
+          g.style.left=(tb.left-tr.left-5)+'px';g.style.width=tb.width+'px';
+        }
+
+        function togglePwd(){
+          const f=document.getElementById('pwdField'),i=document.getElementById('eyeIco');
+          const h=f.type==='password'; f.type=h?'text':'password';
+          i.className=h?'bi bi-eye-slash':'bi bi-eye';
+        }
+
+        function btnRipple(e){
+          const r=e.currentTarget.getBoundingClientRect();
+          const sp=document.createElement('span');
+          sp.style.cssText=`position:absolute;background:rgba(255,255,255,.3);border-radius:50%;width:100px;height:100px;left:${e.clientX-r.left-50}px;top:${e.clientY-r.top-50}px;transform:scale(0);animation:rip .6s ease-out`;
+          e.currentTarget.appendChild(sp);setTimeout(()=>sp.remove(),600);
+        }
+
+        window.addEventListener('load',()=>moveGlider(document.querySelector('.role-tab.active')));
+    </script>
+    
+
+        <style>
+        
+        @@keyframes rip {
+            to
+
+        {
+            transform: scale(2.5);
+            opacity: 0
+        }
+
+        }</style>
+        
+</body>
+</html>

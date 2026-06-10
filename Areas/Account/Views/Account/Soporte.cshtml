@@ -1,0 +1,2388 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════════════════╗
+  ║  SENAPAY — Vista de Soporte                                                  ║
+  ║  Archivo: Soporte.html  (convertible a Soporte.cshtml para ASP.NET MVC)     ║
+  ║                                                                              ║
+  ║  Esta vista es accesible SIN autenticación. El usuario llega desde el        ║
+  ║  enlace "¿Necesitas ayuda para entrar?" del Login.                           ║
+  ║                                                                              ║
+  ║  Secciones principales:                                                      ║
+  ║    1. Recuperar acceso  — guía paso a paso según rol                         ║
+  ║    2. Reportar error    — formulario validado con número de radicado          ║
+  ║    3. Bloquear documento — flujo de emergencia con confirmación               ║
+  ║                                                                              ║
+  ║  Sistema de diseño heredado del Login:                                       ║
+  ║    · Tipografía : Outfit (800/700) + Inter (400/500/600)                     ║
+  ║    · Paleta     : --c verde SENA #39A900 / naranja Tienda / violeta Admin    ║
+  ║    · Iconografía: Bootstrap Icons 1.11.3                                     ║
+  ║    · Efectos   : tilt 3-D, tab-glider, ripple, slideUp, dark-mode auto      ║
+  ╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <!-- viewport: ajuste responsivo para móviles y tablets -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | Soporte</title>
+
+    <!-- ── Google Fonts ─────────────────────────────────────────────────────── -->
+    <!-- Outfit: fuente de display para títulos, etiquetas y botones (800/700/500) -->
+    <!-- Inter : fuente de cuerpo para texto corrido, inputs y párrafos (600/500/400/300) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons: librería de iconos SVG por font-face (v1.11.3) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        /* ════════════════════════════════════════════════════════════════════════
+                                       RESET GLOBAL
+                                       Elimina márgenes, rellenos y fuerza box-sizing en todos los elementos
+                                       para que padding/border no afecten el ancho total calculado.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            box-sizing: border-box; /* el padding y border se incluyen en el width */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       CUSTOM PROPERTIES (Variables CSS)
+                                       Definidas en :root para que estén disponibles globalmente.
+                                       Se sobreescriben por JS (setRole) cuando cambia el rol activo.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        :root {
+            /* Color primario del rol activo (verde SENA por defecto) */
+            --c: #39A900;
+            /* Versión semitransparente del color primario para sombras y glow */
+            --cg: rgba(57,169,0,.18);
+            /* Versión muy transparente del color primario para fondos de focus */
+            --cr: rgba(57,169,0,.07);
+            /* Duración estándar de las transiciones de color/sombra */
+            --speed: .55s;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       MODO OSCURO (prefers-color-scheme: dark)
+                                       Se activa automáticamente según la preferencia del sistema operativo.
+                                       Reemplaza fondos blancos por tonos casi negros y ajusta bordes/textos.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        @@media (prefers-color-scheme: dark) {
+            /* Fondo del body en modo oscuro */
+            body {
+                background: #060608;
+            }
+            /* Panel izquierdo oscuro: fondo carbón y borde sutil */
+            .l-panel {
+                background: #111114 !important;
+                border-color: #222 !important;
+            }
+            /* Tarjeta principal en modo oscuro */
+            .card {
+                background: #1a1a1e !important;
+                border-color: rgba(255,255,255,.05) !important;
+                color: #fff;
+            }
+            /* Título de marca blanco en modo oscuro */
+            .brand-text h1 {
+                color: #fff !important;
+            }
+            /* Título del panel derecho blanco en modo oscuro */
+            .r-text h2 {
+                color: #fff !important;
+            }
+            /* Inputs y selects en modo oscuro */
+            .form-control,
+            .form-select {
+                background: #252529 !important;
+                border-color: #333 !important;
+                color: #eee !important;
+            }
+            /* Barra de pestañas en modo oscuro */
+            .role-tabs {
+                background: #252529 !important;
+            }
+            /* Indicador deslizante de pestaña activa en modo oscuro */
+            .tab-glider {
+                background: #333 !important;
+            }
+            /* Etiquetas de campo más tenues en modo oscuro */
+            .field-label {
+                color: #64748b;
+            }
+            /* Separador del footer de la tarjeta en modo oscuro */
+            .card-footer {
+                border-top-color: #252529;
+            }
+            /* Panel derecho oscuro puro */
+            .r-panel {
+                background: #060608 !important;
+            }
+            /* Texto descriptivo del panel derecho semi-blanco */
+            .r-text p {
+                color: rgba(255,255,255,.7);
+            }
+            /* Pill/badge del panel derecho adaptado al oscuro */
+            .r-pill {
+                color: rgba(255,255,255,.8) !important;
+                background: rgba(255,255,255,.06) !important;
+                border-color: rgba(255,255,255,.1) !important;
+            }
+            /* Overlay del panel derecho con degradado oscuro */
+            .r-overlay {
+                background: radial-gradient(ellipse 65% 55% at 65% 35%, transparent, rgba(4,4,6,.6) 80%), linear-gradient(180deg, transparent 45%, rgba(4,4,6,.92)) !important;
+            }
+            /* Tarjetas internas de secciones en oscuro */
+            .section-card {
+                background: rgba(255,255,255,.03) !important;
+                border-color: rgba(255,255,255,.07) !important;
+            }
+            /* Separadores de ítems en oscuro */
+            .step-connector {
+                background: rgba(255,255,255,.08) !important;
+            }
+            /* Caja de información contextual en oscuro */
+            .info-box {
+                background: rgba(57,169,0,.08) !important;
+                border-color: rgba(57,169,0,.25) !important;
+                color: rgba(255,255,255,.7) !important;
+            }
+            /* Caja de advertencia en oscuro */
+            .warn-box {
+                background: rgba(234,179,8,.07) !important;
+                border-color: rgba(234,179,8,.2) !important;
+                color: rgba(255,255,255,.7) !important;
+            }
+            /* Zona de carga de archivos en oscuro */
+            .upload-zone {
+                background: #252529 !important;
+                border-color: #333 !important;
+            }
+            /* Item de archivo adjunto en oscuro */
+            .file-item {
+                background: rgba(255,255,255,.05) !important;
+            }
+            /* Caja del número de radicado generado */
+            .ticket-box {
+                background: rgba(57,169,0,.08) !important;
+                border-color: rgba(57,169,0,.3) !important;
+            }
+            /* Alerta de emergencia en oscuro */
+            .emergency-banner {
+                background: rgba(239,68,68,.08) !important;
+                border-color: rgba(239,68,68,.25) !important;
+            }
+            /* Confirmación de escritura para bloqueo */
+            .confirm-hint {
+                background: rgba(239,68,68,.07) !important;
+                color: rgba(255,255,255,.6) !important;
+            }
+            /* Selector de rol (botón) en oscuro */
+            .role-card {
+                background: rgba(255,255,255,.04) !important;
+                border-color: rgba(255,255,255,.1) !important;
+            }
+                /* Selector de rol activo en oscuro */
+                .role-card.active {
+                    background: rgba(57,169,0,.1) !important;
+                    border-color: var(--c) !important;
+                }
+        }
+        
+        /* ════════════════════════════════════════════════════════════════════════
+                                       BASE: html / body
+                                       height:100% + overflow:hidden garantizan el efecto split-screen
+                                       exactamente como el Login — sin scroll de página.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        html, body {
+            height: 100%;
+            overflow: hidden; /* evita scroll a nivel de página */
+            font-family: 'Inter', sans-serif;
+            background: #060608; /* fondo oscuro visible en el panel derecho */
+            -webkit-font-smoothing: antialiased; /* texto más nítido en WebKit */
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       SHELL — Contenedor raíz del layout split-screen
+                                       Ocupa toda la ventana y coloca los paneles lado a lado con flexbox.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .shell {
+            display: flex; /* los hijos (l-panel y r-panel) van en fila */
+            height: 100vh; /* ocupa exactamente la altura de la ventana */
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       PANEL IZQUIERDO (.l-panel)
+                                       Contiene toda la interfaz de soporte: marca, tabs y secciones.
+                                       · Ancho fijo de 42% con mínimo de 420px (igual al Login).
+                                       · Fondo blanco, centrado verticalmente con flexbox.
+                                       · overflow:hidden oculta el efecto ripple fuera de límites.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .l-panel {
+            width: 42%;
+            min-width: 420px;
+            background: #fff;
+            display: flex;
+            flex-direction: column; /* columna: marca arriba, contenido abajo */
+            position: relative; /* ancla el pseudo-elemento ::after y el ripple */
+            z-index: 20; /* sobre el panel derecho decorativo */
+            overflow: hidden; /* corta el ripple al borde */
+        }
+
+            /* Línea decorativa en el borde derecho del panel (gradiente de opacidad) */
+            .l-panel::after {
+                content: '';
+                position: absolute;
+                right: -1px;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: linear-gradient( 180deg, transparent, rgba(0,0,0,.07) 40%, rgba(0,0,0,.07) 60%, transparent );
+            }
+
+        /* ── Efecto ripple del panel izquierdo ─────────────────────────────── */
+        /* Círculo que se expande desde el punto de clic dentro del panel */
+        .panel-ripple {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none; /* no bloquea interacciones */
+            transform: translate(-50%, -50%) scale(0); /* empieza invisible/puntual */
+            z-index: 0;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       CARD-TILT — Envolvente con perspectiva 3D
+                                       Recibe los eventos mousemove y aplica rotateX/Y interpolados (lerp)
+                                       para el efecto de inclinación suave idéntico al Login.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .card-tilt {
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            transform-style: preserve-3d; /* habilita hijos en 3D */
+            perspective: 900px;
+            animation: slideUp .7s cubic-bezier(.22,1,.36,1) both; /* entrada elegante */
+        }
+
+        /* Animación de entrada: la tarjeta sube desde abajo con fade-in */
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(32px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       ÁREA DE SCROLL INTERNO
+                                       El panel izquierdo tiene altura fija (100vh).
+                                       Esta capa interna es la que scrollea, no la página.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .scroll-area {
+            flex: 1; /* ocupa todo el espacio restante bajo la barra de marca */
+            overflow-y: auto; /* scroll interno vertical */
+            padding: 0 28px 28px;
+            scroll-behavior: smooth;
+        }
+
+            /* Scrollbar delgado y discreto */
+            .scroll-area::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .scroll-area::-webkit-scrollbar-thumb {
+                background: rgba(0,0,0,.1);
+                border-radius: 4px;
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       TARJETA PRINCIPAL (.card)
+                                       Superficie blanca redondeada que contiene TODO el contenido de soporte.
+                                       Hereda el mismo border-radius, sombras y border del Login.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+            border: 1px solid rgba(0,0,0,.045);
+            transform-style: preserve-3d;
+            will-change: transform;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       FILA DE MARCA (.brand-row)
+                                       Logo + nombre + subtítulo + botón "Volver al login" en la misma fila.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        /* Ícono cuadrado con fondo de color primario — refleja el rol activo */
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: var(--c); /* cambia con el rol */
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 22px;
+            flex-shrink: 0; /* no se encoge */
+            box-shadow: 0 8px 24px var(--cg); /* glow del color primario */
+            transition: background var(--speed), box-shadow var(--speed);
+        }
+
+        /* Nombre del producto */
+        .brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #ffff;
+            line-height: 1;
+            letter-spacing: -.5px;
+        }
+
+        /* Subtítulo bajo el nombre */
+        .brand-text span {
+            font-size: .72rem;
+            color: #94a3b8;
+            letter-spacing: .5px;
+            display: block;
+            margin-top: 3px;
+        }
+
+        /* Enlace para volver al login — alineado al extremo derecho */
+        .back-btn {
+            margin-left: auto; /* empuja el botón a la derecha */
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-decoration: none;
+            border: 1.5px solid #edf0f4;
+            border-radius: 10px;
+            padding: 7px 13px;
+            transition: color .2s, border-color .2s, background .2s;
+            white-space: nowrap;
+        }
+
+            .back-btn:hover {
+                color: var(--c); /* adopta el color del rol al hacer hover */
+                border-color: var(--c);
+                background: var(--cr);
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       BARRA DE PESTAÑAS PRINCIPALES (.role-tabs)
+                                       Reutiliza exactamente el mismo componente tab-glider del Login,
+                                       pero ahora sirve para navegar entre las secciones de soporte.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .role-tabs {
+            display: flex;
+            gap: 5px;
+            background: #f4f6f8;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 26px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Indicador deslizante — se mueve con JS (moveGlider) */
+        .tab-glider {
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.09);
+            /* Transición elástica que produce el "rebote" al deslizarse */
+            transition: left .38s cubic-bezier(.34,1.2,.64,1), width .38s cubic-bezier(.34,1.2,.64,1);
+            pointer-events: none; /* no bloquea clics */
+            z-index: 0;
+        }
+
+        /* Pestaña individual — cada sección de soporte */
+        .role-tab {
+            flex: 1;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            padding: 10px 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color .3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1; /* sobre el glider */
+        }
+
+            /* Pestaña activa — toma el color del rol */
+            .role-tab.active {
+                color: var(--c);
+            }
+
+            /* Variante roja para la pestaña de emergencia */
+            .role-tab.danger.active {
+                color: #ef4444;
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       SECCIONES DE CONTENIDO
+                                       Cada sección corresponde a una pestaña.
+                                       Se muestran/ocultan con showSection() en JavaScript.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .section {
+            display: none;
+        }
+            /* oculta por defecto */
+            .section.active {
+                display: block;
+                /* Entrada suave al activar una sección */
+                animation: fadeSlideIn .3s cubic-bezier(.22,1,.36,1) both;
+            }
+
+        @@keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       TARJETAS DE SECCIÓN (.section-card)
+                                       Superficie secundaria dentro de la tarjeta principal.
+                                       Agrupa contenido relacionado con fondo levemente diferenciado.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .section-card {
+            background: #fafbfc;
+            border: 1px solid rgba(0,0,0,.045);
+            border-radius: 16px;
+            padding: 18px 16px;
+            margin-bottom: 14px;
+        }
+
+        /* Etiqueta de título dentro de una section-card */
+        .section-card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .68rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.3px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       SELECTOR DE ROL (para la sección "Recuperar acceso")
+                                       Tres botones que replican visualmente las role-tabs del Login
+                                       pero en formato de cuadrícula compacta.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columnas iguales */
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Tarjeta de rol individual */
+        .role-card {
+            border: 2px solid #edf0f4;
+            border-radius: 14px;
+            padding: 14px 8px;
+            background: #fff;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color .25s, background .25s, transform .2s;
+        }
+
+            .role-card:hover {
+                transform: translateY(-2px);
+            }
+        /* leve elevación al hover */
+
+        /* Ícono del rol */
+        .role-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background: #f0fdf4; /* fondo tenue por defecto */
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            color: #94a3b8;
+            margin: 0 auto 8px;
+            transition: background .25s, color .25s;
+        }
+
+        /* Nombre del rol */
+        .role-card span {
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #94a3b8;
+            display: block;
+            transition: color .25s;
+        }
+
+        /* Estado activo del rol seleccionado — cambia al color del rol */
+        .role-card.active {
+            border-color: var(--c); /* borde con color primario */
+            background: var(--cr); /* fondo muy suave del color primario */
+        }
+
+            .role-card.active .role-card-icon {
+                background: var(--cg); /* ícono con fondo del glow primario */
+                color: var(--c);
+            }
+
+            .role-card.active span {
+                color: var(--c);
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       PASOS DEL PROCESO (.steps-list)
+                                       Lista vertical de pasos numerados con conector visual entre ellos.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* Un paso individual */
+        .step-item {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            position: relative;
+            padding-bottom: 18px;
+        }
+
+            /* Línea vertical que conecta los pasos (excepto el último) */
+            .step-item:not(:last-child)::after {
+                content: '';
+                position: absolute;
+                left: 15px; /* centrado bajo el número */
+                top: 32px; /* comienza debajo del círculo */
+                width: 2px;
+                height: calc(100% - 14px);
+                background: linear-gradient(180deg, var(--cg), transparent);
+            }
+
+        /* Círculo numerado del paso */
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--c); /* color del rol activo */
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .75rem;
+            font-weight: 800;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--cg);
+            transition: background var(--speed), box-shadow var(--speed);
+            z-index: 1; /* sobre la línea conectora */
+        }
+
+        /* Columna de texto del paso */
+        .step-body {
+            flex: 1;
+        }
+
+            /* Título del paso */
+            .step-body strong {
+                display: block;
+                font-family: 'Outfit', sans-serif;
+                font-size: .88rem;
+                font-weight: 700;
+                color: #94A3B8;
+                margin-bottom: 4px;
+                line-height: 1.2;
+            }
+
+            /* Descripción del paso */
+            .step-body p {
+                font-size: .78rem;
+                color: #E2E8F0;
+                line-height: 1.55;
+            }
+
+        /* Caja de información contextual (tip verde) */
+        .info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 3px solid var(--c);
+            border-radius: 10px;
+            padding: 9px 12px;
+            margin-top: 8px;
+            font-size: .75rem;
+            color: #166534;
+            line-height: 1.5;
+        }
+
+        /* Caja de advertencia (tip ámbar) */
+        .warn-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 3px solid #f59e0b;
+            border-radius: 10px;
+            padding: 9px 12px;
+            margin-top: 8px;
+            font-size: .75rem;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        /* Contenedor de pasos — oculto hasta seleccionar un rol */
+        .steps-container {
+            display: none;
+        }
+
+            .steps-container.active {
+                display: block;
+                animation: fadeSlideIn .3s cubic-bezier(.22,1,.36,1) both;
+            }
+
+        /* Mensaje placeholder cuando no hay rol seleccionado */
+        .role-placeholder {
+            text-align: center;
+            padding: 20px 0 8px;
+            font-size: .82rem;
+            color: #94a3b8;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       CAMPOS DE FORMULARIO
+                                       Idénticos al Login: field-label, field-wrap, field-icon, form-control.
+                                    ════════════════════════════════════════════════════════════════════════ */
+
+        /* Grupo de campo: etiqueta + input envueltos juntos */
+        .field-group {
+            margin-bottom: 14px;
+        }
+
+        /* Etiqueta del campo — mayúsculas, espaciado alto, color tenue */
+        .field-label {
+            display: block;
+            font-family: 'Outfit', sans-serif;
+            font-size: .68rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 6px;
+        }
+
+        /* Contenedor relativo para posicionar el ícono dentro del input */
+        .field-wrap {
+            position: relative;
+        }
+
+        /* Ícono decorativo dentro del input — posicionado absolutamente */
+        .field-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #c8d3dc;
+            font-size: 14px;
+            pointer-events: none; /* no interfiere con el click en el input */
+            transition: color .3s;
+        }
+
+        /* Input de texto y select compartidos */
+        .form-control,
+        .form-select {
+            width: 100%;
+            padding: 13px 13px 13px 38px; /* espacio izquierdo para el ícono */
+            border: 1.5px solid #edf0f4;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: .88rem;
+            color: #1e293b;
+            background: #fafbfc;
+            appearance: none;
+            outline: none;
+            transition: border-color .25s, box-shadow .25s;
+        }
+
+            /* Estado de foco del input: borde y halo del color primario */
+            .form-control:focus,
+            .form-select:focus {
+                border-color: var(--c);
+                box-shadow: 0 0 0 3.5px var(--cr);
+                background: #fff;
+            }
+
+        /* Textarea para descripción de errores */
+        textarea.form-control {
+            resize: vertical; /* solo se puede redimensionar verticalmente */
+            min-height: 88px;
+            padding-top: 13px;
+            line-height: 1.55;
+        }
+
+        /* Fila de dos campos lado a lado */
+        .field-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ── Mensaje de error inline ──────────────────────────────────────── */
+        /* Aparece bajo el campo cuando la validación falla */
+        .alert-ui {
+            font-size: .72rem;
+            color: #ef4444;
+            margin-top: 5px;
+            display: none; /* oculto por defecto */
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       ZONA DE CARGA DE ARCHIVOS (.upload-zone)
+                                       Área interactiva con borde punteado para adjuntar evidencia.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #fafbfc;
+            transition: border-color .25s, background .25s;
+        }
+
+            .upload-zone:hover {
+                border-color: var(--c);
+                background: var(--cr); /* fondo tenue del color primario */
+            }
+
+            .upload-zone i {
+                font-size: 24px;
+                color: #94a3b8;
+                display: block;
+                margin-bottom: 6px;
+            }
+
+            .upload-zone p {
+                font-family: 'Outfit', sans-serif;
+                font-size: .8rem;
+                font-weight: 700;
+                color: #64748b;
+            }
+
+            .upload-zone small {
+                font-size: .7rem;
+                color: #94a3b8;
+            }
+
+        /* Ítem de archivo ya adjunto */
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f4f6f8;
+            border-radius: 10px;
+            padding: 7px 12px;
+            margin-top: 6px;
+            font-size: .75rem;
+            color: #475569;
+        }
+
+            .file-item i {
+                color: var(--c);
+                margin-right: 6px;
+            }
+
+        /* Botón para eliminar un archivo adjunto */
+        .file-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            transition: color .2s;
+        }
+
+            .file-remove:hover {
+                color: #ef4444;
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       BOTÓN PRINCIPAL (.btn-submit)
+                                       Réplica exacta del botón del Login: ancho completo, texto a la izquierda
+                                       y flecha decorativa a la derecha.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .btn-submit {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 14px;
+            background: var(--c); /* color del rol activo */
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            box-shadow: 0 10px 30px var(--cg);
+            transition: all var(--speed);
+            position: relative;
+            overflow: hidden; /* para el efecto ripple */
+        }
+
+            /* Variante roja para botones de emergencia/bloqueo */
+            .btn-submit.danger {
+                background: #ef4444;
+                box-shadow: 0 10px 30px rgba(239,68,68,.25);
+            }
+
+            /* Estado deshabilitado (mientras procesa) */
+            .btn-submit:disabled {
+                opacity: .65;
+                cursor: not-allowed;
+                filter: grayscale(.4);
+            }
+
+        /* Flecha decorativa en el extremo derecho del botón */
+        .btn-arrow {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            background: rgba(255,255,255,.2);
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            transition: transform .3s;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       CAJA DE TICKET / RADICADO (.ticket-box)
+                                       Se muestra tras enviar el reporte con el número de seguimiento.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .ticket-box {
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+            border-radius: 16px;
+            padding: 18px 16px;
+            margin-top: 16px;
+            display: none; /* oculto hasta que se genere */
+        }
+
+            .ticket-box.show {
+                display: block;
+                animation: fadeSlideIn .4s ease both;
+            }
+
+        /* Número de radicado grande */
+        .ticket-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--c);
+            letter-spacing: 2px;
+            display: block;
+            margin: 6px 0 4px;
+        }
+
+        /* Metadata del ticket (fecha, tipo, etc.) */
+        .ticket-meta {
+            font-size: .75rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Fila de acciones del ticket (copiar, descargar) */
+        .ticket-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        /* Botón secundario pequeño */
+        .btn-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
+            border: 1.5px solid #edf0f4;
+            border-radius: 10px;
+            background: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .btn-sm:hover {
+                border-color: var(--c);
+                color: var(--c);
+                background: var(--cr);
+            }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       SECCIÓN EMERGENCIA — BANNER DE ADVERTENCIA
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .emergency-banner {
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+        }
+
+            .emergency-banner strong {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                font-family: 'Outfit', sans-serif;
+                font-size: .85rem;
+                font-weight: 800;
+                color: #dc2626;
+                margin-bottom: 5px;
+            }
+
+            .emergency-banner p {
+                font-size: .78rem;
+                color: #7f1d1d;
+                line-height: 1.5;
+            }
+
+        /* Indicador de confirmación de escritura */
+        .confirm-hint {
+            background: #fff5f5;
+            border-radius: 10px;
+            padding: 10px 13px;
+            margin-bottom: 10px;
+            font-size: .75rem;
+            color: #7f1d1d;
+            line-height: 1.5;
+        }
+
+            .confirm-hint strong {
+                font-family: 'Outfit', sans-serif;
+                letter-spacing: 1px;
+            }
+
+        /* Bloque de confirmación (oculto hasta pulsar "Continuar") */
+        .confirm-block {
+            display: none;
+        }
+
+            .confirm-block.show {
+                display: block;
+                animation: fadeSlideIn .3s ease both;
+            }
+
+        /* Pantalla de éxito tras el bloqueo */
+        .block-success {
+            display: none;
+        }
+
+            .block-success.show {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 16px 0;
+                animation: fadeSlideIn .4s ease both;
+            }
+
+        .block-success-icon {
+            font-size: 3rem;
+            color: #ef4444;
+            margin-bottom: 10px;
+            animation: iconBounce .6s cubic-bezier(.34,1.56,.64,1) both;
+        }
+
+        @@keyframes iconBounce {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .block-success h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #dc2626;
+            margin-bottom: 6px;
+        }
+
+        .block-success p {
+            font-size: .78rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       FOOTER DE LA TARJETA (.card-footer)
+                                       Mismo estilo que el Login: separador, links y badge SSL.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .card-footer {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: space-between;
+            font-size: .7rem;
+        }
+
+            .footer-links a {
+                color: #94a3b8;
+                text-decoration: none;
+                transition: .2s;
+            }
+
+                .footer-links a:hover {
+                    color: var(--c);
+                }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       PANEL DERECHO (.r-panel)
+                                       Decorativo: fondo geométrico SVG + overlay de degradado + texto.
+                                       Idéntico al Login.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        .r-panel {
+            flex: 1; /* ocupa el espacio restante del shell */
+            position: relative;
+            background: #f8fafc;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end; /* el texto se pega al fondo */
+        }
+
+        /* Canvas SVG del fondo geométrico animado */
+        #geo-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #geo-canvas {
+            display: none; /* Esto quita las figuras por completo */
+        }
+
+        /* Spotlight de seguimiento del cursor */
+        .r-spotlight {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Overlay de degradado que suaviza la geometría de fondo */
+        .r-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background: radial-gradient(ellipse 65% 55% at 65% 35%, transparent, rgba(255,255,255,.4) 80%), linear-gradient(180deg, transparent 45%, rgba(255,255,255,.95));
+        }
+
+        /* Área de texto del panel derecho */
+        .r-text {
+            position: relative;
+            z-index: 5;
+            padding: 52px 56px;
+            max-width: 520px;
+            margin-bottom: 40px;
+        }
+
+            .r-text p {
+                color: #64748b;
+            }
+
+        /* Pill/badge pulsante que indica el estado del sistema */
+        .r-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(0,0,0,.04);
+            border: 1px solid rgba(0,0,0,.08);
+            border-radius: 100px;
+            padding: 6px 14px 6px 8px;
+            font-size: .72rem;
+            color: #475569;
+            backdrop-filter: blur(8px); /* efecto de cristal */
+            margin-bottom: 20px;
+        }
+
+        /* Punto pulsante dentro del pill */
+        .r-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--c);
+            box-shadow: 0 0 8px var(--c);
+            animation: sPulse 2s infinite; /* pulso de vida */
+        }
+
+        @@keyframes sPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(57,169,0,.45);
+            }
+
+            55% {
+                box-shadow: 0 0 0 5px rgba(57,169,0,0);
+            }
+        }
+
+        /* Título grande del panel derecho */
+        .r-text h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 3vw, 2.9rem);
+            font-weight: 800;
+            color: #0f0f0f;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 14px;
+        }
+
+            /* Palabra destacada en el título (cambia con el rol) */
+            .r-text h2 em {
+                font-style: normal;
+                color: var(--c);
+                transition: color var(--speed);
+            }
+
+        /* Lista de características de soporte en el panel derecho */
+        .r-features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .r-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            background: rgba(0,0,0,.03);
+            border: 1px solid rgba(0,0,0,.06);
+            border-radius: 12px;
+            padding: 11px 14px;
+            backdrop-filter: blur(8px);
+        }
+
+        .r-feature-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--c);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px var(--cg);
+            transition: background var(--speed), box-shadow var(--speed);
+        }
+
+        .r-feature-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════════
+                                       ANIMACIÓN RIPPLE DEL BOTÓN
+                                       Círculo que se expande desde el punto de clic y desaparece.
+                                    ════════════════════════════════════════════════════════════════════════ */
+        @@keyframes rip {
+            to {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* ── Responsive ────────────────────────────────────────────────────── */
+        /* En pantallas pequeñas se oculta el panel derecho */
+        @@media (max-width: 860px) {
+            .r-panel {
+                display: none;
+            }
+
+            .l-panel {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         SHELL — Contenedor raíz del layout dividido en dos paneles
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <div class="shell">
+
+        <!-- ════════════════════════════════════════════════════════════════════
+             PANEL IZQUIERDO — Toda la interfaz de soporte
+        ══════════════════════════════════════════════════════════════════════ -->
+        <div class="l-panel" id="lPanel">
+
+            <!-- Efecto ripple de fondo que se activa al hacer click en el panel -->
+            <div class="panel-ripple" id="panelRipple"></div>
+
+            <!-- Área de scroll interno: permite desplazamiento dentro del panel fijo -->
+            <div class="scroll-area">
+
+                <!-- Envoltura con perspectiva 3D para el efecto tilt de la tarjeta -->
+                <div class="card-tilt" id="tiltWrap">
+
+                    <!-- ── Tarjeta principal de soporte ─────────────────────────── -->
+                    <div class="card" id="supportCard">
+
+                        <!-- ── Fila de marca: logo + nombre + botón volver ────────── -->
+                        <div class="brand-row">
+
+                            <!-- Ícono de la marca — cambia según el rol activo -->
+                            <div class="brand-icon" id="brandIcon">
+                                <i class="bi bi-headset" id="brandIco"></i>
+                                <!-- bi-headset: ícono por defecto para la pantalla de soporte -->
+                            </div>
+
+                            <!-- Nombre y subtítulo del producto -->
+                            <div class="brand-text">
+                                <h1>SenaPay</h1>
+                                <span>Centro de Soporte</span>
+                            </div>
+
+                            <!-- Enlace para regresar al login sin necesidad de estar autenticado -->
+                            <a asp-area="Account" asp-controller="Account" asp-action="Login"
+                               class="back-btn">
+                                <i class="bi bi-arrow-left"></i> Volver al inicio
+                            </a>
+                        </div>
+
+                        <!-- ══════════════════════════════════════════════════════════
+                             BARRA DE PESTAÑAS PRINCIPALES
+                             Tres secciones: Recuperar Acceso / Reportar Error / Emergencia
+                             El tab-glider se mueve con JS al cambiar de sección.
+                        ════════════════════════════════════════════════════════════ -->
+                        <div class="role-tabs" id="mainTabs">
+
+                            <!-- Indicador deslizante animado — se posiciona sobre la pestaña activa -->
+                            <div class="tab-glider" id="mainGlider"></div>
+
+                            <!-- Pestaña 1: Recuperar acceso -->
+                            <button class="role-tab active" id="tab-recuperar"
+                                    onclick="showSection('recuperar', this)">
+                                <i class="bi bi-key-fill"></i> Recuperar
+                            </button>
+
+                            <!-- Pestaña 2: Reportar un error -->
+                            <button class="role-tab" id="tab-reportar"
+                                    onclick="showSection('reportar', this)">
+                                <i class="bi bi-flag-fill"></i> Reportar
+                            </button>
+                        </div>
+
+                        <!-- ════════════════════════════════════════════════════════════
+                             SECCIÓN 1: RECUPERAR ACCESO
+                             Muestra pasos específicos según el rol del usuario
+                             (Aprendiz, Tienda, Funcionario).
+                        ══════════════════════════════════════════════════════════════ -->
+                        <div class="section active" id="sec-recuperar">
+
+                            <!-- Tarjeta de selección de rol -->
+                            <div class="section-card">
+                                <div class="section-card-title">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    ¿Cuál es tu rol? — Elige para ver los pasos
+                                </div>
+
+                                <!-- Cuadrícula de tres botones de rol -->
+                                <div class="role-selector">
+
+                                    <!-- Rol Aprendiz: usa correo soy.sena.edu.co -->
+                                    <div class="role-card active" id="rc-Aprendiz"
+                                         onclick="selectRecoveryRole('Aprendiz', this)">
+                                        <div class="role-card-icon">
+                                            <i class="bi bi-person-badge-fill"></i>
+                                        </div>
+                                        <span>Aprendiz</span>
+                                    </div>
+
+                                    <!-- Rol Tienda: usa correo corporativo registrado -->
+                                    <div class="role-card" id="rc-Tienda"
+                                         onclick="selectRecoveryRole('Tienda', this)">
+                                        <div class="role-card-icon" style="background:#fff4ed;">
+                                            <i class="bi bi-shop"></i>
+                                        </div>
+                                        <span>Tienda</span>
+                                    </div>
+
+                                    <!-- Rol Funcionario: usa correo sena.edu.co -->
+                                    <div class="role-card" id="rc-Funcionario"
+                                         onclick="selectRecoveryRole('Funcionario', this)">
+                                        <div class="role-card-icon" style="background:#f5f3ff;">
+                                            <i class="bi bi-briefcase-fill"></i>
+                                        </div>
+                                        <span>Funcionario</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Pasos para APRENDIZ ─────────────────────────────── -->
+                            <!-- Visible por defecto al cargar la sección -->
+                            <div class="section-card steps-container active" id="steps-Aprendiz">
+                                <div class="section-card-title">
+                                    <i class="bi bi-list-ol"></i>
+
+                                    acceso como Aprendiz
+                                </div>
+                                <div class="steps-list">
+
+                                    <!-- Paso 1: Ir al portal SENA -->
+                                    <div class="step-item">
+                                        <div class="step-num">1</div>
+                                        <div class="step-body">
+                                            <strong>Ingresa al portal SENA</strong>
+                                            <p>
+                                                Ve a <em>www.senapay.edu.co</em> en tu navegador y busca
+                                                la opción <strong>"Recuperar contraseña"</strong> en la
+                                                sección de acceso.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Paso 2: Identificarse con correo institucional -->
+                                    <div class="step-item">
+                                        <div class="step-num">2</div>
+                                        <div class="step-body">
+                                            <strong>Usa tu correo institucional</strong>
+                                            <p>
+                                                Ingresa tu cuenta
+                                                <strong>nombre.apellido@soy.sena.edu.co</strong>
+                                                que el SENA te asignó al inicio de la formación.
+                                            </p>
+                                            <!-- Caja de tip verde: información adicional importante -->
+                                            <div class="info-box">
+                                                <i class="bi bi-info-circle-fill"></i>
+                                                Si no recuerdas tu correo institucional, acércate a
+                                                Bienestar al Aprendiz con tu número de ficha.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Paso 3: Esperar el correo de restablecimiento -->
+                                    <div class="step-item">
+                                        <div class="step-num">3</div>
+                                        <div class="step-body">
+                                            <strong>Revisa tu bandeja de entrada</strong>
+                                            <p>
+                                                Recibirás un correo con un enlace de restablecimiento
+                                                válido por <strong>30 minutos</strong>. Revisa también
+                                                la carpeta de spam o correo no deseado.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Paso 4: Actualizar clave en SenaPay -->
+                                    <div class="step-item">
+                                        <div class="step-num">4</div>
+                                        <div class="step-body">
+                                            <strong>Actualiza tu clave en SenaPay</strong>
+                                            <p>
+                                                Una vez restablecida tu contraseña del portal SENA,
+                                                vuelve a SenaPay e inicia sesión con las nuevas credenciales
+                                                y tu número de ficha.
+                                            </p>
+                                            <!-- Caja de advertencia ámbar -->
+                                            <div class="warn-box">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                Si el problema persiste, genera un reporte en la pestaña
+                                                <strong>"Reportar"</strong>.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div><!-- /steps-list Aprendiz -->
+                            </div><!-- /steps-container Aprendiz -->
+                            <!-- ── Pasos para TIENDA ───────────────────────────────── -->
+                            <!-- Oculto hasta que el usuario seleccione "Tienda" -->
+                            <div class="section-card steps-container" id="steps-Tienda">
+                                <div class="section-card-title">
+                                    <i class="bi bi-list-ol"></i>
+                                    Recuperar acceso como Tienda
+                                </div>
+                                <div class="steps-list">
+
+                                    <div class="step-item">
+                                        <div class="step-num">1</div>
+                                        <div class="step-body">
+                                            <strong>Ubica tu correo corporativo</strong>
+                                            <p>
+                                                Es el correo con el que te registraste como punto de venta
+                                                al firmar el convenio con el centro de formación.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">2</div>
+                                        <div class="step-body">
+                                            <strong>Selecciona "Olvidé mi clave" en SenaPay</strong>
+                                            <p>
+                                                En la pantalla de inicio de sesión, elige la opción
+                                                <strong>Tienda</strong> antes de pulsar "Recuperar contraseña".
+                                            </p>
+                                            <div class="warn-box">
+                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                No uses el flujo de <em>Aprendiz</em>; ese proceso valida
+                                                contra el directorio SENA y no encontrará tu cuenta.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">3</div>
+                                        <div class="step-body">
+                                            <strong>Espera el correo de restablecimiento</strong>
+                                            <p>
+                                                Llegará a tu correo corporativo en máximo
+                                                <strong>10 minutos</strong>. Si no aparece, revisa spam.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">4</div>
+                                        <div class="step-body">
+                                            <strong>¿El correo corporativo ya no existe?</strong>
+                                            <p>
+                                                Comunícate con el administrador del centro al correo
+                                                <em>administrador@cimm.sena.edu.co</em> indicando tu
+                                                NIT y nombre del establecimiento.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div><!-- /steps-list Tienda -->
+                            </div><!-- /steps-container Tienda -->
+                            <!-- ── Pasos para FUNCIONARIO ─────────────────────────── -->
+                            <!-- Oculto hasta que el usuario seleccione "Funcionario" -->
+                            <div class="section-card steps-container" id="steps-Funcionario">
+                                <div class="section-card-title">
+                                    <i class="bi bi-list-ol"></i>
+                                    Recuperar acceso como Funcionario / Admin
+                                </div>
+                                <div class="steps-list">
+
+                                    <div class="step-item">
+                                        <div class="step-num">1</div>
+                                        <div class="step-body">
+                                            <strong>Usa tu correo SENA institucional</strong>
+                                            <p>
+                                                Como funcionario, tu cuenta es
+                                                <strong>nombre.apellido@sena.edu.co</strong>
+                                                (dominio diferente al del aprendiz).
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">2</div>
+                                        <div class="step-body">
+                                            <strong>Solicita restablecimiento por Directorio Activo</strong>
+                                            <p>
+                                                El proceso de recuperación de funcionarios pasa por el
+                                                <strong>Directorio Activo SENA</strong>. Contacta al área
+                                                de sistemas del centro.
+                                            </p>
+                                            <div class="info-box">
+                                                <i class="bi bi-info-circle-fill"></i>
+                                                Puedes abrir un ticket de TI al correo
+                                                <em>soportetic@cimm.sena.edu.co</em> con tu número de cédula
+                                                y cargo.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">3</div>
+                                        <div class="step-body">
+                                            <strong>Espera la respuesta del área de TI</strong>
+                                            <p>
+                                                El tiempo de respuesta habitual es de
+                                                <strong>1 a 2 días hábiles</strong>. Recibirás tu nueva
+                                                contraseña temporal por correo.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="step-item">
+                                        <div class="step-num">4</div>
+                                        <div class="step-body">
+                                            <strong>Inicia sesión y cambia tu clave temporal</strong>
+                                            <p>
+                                                Al entrar con la contraseña temporal el sistema te obligará
+                                                a crear una clave definitiva segura (mín. 8 caracteres,
+                                                mayúsculas y número).
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @* Alternativa sin @inject — pon esto en cualquier parte del body *@
+                                </div><!-- /steps-list Funcionario -->
+                            </div><!-- /steps-container Funcionario -->
+
+                        </div><!-- /sec-recuperar -->
+                        <!-- ════════════════════════════════════════════════════════════
+                             SECCIÓN 2: REPORTAR ERROR
+                             Formulario validado para enviar incidencias al equipo técnico.
+                             Genera un número de radicado único al enviarse.
+                        ══════════════════════════════════════════════════════════════ -->
+                        <div class="section" id="sec-reportar">
+                            
+                                    <form id="af-form" style="display:none">
+                                        @Html.AntiForgeryToken()
+                                    </form>
+                            <!-- Tarjeta de datos del usuario que reporta -->
+                            <div class="section-card">
+                                <div class="section-card-title">
+                                    <i class="bi bi-person-fill"></i>
+                                    Tus datos — para identificarte en el reporte
+                                </div>
+
+                                <!-- Fila: tipo de documento + número de documento -->
+                                <div class="field-row">
+
+                                    <!-- Tipo de documento (CC o TI) -->
+                                    <div class="field-group" style="width: 42%">
+                                        <label class="field-label">Tipo doc.</label>
+                                        <div class="field-wrap">
+                                            <i class="bi bi-card-text field-icon"></i>
+                                            <select class="form-select" id="rpt-tdoc" name="TipoDocumento">
+                                                <option value="CC">CC</option>
+                                                <option value="TI">TI</option>
+                                                <option value="CE">CE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Número de documento — solo dígitos, validado -->
+                                    <div class="field-group" style="flex: 1">
+                                        <label class="field-label">N.º Documento <span style="color:#ef4444">*</span></label>
+                                        <div class="field-wrap">
+                                            <i class="bi bi-hash field-icon"></i>
+                                            <input type="text" class="form-control" id="rpt-doc"
+                                                   placeholder="0000000000" maxlength="12"
+                                                   onkeypress="return isNumKey(event)"
+                                                   oninput="clearError('err-rpt-doc')" />
+                                        </div>
+                                        <!-- Mensaje de error de validación -->
+                                        <div id="err-rpt-doc" class="alert-ui">
+                                            <i class="bi bi-exclamation-circle"></i> Ingresa tu número de documento
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rol del usuario que reporta -->
+                                <div class="field-group">
+                                    <label class="field-label">Tu rol <span style="color:#ef4444">*</span></label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-person-lines-fill field-icon"></i>
+                                        <select class="form-select" id="rpt-rol" onchange="clearError('err-rpt-rol')">
+                                            <option value="">— Selecciona tu rol —</option>
+                                            <option value="Aprendiz">Aprendiz</option>
+                                            <option value="Tienda">Tienda</option>
+                                            <option value="Funcionario">Funcionario</option>
+                                        </select>
+                                    </div>
+                                    <div id="err-rpt-rol" class="alert-ui">
+                                        <i class="bi bi-exclamation-circle"></i> Selecciona tu rol
+                                    </div>
+                                </div>
+
+                                <!-- Campo de Ficha — solo aparece si el rol es Aprendiz -->
+                                <div class="field-group" id="ficha-group" style="display:none">
+                                    <label class="field-label">N.º de Ficha <span style="color:#ef4444">*</span></label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-journal-code field-icon"></i>
+                                        <input type="text" class="form-control" id="rpt-ficha"
+                                               placeholder="Ej. 2895461" maxlength="7"
+                                               onkeypress="return isNumKey(event)"
+                                               oninput="clearError('err-rpt-ficha')" />
+                                    </div>
+                                    <div id="err-rpt-ficha" class="alert-ui">
+                                        <i class="bi bi-exclamation-circle"></i> Ingresa tu número de ficha
+                                    </div>
+                                </div>
+
+                            </div><!-- /section-card datos -->
+                            <!-- Tarjeta de detalle del error -->
+                            <div class="section-card">
+                                <div class="section-card-title">
+                                    <i class="bi bi-bug-fill"></i>
+                                    Descripción del error
+                                </div>
+
+                                <!-- Tipo de problema -->
+                                <div class="field-group">
+                                    <label class="field-label">Tipo de problema <span style="color:#ef4444">*</span></label>
+                                    <div class="field-wrap">
+                                        <i class="bi bi-exclamation-diamond field-icon"></i>
+                                        <select class="form-select" id="rpt-tipo" onchange="clearError('err-rpt-tipo')">
+                                            <option value="">— Selecciona el tipo —</option>
+                                            <option value="pago">Pago fallido o pendiente</option>
+                                            <option value="saldo">Saldo incorrecto</option>
+                                            <option value="acceso">No puedo iniciar sesión</option>
+                                            <option value="qr">Error al escanear QR</option>
+                                            <option value="otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div id="err-rpt-tipo" class="alert-ui">
+                                        <i class="bi bi-exclamation-circle"></i> Selecciona el tipo de problema
+                                    </div>
+                                </div>
+
+                                <!-- Descripción detallada -->
+                                <div class="field-group">
+                                    <label class="field-label">Descripción <span style="color:#ef4444">*</span></label>
+                                    <div class="field-wrap">
+                                        <textarea class="form-control" id="rpt-desc" name="Descripcion"
+                                                  placeholder="Describe qué ocurrió, a qué hora y qué pantalla viste..."
+                                                  oninput="clearError('err-rpt-desc')"></textarea>
+                                    </div>
+                                    <div id="err-rpt-desc" class="alert-ui">
+                                        <i class="bi bi-exclamation-circle"></i> Escribe una descripción del error
+                                    </div>
+                                </div>
+
+                                <!-- Zona de adjuntos (evidencia visual del error) -->
+                                <div class="field-group">
+                                    <label class="field-label">Evidencia (opcional)</label>
+                                    <!-- Al hacer click activa el input file oculto -->
+                                    <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                                        <p>Haz clic o arrastra tus capturas aquí</p>
+                                        <small>PNG, JPG, PDF — máx. 10 MB por archivo</small>
+                                    </div>
+                                    <!-- Input file oculto — acepta imágenes y PDF -->
+                                    <input type="file" id="file-input" multiple
+                                           accept="image/*,.pdf" style="display:none"
+                                           onchange="handleFileUpload(this)" />
+                                    <!-- Contenedor donde se listan los archivos adjuntos -->
+                                    <div id="files-preview"></div>
+                                </div>
+
+                                <!-- Botón de envío del reporte -->
+                                <button class="btn-submit" id="rpt-submit-btn"
+                                        onclick="submitReport(event)">
+                                    <span id="rpt-btn-text">Enviar reporte</span>
+                                    <div class="btn-arrow"><i class="bi bi-send-fill"></i></div>
+                                </button>
+                            </div>
+
+                            <!-- ── Caja de ticket generado ─────────────────────────── -->
+                            <!-- Oculta hasta que el reporte se envíe correctamente -->
+                            <div class="ticket-box" id="ticket-result">
+                                <div class="section-card-title" style="margin-bottom:8px;">
+                                    <i class="bi bi-ticket-fill"></i> Reporte recibido — Número de radicado
+                                </div>
+                                <!-- El número se genera dinámicamente en JS -->
+                                <span class="ticket-num" id="ticket-num">SP-2025-00000</span>
+                                <!-- Metadata del reporte: fecha, tipo, tiempo de respuesta -->
+                                <div class="ticket-meta" id="ticket-meta"></div>
+                                <!-- Acciones: copiar el número o "descargar" comprobante -->
+                                <div class="ticket-actions">
+                                    <button class="btn-sm" onclick="copyTicketNum()">
+                                        <i class="bi bi-clipboard"></i> Copiar N.º
+                                    </button>
+                                    <button class="btn-sm">
+                                        <i class="bi bi-download"></i> Comprobante
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /card -->
+                </div><!-- /card-tilt -->
+            </div><!-- /scroll-area -->
+        </div><!-- /l-panel -->
+        <!-- ════════════════════════════════════════════════════════════════════
+             PANEL DERECHO — Decorativo
+             Fondo con formas geométricas SVG generadas dinámicamente + overlay
+             + texto informativo de soporte. Idéntico al Login.
+        ══════════════════════════════════════════════════════════════════════ -->
+        <div class="r-panel" id="rPanel">
+
+            <!-- Canvas SVG donde se dibujan las formas geométricas del fondo -->
+            <svg id="geo-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+
+            <!-- Spotlight que sigue el cursor (sin content, efecto por JS) -->
+            <div class="r-spotlight" id="spotlight"></div>
+
+            <!-- Overlay de degradado que suaviza el fondo geométrico -->
+            <div class="r-overlay"></div>
+
+            <!-- Texto informativo anclado al fondo del panel -->
+            <div class="r-text">
+
+                <!-- Pill con indicador de estado del sistema -->
+                <div class="r-pill">
+                    <div class="r-pill-dot"></div>
+                    SENA · Duitama CIMM
+                </div>
+
+                <!-- Título dinámico — la palabra "em" cambia con el rol -->
+                <h2>Soporte<br><em id="heroWord">confiable</em></h2>
+
+                <!-- Descripción del panel de soporte -->
+                <p>
+                    Recupera tu acceso, reporta errores y protege tu cuenta desde
+                    un solo lugar seguro.
+                </p>
+
+                <!-- Lista de características del soporte -->
+                <div class="r-features">
+
+                    <div class="r-feature-item">
+                        <div class="r-feature-icon">
+                            <i class="bi bi-key-fill"></i>
+                        </div>
+                        <span class="r-feature-text">
+                            Recuperación de acceso guiada por rol
+                        </span>
+                    </div>
+
+                    <div class="r-feature-item">
+                        <div class="r-feature-icon">
+                            <i class="bi bi-ticket-detailed-fill"></i>
+                        </div>
+                        <span class="r-feature-text">
+                            Reportes con número de radicado oficial
+                        </span>
+                    </div>
+
+                    <div class="r-feature-item">
+                        <div class="r-feature-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <span class="r-feature-text">
+                            Bloqueo de emergencia inmediato
+                        </span>
+                    </div>
+
+                </div>
+            </div><!-- /r-text -->
+        </div><!-- /r-panel -->
+
+    </div><!-- /shell -->
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         JAVASCRIPT
+         Toda la lógica interactiva de la página, comentada función por función.
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <script>
+
+        /* ══════════════════════════════════════════════════════════════════════
+           CONFIGURACIÓN DE ROLES (tabla de temas)
+           Cada rol tiene: color primario (c), componentes RGB (r,g,b),
+           glow semitransparente (cg), halo de foco (cr), icono Bootstrap Icons
+           y la palabra de énfasis del panel derecho.
+           Esta tabla es la misma del Login, extendida para el soporte.
+        ══════════════════════════════════════════════════════════════════════ */
+        const ROLES = {
+          Aprendiz:   { c:'#39A900', r:57,  g:169, b:0,   cg:'rgba(57,169,0,.18)',   cr:'rgba(57,169,0,.07)',   icon:'bi-person-badge-fill', word:'confiable' },
+          Tienda:     { c:'#E86C00', r:232, g:108, b:0,   cg:'rgba(232,108,0,.2)',   cr:'rgba(232,108,0,.07)',  icon:'bi-shop',              word:'seguro'    },
+          Funcionario:{ c:'#6D28D9', r:109, g:40,  b:217, cg:'rgba(109,40,217,.2)', cr:'rgba(109,40,217,.07)', icon:'bi-briefcase-fill',    word:'avanzado'  }
+        };
+
+        /* ── Estado global ──────────────────────────────────────────────── */
+        let currentRole = 'Aprendiz'; // Rol activo en el selector de recuperación
+        let tiltX = 0, tiltY = 0;    // Inclinación actual de la tarjeta (interpolada)
+        let targetX = 0, targetY = 0; // Inclinación objetivo (desde el mousemove)
+
+        /* ══════════════════════════════════════════════════════════════════════
+           isNumKey(event)
+           Filtra el evento keypress para permitir solo dígitos (0-9).
+           Se usa en los campos de documento y ficha para evitar letras.
+           @@param {KeyboardEvent} e  — evento de teclado
+           @@returns {boolean}        — true si es un dígito, false en caso contrario
+        ══════════════════════════════════════════════════════════════════════ */
+        function isNumKey(e) {
+          const code = e.which || e.keyCode;
+          return (code >= 48 && code <= 57); // 48='0', 57='9'
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           showSection(sectionId, tabElement)
+           Navega entre las tres secciones principales (recuperar / reportar / bloquear).
+           Oculta todas las secciones, desactiva todos los tabs, luego activa
+           la sección y el tab correspondientes y reposiciona el glider.
+           @@param {string}      sectionId  — ID de la sección a mostrar (sin prefijo "sec-")
+           @@param {HTMLElement} tabElement — Elemento <button> del tab clicado
+        ══════════════════════════════════════════════════════════════════════ */
+        function showSection(sectionId, tabElement) {
+          // 1. Ocultar todas las secciones
+          document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+          // 2. Desactivar todos los tabs
+          document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+
+          // 3. Activar la sección solicitada
+          document.getElementById('sec-' + sectionId).classList.add('active');
+
+          // 4. Activar el tab correspondiente
+          tabElement.classList.add('active');
+
+          // 5. Mover el glider al tab activo
+          moveGlider(tabElement, 'mainGlider', 'mainTabs');
+
+          // 6. Scroll al inicio del área de contenido
+          document.querySelector('.scroll-area').scrollTop = 0;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           moveGlider(tabEl, gliderId, tabsId)
+           Calcula la posición y el ancho del tab activo dentro de su contenedor
+           y anima el indicador deslizante (tab-glider) hacia esa posición.
+           @@param {HTMLElement} tabEl    — Tab activo
+           @@param {string}      gliderId — ID del elemento .tab-glider
+           @@param {string}      tabsId   — ID del contenedor .role-tabs
+        ══════════════════════════════════════════════════════════════════════ */
+        function moveGlider(tabEl, gliderId, tabsId) {
+          const glider    = document.getElementById(gliderId);
+          const tabsRect  = document.getElementById(tabsId).getBoundingClientRect();
+          const tabRect   = tabEl.getBoundingClientRect();
+
+          // Posición relativa al contenedor menos el padding izquierdo (6px → aquí 5)
+          glider.style.left  = (tabRect.left - tabsRect.left - 5) + 'px';
+          glider.style.width = tabRect.width + 'px';
+          // La transición CSS cubic-bezier produce el efecto elástico automáticamente
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           selectRecoveryRole(roleName, cardElement)
+           Cambia el rol seleccionado en la sección "Recuperar acceso".
+           1. Actualiza la variable CSS --c y sus derivadas al color del rol.
+           2. Actualiza el ícono de la marca y la palabra del panel derecho.
+           3. Activa visualmente la tarjeta de rol clickeada.
+           4. Muestra el bloque de pasos correspondiente al rol.
+           @@param {string}      roleName    — 'Aprendiz' | 'Tienda' | 'Funcionario'
+           @@param {HTMLElement} cardElement — Tarjeta .role-card clickeada
+        ══════════════════════════════════════════════════════════════════════ */
+        function selectRecoveryRole(roleName, cardElement) {
+          currentRole = roleName;
+          const theme = ROLES[roleName];
+
+          // 1. Actualizar las variables CSS de color en el documento
+          document.documentElement.style.setProperty('--c',  theme.c);
+          document.documentElement.style.setProperty('--cg', theme.cg);
+          document.documentElement.style.setProperty('--cr', theme.cr);
+
+          // 2. Actualizar ícono de la marca y palabra del panel derecho
+          document.getElementById('brandIco').className  = 'bi ' + theme.icon;
+          document.getElementById('heroWord').textContent = theme.word;
+
+          // 3. Activar la tarjeta clickeada (desactiva las otras)
+          document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+          cardElement.classList.add('active');
+
+          // 4. Mostrar el bloque de pasos del rol seleccionado
+          document.querySelectorAll('.steps-container').forEach(s => s.classList.remove('active'));
+          document.getElementById('steps-' + roleName).classList.add('active');
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           clearError(errorId)
+           Oculta el mensaje de error de validación de un campo específico.
+           Se llama en el evento oninput de cada campo para limpiar errores al escribir.
+           @@param {string} errorId — ID del div .alert-ui a ocultar
+        ══════════════════════════════════════════════════════════════════════ */
+        function clearError(errorId) {
+          document.getElementById(errorId).style.display = 'none';
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           showError(errorId)
+           Muestra el mensaje de error de un campo y hace scroll suave hacia él.
+           @@param {string} errorId — ID del div .alert-ui a mostrar
+        ══════════════════════════════════════════════════════════════════════ */
+        function showError(errorId) {
+          const el = document.getElementById(errorId);
+          el.style.display = 'flex';
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           Listener: cambio en el selector de rol del reporte
+           Muestra u oculta el campo "N.º de Ficha" según si el rol es Aprendiz.
+        ══════════════════════════════════════════════════════════════════════ */
+        document.getElementById('rpt-rol').addEventListener('change', function() {
+          // El campo de ficha solo es requerido para Aprendices
+          const fichaGroup = document.getElementById('ficha-group');
+          fichaGroup.style.display = (this.value === 'Aprendiz') ? 'block' : 'none';
+          clearError('err-rpt-rol');
+        });
+
+                // Array que conserva los archivos seleccionados entre handleFileUpload y submitReport
+        let _archivosSeleccionados = [];
+
+        function handleFileUpload(inputEl) {
+            const container = document.getElementById('files-preview');
+
+            Array.from(inputEl.files).forEach(file => {
+                // Guardar la referencia real del archivo ← NUEVO
+                _archivosSeleccionados.push(file);
+
+                const item = document.createElement('div');
+                item.className = 'file-item';
+
+                // Índice para poder eliminarlo del array al quitar el preview
+                const idx = _archivosSeleccionados.length - 1;
+                item.innerHTML =
+                    `<span><i class="bi bi-file-earmark-image-fill"></i>${file.name}</span>` +
+                    `<button class="file-remove"
+                             onclick="_archivosSeleccionados.splice(${idx},1); this.parentElement.remove()"
+                             title="Eliminar archivo">&times;</button>`;
+                container.appendChild(item);
+            });
+
+            inputEl.value = ''; // Limpiar input para permitir re-selección
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           submitReport(event)
+        ══════════════════════════════════════════════════════════════════════ */
+                async function submitReport(event) {
+            btnRipple(event);
+
+            // ── Recolectar valores ──────────────────────────────────────────────
+            //Se obtienen los valores de close inputs de la vista year se guardan en cada variable
+            const doc   = document.getElementById('rpt-doc').value.trim();
+            const rol   = document.getElementById('rpt-rol').value;
+            const tipo  = document.getElementById('rpt-tipo').value;
+            const desc  = document.getElementById('rpt-desc').value.trim();
+            const ficha = document.getElementById('rpt-ficha').value.trim();
+
+            // ── Validación ─────────────────────────────────────────────────────
+            //Se valida que cumplan todos los requisitos close inputs por eso el .value
+            let isValid = true;
+
+            if (!doc || doc.length < 6) {
+                showError('err-rpt-doc'); isValid = false;
+            }
+            if (!rol) {
+                showError('err-rpt-rol'); isValid = false;
+            }
+            if (rol === 'Aprendiz' && (!ficha || ficha.length < 6)) {
+                showError('err-rpt-ficha'); isValid = false;
+            }
+            if (!tipo) {
+                showError('err-rpt-tipo'); isValid = false;
+            }
+            if (desc.length < 10) {
+                showError('err-rpt-desc'); isValid = false;
+            }
+
+            if (!isValid) return;   // ← ahora sí existe la variable
+
+            // ── Estado de carga ────────────────────────────────────────────────
+            //Interactua con la vista, al momento de oprimir el boton lo desactiva para evitar spam
+            //Le pone al boton 'Enviando...'
+            const btn     = document.getElementById('rpt-submit-btn');
+            const btnText = document.getElementById('rpt-btn-text');
+            btn.disabled        = true;
+            btnText.textContent = 'Enviando...';
+
+            try {
+                // ── Armar FormData ─────────────────────────────────────────────
+                //Se arma la caja para enviar los datos al controlador en formData
+                const formData = new FormData();
+                formData.append('TipoDocumento', document.getElementById('rpt-tdoc').value);
+                formData.append('Documento',     doc);
+                formData.append('Rol',           rol);
+                formData.append('TipoReporte',   tipo);
+                formData.append('Descripcion',   desc);
+
+                // DESPUÉS ← usa el array que conserva los archivos reales
+                if (_archivosSeleccionados.length > 0)
+                formData.append('Evidencia', _archivosSeleccionados[0]);
+
+                // Token antiforgery — se lee del campo oculto inyectado por Razor
+                //Esto genera un token que se guarda en el html en el <input type="hidden">
+                //Si el usuario que ingreso es valido se le asigna el token temporal y el backend lo verifica por medio de [ValidateAntiForgeryToken]
+                const token = document.querySelector('#af-form input[name="__RequestVerificationToken"]')?.value;
+                if (token) formData.append('__RequestVerificationToken', token);
+
+                // ── Fetch ──────────────────────────────────────────────────────
+                //Se envia los datos de la vista en la caja formData a la ruta /Account/Account/EnviarReporte
+                const res  = await fetch('/Account/Account/EnviarReporte', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    document.getElementById('ticket-num').textContent = data.radicado;
+                    const now   = new Date();
+                    const fecha = now.toLocaleDateString('es-CO',
+                        { year: 'numeric', month: 'long', day: 'numeric' });
+                    const hora  = now.toLocaleTimeString('es-CO',
+                        { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('ticket-meta').innerHTML =
+                        `Enviado el <strong>${fecha}</strong> a las <strong>${hora}</strong><br>` +
+                        `Tiempo estimado de respuesta: <strong>24–48 horas hábiles</strong>`;
+                    document.getElementById('ticket-result').classList.add('show');
+                    document.getElementById('ticket-result')
+                        .scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    alert(data.msg ?? 'Error al enviar el reporte.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert('Error de conexión. Intenta de nuevo.');
+            } finally {
+                btn.disabled        = false;
+                btnText.textContent = 'Enviar otro reporte';
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           copyTicketNum()
+           Copia el número de radicado generado al portapapeles del usuario.
+           Muestra una indicación visual temporal en el botón.
+        ══════════════════════════════════════════════════════════════════════ */
+        function copyTicketNum() {
+          const num = document.getElementById('ticket-num').textContent;
+          navigator.clipboard.writeText(num).then(() => {
+            // Feedback visual: cambiar texto del botón momentáneamente
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> ¡Copiado!';
+            setTimeout(() => {
+              btn.innerHTML = '<i class="bi bi-clipboard"></i> Copiar N.º';
+            }, 2000);
+          });
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           goToConfirmStep()
+           Valida el formulario del paso 1 de bloqueo (documento y motivo).
+           Si es válido, oculta el formulario y muestra el paso de confirmación.
+        ══════════════════════════════════════════════════════════════════════ */
+        function goToConfirmStep() {
+          const doc    = document.getElementById('blk-doc').value.trim();
+          const motivo = document.getElementById('blk-motivo').value;
+
+          let isValid = true;
+
+          if (!doc || doc.length < 6) {
+            showError('err-blk-doc'); isValid = false;
+          }
+          if (!motivo) {
+            showError('err-blk-motivo'); isValid = false;
+          }
+
+          if (!isValid) return;
+
+          // Ocultar el formulario del paso 1
+          document.getElementById('blk-form-step').style.display = 'none';
+
+          // Mostrar el bloque de confirmación del paso 2
+          const confirmStep = document.getElementById('blk-confirm-step');
+          confirmStep.classList.add('show');
+          confirmStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+          // Limpiar el campo de confirmación por si el usuario regresó
+          document.getElementById('blk-confirm-text').value = '';
+          document.getElementById('blk-final-btn').disabled = true;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           cancelBlock(event)
+           Cancela el flujo de bloqueo y regresa al paso 1 del formulario.
+           @@param {MouseEvent} event — Evento click del enlace "Cancelar"
+        ══════════════════════════════════════════════════════════════════════ */
+        function cancelBlock(event) {
+          event.preventDefault();
+
+          // Mostrar de nuevo el formulario del paso 1
+          document.getElementById('blk-form-step').style.display = 'block';
+
+          // Ocultar el bloque de confirmación
+          document.getElementById('blk-confirm-step').classList.remove('show');
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           checkConfirmWord()
+           Se ejecuta en cada pulsación de tecla en el campo de confirmación.
+           Compara el valor con 'BLOQUEAR' y habilita/deshabilita el botón final.
+        ══════════════════════════════════════════════════════════════════════ */
+        function checkConfirmWord() {
+          const text   = document.getElementById('blk-confirm-text').value;
+          const finalBtn = document.getElementById('blk-final-btn');
+
+          // Solo habilitar si la palabra es exactamente "BLOQUEAR"
+          finalBtn.disabled = (text !== 'BLOQUEAR');
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           executeBlock(event)
+           Ejecuta el bloqueo definitivo de la cuenta:
+           1. Aplica el efecto ripple al botón.
+           2. Simula la petición al servidor.
+           3. Oculta el bloque de confirmación y muestra la pantalla de éxito.
+           4. Genera el radicado de emergencia.
+           @@param {MouseEvent} event — Evento click del botón de bloqueo
+        ══════════════════════════════════════════════════════════════════════ */
+        function executeBlock(event) {
+          btnRipple(event);
+
+          // Estado de carga del botón
+          const btn = document.getElementById('blk-final-btn');
+          btn.disabled = true;
+          document.getElementById('blk-final-text').textContent = 'Procesando bloqueo...';
+
+          // Simular petición al servidor (reemplazar por fetch real)
+          setTimeout(() => {
+            // Generar radicado de emergencia con prefijo EMG
+            const randNum  = Math.floor(Math.random() * 90000) + 10000;
+            const radicado = `EMG-${new Date().getFullYear()}-${randNum}`;
+
+            // Mostrar el radicado en la pantalla de éxito
+            document.getElementById('blk-radicado').textContent = radicado;
+
+            // Ocultar el bloque de confirmación
+            document.getElementById('blk-confirm-step').classList.remove('show');
+
+            // Mostrar la pantalla de éxito con animación
+            document.getElementById('blk-success').classList.add('show');
+            document.getElementById('blk-success').scrollIntoView({ behavior:'smooth', block:'start' });
+          }, 1400);
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           btnRipple(event)
+           Crea un elemento <span> que se expande desde el punto de click
+           dentro del botón y se desvanece, simulando el efecto Material ripple.
+           @@param {MouseEvent} event — Evento click con coordenadas
+        ══════════════════════════════════════════════════════════════════════ */
+        function btnRipple(event) {
+          const btn  = event.currentTarget;
+          const rect = btn.getBoundingClientRect();
+
+          // Crear el elemento del ripple
+          const ripple = document.createElement('span');
+          ripple.style.cssText =
+            `position:absolute; background:rgba(255,255,255,.3); border-radius:50%;` +
+            `width:100px; height:100px;` +
+            `left:${event.clientX - rect.left - 50}px;` +
+            `top:${event.clientY - rect.top  - 50}px;` +
+            `transform:scale(0); animation:rip .6s ease-out;` +
+            `pointer-events:none;`;
+
+          btn.appendChild(ripple);
+
+          // Eliminar el elemento tras la animación para no acumular DOM
+          setTimeout(() => ripple.remove(), 600);
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           lerp(a, b, t)
+           Interpolación lineal entre dos valores: a + (b - a) * t
+           Usada en el efecto tilt para suavizar el movimiento de la tarjeta.
+           @@param {number} a — Valor inicial
+           @@param {number} b — Valor objetivo
+           @@param {number} t — Factor de interpolación [0..1] (velocidad)
+           @@returns {number}
+        ══════════════════════════════════════════════════════════════════════ */
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           EFECTO TILT 3D
+           Escucha el movimiento del ratón sobre el panel izquierdo y calcula
+           los ángulos de inclinación objetivo. El loop de animación interpola
+           suavemente la transformación de la tarjeta cada frame.
+        ══════════════════════════════════════════════════════════════════════ */
+        const tiltWrap = document.getElementById('tiltWrap');
+
+        // Cuando el ratón se mueve dentro del panel: calcular ángulos objetivo
+        document.getElementById('lPanel').addEventListener('mousemove', e => {
+          const rect = tiltWrap.getBoundingClientRect();
+          // targetX: inclinación vertical (rotateX) — invertido para efecto natural
+          targetX = (e.clientY - rect.top  - rect.height / 2) / rect.height * -9;
+          // targetY: inclinación horizontal (rotateY)
+          targetY = (e.clientX - rect.left - rect.width  / 2) / rect.width  *  9;
+        });
+
+        // Cuando el ratón sale: volver al centro suavemente
+        document.getElementById('lPanel').addEventListener('mouseleave', () => {
+          targetX = 0; targetY = 0;
+        });
+
+        // Loop de animación: cada frame interpola la inclinación actual hacia el objetivo
+        (function animateTilt() {
+          tiltX = lerp(tiltX, targetX, .08); // .08 = velocidad de interpolación
+          tiltY = lerp(tiltY, targetY, .08);
+          tiltWrap.style.transform =
+            `perspective(900px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg)`;
+          requestAnimationFrame(animateTilt); // solicitar el siguiente frame
+        })();
+
+        /* ══════════════════════════════════════════════════════════════════════
+           FONDO GEOMÉTRICO SVG (panel derecho)
+           Dibuja polígonos, círculos y líneas aleatorios en el canvas SVG
+           usando el color primario del rol activo.
+           Se vuelve a dibujar al redimensionar la ventana.
+        ══════════════════════════════════════════════════════════════════════ */
+        const NS  = 'http://www.w3.org/2000/svg';   // Namespace SVG estándar
+        const cvs = document.getElementById('geo-canvas'); // Canvas SVG destino
+
+        /* rand(min, max) — Número aleatorio entre min y max */
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+
+        function drawGeo() {
+          cvs.innerHTML = ''; // Limpiar el canvas antes de redibujar
+
+          const W = document.getElementById('rPanel').clientWidth;
+          const H = document.getElementById('rPanel').clientHeight;
+
+          // Detectar si está en modo oscuro para ajustar opacidades
+          const dark      = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme     = ROLES[currentRole];
+          const baseAlpha = dark ? 0.05 : 0.08; // Opacidad base de las figuras
+
+          /* ── Dibujar polígonos irregulares de fondo ── */
+          for (let i = 0; i < 8; i++) {
+            const pts = Array.from({length: 5}, () =>
+              `${rand(0, W).toFixed(0)},${rand(0, H).toFixed(0)}`
+            ).join(' ');
+
+            const poly = document.createElementNS(NS, 'polygon');
+            poly.setAttribute('points', pts);
+            poly.setAttribute('fill',   `rgba(${theme.r},${theme.g},${theme.b},${rand(baseAlpha * .3, baseAlpha)})`);
+            poly.setAttribute('stroke', `rgba(${theme.r},${theme.g},${theme.b},${baseAlpha * 1.5})`);
+            poly.setAttribute('stroke-width', '0.5');
+            cvs.appendChild(poly);
+          }
+
+          /* ── Dibujar círculos semitransparentes ── */
+          for (let i = 0; i < 12; i++) {
+            const circle = document.createElementNS(NS, 'circle');
+            circle.setAttribute('cx', rand(0, W).toFixed(0));
+            circle.setAttribute('cy', rand(0, H).toFixed(0));
+            circle.setAttribute('r',  rand(20, 120).toFixed(0));
+            circle.setAttribute('fill',   `rgba(${theme.r},${theme.g},${theme.b},${rand(baseAlpha * .2, baseAlpha * .6)})`);
+            circle.setAttribute('stroke', `rgba(${theme.r},${theme.g},${theme.b},${baseAlpha})`);
+            circle.setAttribute('stroke-width', rand(0.5, 2).toFixed(1));
+            cvs.appendChild(circle);
+          }
+
+          /* ── Dibujar líneas de conexión ── */
+          for (let i = 0; i < 10; i++) {
+            const line = document.createElementNS(NS, 'line');
+            line.setAttribute('x1', rand(0, W).toFixed(0));
+            line.setAttribute('y1', rand(0, H).toFixed(0));
+            line.setAttribute('x2', rand(0, W).toFixed(0));
+            line.setAttribute('y2', rand(0, H).toFixed(0));
+            line.setAttribute('stroke',       `rgba(${theme.r},${theme.g},${theme.b},${rand(0.04, 0.1)})`);
+            line.setAttribute('stroke-width', rand(0.5, 1.5).toFixed(1));
+            cvs.appendChild(line);
+          }
+        }
+
+        // Dibujar al cargar la página
+        drawGeo();
+
+        // Redibujar si cambia el tamaño de la ventana (responsive)
+        window.addEventListener('resize', drawGeo);
+
+        // Redibujar si cambia la preferencia de modo oscuro/claro
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawGeo);
+
+        /* ══════════════════════════════════════════════════════════════════════
+           INICIALIZACIÓN AL CARGAR
+           Una vez que el DOM está completo, posicionar el glider en el tab activo.
+        ══════════════════════════════════════════════════════════════════════ */
+        window.addEventListener('load', () => {
+          // Posicionar el glider sobre la primera pestaña (Recuperar) al iniciar
+          moveGlider(
+            document.querySelector('.role-tab.active'),
+            'mainGlider',
+            'mainTabs'
+          );
+        });
+
+    </script>
+
+    <!-- Keyframes del efecto ripple del botón (definidos aquí para compatibilidad) -->
+    <style>
+        @@keyframes rip {
+            to {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+    </style>
+
+</body>
+</html>

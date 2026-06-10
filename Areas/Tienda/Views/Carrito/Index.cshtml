@@ -1,0 +1,1116 @@
+﻿@model SenaPay.Domain.Interfaces.Tienda.DTOs.CarritoDto
+@{
+    ViewData["Title"] = "Mi Carrito – SenaPay";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | Mi Carrito</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --c: #39A900;
+            --cg: rgba(57,169,0,.18);
+            --cr: rgba(57,169,0,.08);
+            --cd: #2d8500;
+            --danger: #ef4444;
+            --dg: rgba(239,68,68,.12);
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --border: rgba(0,0,0,.06);
+            --text-main: #0f0f1a;
+            --text-muted: #64748b;
+            --sidebar-w: 240px;
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            : root
+
+        {
+            --bg: #080810;
+            --surface: #13131f;
+            --border: rgba(255,255,255,.06);
+            --text-main: #f0f0ff;
+            --text-muted: #6b7a99;
+        }
+
+        .navbar, .sidebar {
+            background: #0d0d1a !important;
+            border-color: rgba(255,255,255,.05) !important;
+        }
+
+        .item-row {
+            background: #13131f !important;
+            border-color: rgba(255,255,255,.05) !important;
+        }
+
+            .item-row:hover {
+                background: #1a1a2e !important;
+            }
+
+        .resumen-card {
+            background: #13131f !important;
+            border-color: rgba(255,255,255,.05) !important;
+        }
+
+        .nav-link-item:hover, .nav-link-item.active {
+            background: rgba(57,169,0,.18) !important;
+            color: #86efac !important;
+        }
+
+        .toast-panel {
+            background: #1c1c2e;
+            border-color: rgba(255,255,255,.08);
+        }
+
+        .divider-line {
+            border-color: rgba(255,255,255,.06);
+        }
+
+        .empty-card {
+            background: #13131f;
+            border-color: rgba(255,255,255,.05);
+        }
+
+        .alert-error {
+            background: rgba(239,68,68,.08);
+        }
+
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── SHELL ─── */
+        .shell {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform .35s cubic-bezier(.4,0,.2,1);
+            z-index: 50;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--c);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 18px;
+            box-shadow: 0 6px 18px var(--cg);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -.4px;
+        }
+
+        .brand-sub {
+            font-size: .62rem;
+            color: var(--text-muted);
+            letter-spacing: .4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 10px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .58rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            padding: 0 10px;
+            margin: 14px 0 6px;
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            transition: background .2s, color .2s;
+        }
+
+            .nav-link-item i {
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+
+            .nav-link-item:hover, .nav-link-item.active {
+                background: rgba(57,169,0,.1);
+                color: var(--c);
+            }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--c);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(57,169,0,.07);
+            border: 1px solid rgba(57,169,0,.12);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--c), #86efac);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+
+        .user-role-tag {
+            font-size: .6rem;
+            color: var(--c);
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+
+        /* ─── MAIN ─── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ─── NAVBAR ─── */
+        .navbar {
+            height: 62px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 14px;
+            flex-shrink: 0;
+            z-index: 30;
+        }
+
+        .nav-hamburger {
+            display: none;
+            border: none;
+            background: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .nav-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .nav-breadcrumb {
+            font-size: .72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(57,169,0,.07);
+            border: 1px solid rgba(57,169,0,.15);
+            color: var(--c);
+            font-family: 'Outfit', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, transform .15s;
+        }
+
+            .btn-back:hover {
+                background: rgba(57,169,0,.14);
+                transform: translateY(-1px);
+            }
+
+        /* ─── PAGE BODY ─── */
+        .page-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 28px 60px;
+            scroll-behavior: smooth;
+        }
+
+        /* ─── LAYOUT DOS COLUMNAS ─── */
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 22px;
+            align-items: start;
+        }
+
+        /* ─── ALERTA ERROR (TempData["Error"]) ─── */
+        .alert-error {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(239,68,68,.07);
+            border: 1px solid rgba(239,68,68,.18);
+            border-radius: 12px;
+            padding: 13px 16px;
+            font-size: .82rem;
+            color: var(--danger);
+            font-weight: 500;
+            margin-bottom: 20px;
+            animation: slideUp .4s both;
+        }
+
+        /* ─── SECCIÓN: ITEMS ─── */
+        .section-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(57,169,0,.1);
+            display: grid;
+            place-items: center;
+            color: var(--c);
+            font-size: 16px;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section-sub {
+            font-size: .72rem;
+            color: var(--text-muted);
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ─── FILA DE ITEM ─── */
+        .item-row {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform .2s, box-shadow .2s;
+            animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+        }
+
+            .item-row:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 22px rgba(0,0,0,.07);
+            }
+
+        .item-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .92rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-unit {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .item-qty {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qty-pill {
+            background: rgba(57,169,0,.09);
+            border: 1px solid rgba(57,169,0,.18);
+            border-radius: 99px;
+            padding: 4px 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            color: var(--c);
+            white-space: nowrap;
+        }
+
+        .item-subtotal {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* Botón eliminar — form inline */
+        .btn-remove {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            border: 1px solid rgba(239,68,68,.18);
+            background: rgba(239,68,68,.06);
+            color: var(--danger);
+            font-size: 15px;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: background .2s, transform .15s;
+            flex-shrink: 0;
+        }
+
+            .btn-remove:hover {
+                background: rgba(239,68,68,.14);
+                transform: scale(1.08);
+            }
+
+        @@keyframes slideUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 64px 24px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .empty-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .empty-sub {
+            font-size: .82rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .btn-go-shop {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 26px;
+            background: var(--c);
+            color: #fff;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 6px 18px var(--cg);
+            transition: background .2s, transform .2s;
+        }
+
+            .btn-go-shop:hover {
+                background: var(--cd);
+                transform: translateY(-2px);
+            }
+
+        /* ─── RESUMEN CARD ─── */
+        .resumen-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        }
+
+        .resumen-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .98rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .resumen-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+        }
+
+        .resumen-label {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        .resumen-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .divider-line {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 8px 0;
+        }
+
+        .resumen-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0 0;
+        }
+
+        .resumen-total-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .resumen-total-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--c);
+        }
+
+        /* Botón confirmar compra */
+        .btn-confirmar {
+            width: 100%;
+            margin-top: 18px;
+            padding: 15px;
+            border: none;
+            border-radius: 13px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .88rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 8px 24px var(--cg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background .25s, transform .2s, box-shadow .25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-confirmar:hover {
+                background: var(--cd);
+                transform: translateY(-2px);
+                box-shadow: 0 12px 32px var(--cg);
+            }
+
+            .btn-confirmar::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+                pointer-events: none;
+            }
+
+        /* Botón vaciar carrito */
+        .btn-vaciar {
+            width: 100%;
+            margin-top: 10px;
+            padding: 11px;
+            border: 1px solid rgba(239,68,68,.2);
+            border-radius: 11px;
+            background: rgba(239,68,68,.05);
+            color: var(--danger);
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background .2s, border-color .2s, transform .15s;
+        }
+
+            .btn-vaciar:hover {
+                background: rgba(239,68,68,.1);
+                border-color: rgba(239,68,68,.35);
+                transform: translateY(-1px);
+            }
+
+        .trust-note {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: .68rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── OVERLAY MÓVIL ─── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            z-index: 40;
+            backdrop-filter: blur(2px);
+        }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+        /* ─── TOAST ─── */
+        .toast-panel {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            min-width: 300px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 16px 48px rgba(0,0,0,.14);
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .4s cubic-bezier(.34,1.2,.64,1), opacity .3s;
+        }
+
+            .toast-panel.show {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .toast-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+
+            .toast-icon.danger {
+                background: rgba(239,68,68,.1);
+                color: var(--danger);
+            }
+
+        .toast-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .toast-msg {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @@media (max-width: 900px) {
+            .cart-layout
+
+        {
+            grid-template-columns: 1fr;
+        }
+
+        .resumen-card {
+            position: static;
+        }
+
+        }
+        @@media (max-width: 768px) {
+            .sidebar
+
+        {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .nav-hamburger {
+            display: flex;
+        }
+
+        .page-body {
+            padding: 18px 14px 60px;
+        }
+
+        .navbar {
+            padding: 0 14px;
+        }
+
+        .item-subtotal {
+            min-width: 60px;
+            font-size: .88rem;
+        }
+
+        }
+        @@media (max-width: 480px) {
+            .item-qty
+
+        {
+            display: none;
+        }
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="shell">
+
+        <!-- ══════════════════════════════════
+             SIDEBAR
+        ══════════════════════════════════ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="bi bi-cup-hot-fill"></i></div>
+                <div>
+                    <div class="brand-name">SenaPay</div>
+                    <div class="brand-sub">SENA · Ecosistema Digital</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Tienda</div>
+
+                <a class="nav-link-item" href="/Productos">
+                    <i class="bi bi-grid-fill"></i>
+                    Productos
+                </a>
+
+                <button class="nav-link-item active">
+                    <i class="bi bi-cart3"></i>
+                    Mi Carrito
+                    <span class="nav-badge">@Model.Items.Count()</span>
+                </button>
+
+                <div class="nav-section-label">Cuenta</div>
+
+                <a class="nav-link-item" href="/Account/Logout"
+                   style="color:#ef4444; margin-top:8px;"
+                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                    <i class="bi bi-box-arrow-left"></i>
+                    Cerrar sesión
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                        <div class="user-name">@(User.Identity?.Name ?? "Aprendiz")</div>
+                        <div class="user-role-tag">APRENDIZ</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+        <!-- ══════════════════════════════════
+             MAIN
+        ══════════════════════════════════ -->
+        <div class="main">
+
+            <!-- NAVBAR -->
+            <header class="navbar">
+                <button class="nav-hamburger" onclick="openSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <div class="nav-title">Mi Carrito</div>
+                    <div class="nav-breadcrumb">
+                        <span>SenaPay</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Cafetería</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Carrito</span>
+                    </div>
+                </div>
+                <div class="nav-spacer"></div>
+
+                <!-- Volver — href original conservado -->
+                <a href="/Productos" class="btn-back">
+                    <i class="bi bi-arrow-left"></i>
+                    Seguir comprando
+                </a>
+            </header>
+
+            <!-- PAGE BODY -->
+            <div class="page-body">
+
+                <!-- Error de TempData — name original: TempData["Error"] -->
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert-error">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        @TempData["Error"]
+                    </div>
+                }
+
+                @if (!Model.Items.Any())
+                {
+                    <!-- ─── CARRITO VACÍO ─── -->
+                    <div class="empty-card">
+                        <div class="empty-icon"><i class="bi bi-cart-x"></i></div>
+                        <div class="empty-title">Tu carrito está vacío</div>
+                        <div class="empty-sub">Explora la cafetería y agrega tus productos favoritos.</div>
+                        <a href="/Productos" class="btn-go-shop">
+                            <i class="bi bi-grid-fill"></i>
+                            Ver productos
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="cart-layout">
+
+                        <!-- ─── COLUMNA IZQUIERDA: ITEMS ─── -->
+                        <div>
+                            <div class="section-head">
+                                <div class="section-icon"><i class="bi bi-bag-fill"></i></div>
+                                <div>
+                                    <div class="section-title">Productos en tu carrito</div>
+                                    <div class="section-sub">@Model.Items.Count() ítem(s) seleccionado(s)</div>
+                                </div>
+                            </div>
+
+                            <div class="items-list">
+                                @{
+                                    var thumbColors = new[] {
+                            "#d1fae5","#fef9c3","#dbeafe","#fce7f3",
+                            "#f3e8ff","#ffedd5","#dcfce7","#e0f2fe"
+                            };
+                                    var thumbEmoji = new[] { "☕", "🥐", "🧃", "🍞", "🥤", "🍫", "🧁", "🥪", "🍵", "🍿" };
+                                    int ei = 0;
+                                }
+                                @foreach (var item in Model.Items)
+                                {
+                                    var bg = thumbColors[ei % thumbColors.Length];
+                                    var emoji = thumbEmoji[ei % thumbEmoji.Length];
+                                    ei++;
+
+                                    <div class="item-row" style="animation-delay:@(ei * 0.05)s">
+
+                                        <!-- Thumbnail -->
+                                        <div class="item-thumb" style="background:@bg">@emoji</div>
+
+                                        <!-- Info — propiedades originales: item.NombreProducto, item.PrecioUnitario -->
+                                        <div class="item-info">
+                                            <div class="item-name">@item.NombreProducto</div>
+                                            <div class="item-unit">$@item.PrecioUnitario.ToString("N0") / unidad</div>
+                                        </div>
+
+                                        <!-- Cantidad — item.Cantidad -->
+                                        <div class="item-qty">
+                                            <span class="qty-pill">
+                                                <i class="bi bi-x" style="font-size:11px;"></i>
+                                                @item.Cantidad
+                                            </span>
+                                        </div>
+
+                                        <!-- Subtotal — item.Subtotal -->
+                                        <div class="item-subtotal">$@item.Subtotal.ToString("N0")</div>
+
+                                        <!-- Eliminar — action, name y value originales conservados -->
+                                        <form method="post" action="/Carrito/Eliminar"
+                                              onsubmit="return confirmEliminar()">
+                                            <input type="hidden" name="idProducto" value="@item.Id_Producto" />
+                                            <button type="submit" class="btn-remove" title="Eliminar">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- ─── COLUMNA DERECHA: RESUMEN ─── -->
+                        <div class="resumen-card">
+                            <div class="resumen-title">
+                                <i class="bi bi-receipt" style="color:var(--c);"></i>
+                                Resumen del pedido
+                            </div>
+
+                            <!-- Desglose por ítem -->
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="resumen-row">
+                                    <span class="resumen-label">@item.NombreProducto</span>
+                                    <span class="resumen-value">$@item.Subtotal.ToString("N0")</span>
+                                </div>
+                            }
+
+                            <hr class="divider-line" />
+
+                            <!-- Total — Model.Total original -->
+                            <div class="resumen-total-row">
+                                <span class="resumen-total-label">Total</span>
+                                <span class="resumen-total-value">$@Model.Total.ToString("N0")</span>
+                            </div>
+
+                            <!-- Confirmar compra — action original: /Transaccion/Procesar -->
+                            <form method="post" action="/Transaccion/Procesar">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-confirmar">
+                                    <i class="bi bi-shield-fill-check"></i>
+                                    Confirmar con SenaPay
+                                </button>
+                            </form>
+
+                            <!-- Vaciar carrito — action original: /Carrito/Vaciar -->
+                            <form method="post" action="/Carrito/Vaciar"
+                                  onsubmit="return confirmVaciar()">
+                                <button type="submit" class="btn-vaciar">
+                                    <i class="bi bi-trash3"></i>
+                                    Vaciar carrito
+                                </button>
+                            </form>
+
+                            <div class="trust-note">
+                                <i class="bi bi-lock-fill"></i>
+                                Pago seguro procesado por SenaPay
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-panel" id="toastPanel">
+        <div class="toast-icon danger">
+            <i class="bi bi-trash3-fill"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="toast-title" id="toastTitle">Producto eliminado</div>
+            <div class="toast-msg" id="toastMsg">El ítem fue removido del carrito.</div>
+        </div>
+        <button class="toast-close" onclick="hideToast()"><i class="bi bi-x"></i></button>
+    </div>
+
+    <script>
+        /* ── Sidebar ────────────────────────────────────────────────────── */
+        function openSidebar()  {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        /* ── Confirmación eliminar ítem ─────────────────────────────────── */
+        function confirmEliminar() {
+            /*
+             * Mostramos el toast ANTES de que el POST recargue la página.
+             * En la mayoría de conexiones normales el toast alcanza a verse
+             * brevemente. Si prefieres AJAX puro, llama preventDefault() aquí.
+             */
+            showToast();
+            return true;   // permite que el form POST continúe
+        }
+
+        /* ── Confirmación vaciar ────────────────────────────────────────── */
+        function confirmVaciar() {
+            return confirm('¿Deseas vaciar todo el carrito? Esta acción no se puede deshacer.');
+        }
+
+        /* ── Toast ──────────────────────────────────────────────────────── */
+        let toastTimer;
+        function showToast() {
+            document.getElementById('toastPanel').classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(hideToast, 3000);
+        }
+        function hideToast() {
+            document.getElementById('toastPanel').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

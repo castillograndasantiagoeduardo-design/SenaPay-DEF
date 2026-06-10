@@ -1,0 +1,1229 @@
+﻿@model SenaPay.Application.UseCases.Tienda.DTOs.TiendaViewModel
+@{
+    ViewData["Title"] = "Cafetería SenaPay";
+    Layout = null;
+
+    /* Paletas visuales — datos de presentación pura, no lógica de negocio */
+    var thumbColors = new[] {
+        "#d1fae5","#dcfce7","#bbf7d0",
+        "#fef9c3","#fef3c7","#fde68a",
+        "#dbeafe","#bfdbfe","#e0f2fe",
+        "#fce7f3","#fdf2f8","#f3e8ff","#ede9fe"
+    };
+    var thumbEmoji = new[] {
+        "☕","🥐","🧃","🍞","🥤","🍫","🧁","🥪","🍵","🧆","🥗","🍎","🥜","🧋","🍿"
+    };
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | Cafetería Virtual</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* ─── (Todo el CSS se mantiene idéntico al original) ─── */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --c: #39A900;
+            --cg: rgba(57,169,0,.18);
+            --cr: rgba(57,169,0,.08);
+            --cd: #2d8500;
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --border: rgba(0,0,0,.06);
+            --text-main: #0f0f1a;
+            --text-muted: #64748b;
+            --sidebar-w: 240px;
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #080810;
+                --surface: #13131f;
+                --border: rgba(255,255,255,.06);
+                --text-main: #f0f0ff;
+                --text-muted: #6b7a99;
+            }
+
+            .navbar, .sidebar {
+                background: #0d0d1a !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .card-produto {
+                background: #13131f !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .search-input {
+                background: #1c1c2e !important;
+                border-color: #2a2a3e !important;
+                color: #e2e8f0 !important;
+            }
+
+            .nav-link-item {
+                color: #8899bb;
+            }
+
+                .nav-link-item:hover, .nav-link-item.active {
+                    background: rgba(57,169,0,.18) !important;
+                    color: #86efac !important;
+                }
+
+            .toast-panel {
+                background: #1c1c2e;
+                border-color: rgba(255,255,255,.08);
+                color: #e2e8f0;
+            }
+
+            .cat-chip {
+                background: #1c1c2e !important;
+                border-color: rgba(255,255,255,.08) !important;
+                color: #94a3b8 !important;
+            }
+
+                .cat-chip.active {
+                    background: rgba(57,169,0,.2) !important;
+                    color: #86efac !important;
+                    border-color: rgba(57,169,0,.3) !important;
+                }
+
+            .qty-btn {
+                background: #1c1c2e;
+                border-color: #2a2a3e;
+                color: #e2e8f0;
+            }
+
+            .qty-input {
+                background: #1c1c2e;
+                border-color: #2a2a3e;
+                color: #e2e8f0;
+            }
+
+            .empty-state {
+                background: #13131f;
+            }
+
+            .stock-ok {
+                color: #86efac;
+            }
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter',sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .shell {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform .35s cubic-bezier(.4,0,.2,1);
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--c);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 18px;
+            box-shadow: 0 6px 18px var(--cg);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: 'Outfit',sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -.4px;
+        }
+
+        .brand-sub {
+            font-size: .62rem;
+            color: var(--text-muted);
+            letter-spacing: .4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 10px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-family: 'Outfit',sans-serif;
+            font-size: .58rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            padding: 0 10px;
+            margin: 14px 0 6px;
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            transition: background .2s,color .2s;
+        }
+
+            .nav-link-item i {
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+
+            .nav-link-item:hover, .nav-link-item.active {
+                background: rgba(57,169,0,.1);
+                color: var(--c);
+            }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--c);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(57,169,0,.07);
+            border: 1px solid rgba(57,169,0,.12);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--c),#86efac);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-family: 'Outfit',sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+
+        .user-role-tag {
+            font-size: .6rem;
+            color: var(--c);
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .navbar {
+            height: 62px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 14px;
+            flex-shrink: 0;
+            z-index: 30;
+        }
+
+        .nav-hamburger {
+            display: none;
+            border: none;
+            background: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .nav-title {
+            font-family: 'Outfit',sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .nav-breadcrumb {
+            font-size: .72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .nav-breadcrumb i {
+                font-size: 10px;
+            }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34,197,94,.08);
+            border: 1px solid rgba(34,197,94,.18);
+            border-radius: 100px;
+            padding: 5px 12px;
+            font-size: .68rem;
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34,197,94,.7);
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34,197,94,.5)
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(34,197,94,0)
+            }
+        }
+
+        .btn-cart {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 12px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit',sans-serif;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 14px var(--cg);
+            transition: background .25s,transform .2s,box-shadow .25s;
+        }
+
+            .btn-cart:hover {
+                background: var(--cd);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 22px var(--cg);
+            }
+
+        .cart-count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            border: 2px solid var(--surface);
+            transition: transform .3s cubic-bezier(.34,1.5,.64,1);
+        }
+
+            .cart-count.bump {
+                transform: scale(1.4);
+            }
+
+        .page-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 28px 60px;
+            scroll-behavior: smooth;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+            animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 11px 12px 11px 38px;
+            border: 1.5px solid #e9edf3;
+            border-radius: 12px;
+            font-family: 'Inter',sans-serif;
+            font-size: .85rem;
+            color: var(--text-main);
+            background: #fafbfc;
+            outline: none;
+            transition: border-color .25s,box-shadow .25s;
+        }
+
+            .search-input:focus {
+                border-color: var(--c);
+                box-shadow: 0 0 0 3.5px var(--cr);
+                background: #fff;
+            }
+
+        .cats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cat-chip {
+            padding: 7px 14px;
+            border-radius: 99px;
+            border: 1.5px solid #e9edf3;
+            background: #fafbfc;
+            font-family: 'Outfit',sans-serif;
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            letter-spacing: .3px;
+            transition: background .2s,color .2s,border-color .2s,transform .15s;
+        }
+
+            .cat-chip:hover {
+                transform: translateY(-1px);
+                border-color: var(--c);
+                color: var(--c);
+            }
+
+            .cat-chip.active {
+                background: rgba(57,169,0,.1);
+                color: var(--c);
+                border-color: rgba(57,169,0,.3);
+            }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+            gap: 18px;
+            animation: slideUp .6s cubic-bezier(.22,1,.36,1) .06s both;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(22px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .card-produto {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform .25s,box-shadow .25s;
+            animation: slideUp .55s cubic-bezier(.22,1,.36,1) both;
+        }
+
+            .card-produto:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 36px rgba(0,0,0,.1);
+            }
+
+        .card-thumb {
+            height: 100px;
+            display: grid;
+            place-items: center;
+            font-size: 2.6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .card-thumb::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+            }
+
+        .card-body {
+            padding: 18px 18px 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-name {
+            font-family: 'Outfit',sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            font-size: .63rem;
+            font-weight: 700;
+            font-family: 'Outfit',sans-serif;
+        }
+
+        .badge-cat {
+            background: rgba(57,169,0,.1);
+            color: #39A900;
+        }
+
+        .badge-shop {
+            background: rgba(99,102,241,.1);
+            color: #6366f1;
+        }
+
+        .card-price {
+            font-family: 'Outfit',sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--c);
+            margin-top: 4px;
+        }
+
+            .card-price span {
+                font-size: .7rem;
+                font-weight: 500;
+                color: var(--text-muted);
+                margin-left: 2px;
+            }
+
+        .stock-ok {
+            font-size: .68rem;
+            color: #16a34a;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-low {
+            font-size: .68rem;
+            color: #f59e0b;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-out {
+            font-size: .68rem;
+            color: #ef4444;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-footer {
+            padding: 0 18px 18px;
+        }
+
+        .add-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qty-wrap {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid #e9edf3;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 36px;
+            background: #f8fafc;
+            border: none;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            transition: background .15s,color .15s;
+            display: grid;
+            place-items: center;
+        }
+
+            .qty-btn:hover {
+                background: rgba(57,169,0,.1);
+                color: var(--c);
+            }
+
+        .qty-input {
+            width: 44px;
+            height: 36px;
+            border: none;
+            text-align: center;
+            font-family: 'Outfit',sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            background: transparent;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+
+            .qty-input::-webkit-inner-spin-button, .qty-input::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+            }
+
+        .btn-agregar {
+            flex: 1;
+            padding: 0 14px;
+            height: 36px;
+            background: var(--c);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit',sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--cg);
+            transition: background .2s,transform .15s,box-shadow .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+            .btn-agregar:hover:not(:disabled) {
+                background: var(--cd);
+                transform: translateY(-1px);
+                box-shadow: 0 6px 18px var(--cg);
+            }
+
+            .btn-agregar:disabled {
+                opacity: .45;
+                cursor: not-allowed;
+                filter: grayscale(.5);
+            }
+
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 56px 20px;
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .empty-icon {
+            font-size: 2.8rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .empty-title {
+            font-family: 'Outfit',sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .empty-sub {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        .alert-success {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(34,197,94,.08);
+            border: 1px solid rgba(34,197,94,.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: .82rem;
+            color: #16a34a;
+            font-weight: 500;
+            margin-bottom: 20px;
+            animation: slideUp .4s both;
+        }
+
+        .toast-panel {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            min-width: 300px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 16px 48px rgba(0,0,0,.14);
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .4s cubic-bezier(.34,1.2,.64,1),opacity .3s;
+        }
+
+            .toast-panel.show {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .toast-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+
+            .toast-icon.success {
+                background: rgba(34,197,94,.12);
+                color: #16a34a;
+            }
+
+        .toast-title {
+            font-family: 'Outfit',sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .toast-msg {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            padding: 2px;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            z-index: 40;
+            backdrop-filter: blur(2px);
+        }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+        @@media (max-width:768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+
+                .sidebar.open {
+                    transform: translateX(0);
+                }
+
+            .nav-hamburger {
+                display: flex;
+            }
+
+            .status-pill {
+                display: none;
+            }
+
+            .page-body {
+                padding: 18px 14px 60px;
+            }
+
+            .navbar {
+                padding: 0 14px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+                gap: 12px;
+            }
+
+            .btn-cart span {
+                display: none;
+            }
+
+            .cats-row {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 4px;
+            }
+        }
+
+        @@media (max-width:400px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="bi bi-cup-hot-fill"></i></div>
+                <div>
+                    <div class="brand-name">SenaPay</div>
+                    <div class="brand-sub">SENA · Ecosistema Digital</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Tienda</div>
+                <button class="nav-link-item active">
+                    <i class="bi bi-grid-fill"></i>
+                    Productos
+                    <!-- ✅ TotalProductos ya calculado por el caso de uso -->
+                    <span class="nav-badge" id="sidebarProductCount">@Model.TotalProductos</span>
+                </button>
+                <a class="nav-link-item" href="/Carrito">
+                    <i class="bi bi-cart3"></i>
+                    Mi Carrito
+                    <!-- ✅ ItemsEnCarrito viene del controlador, que lo leyó de Session -->
+                    <span class="nav-badge" style="background:#ef4444;" id="sidebarCartBadge">
+                        @Model.ItemsEnCarrito
+                    </span>
+                </a>
+                <div class="nav-section-label">Cuenta</div>
+                <a class="nav-link-item" href="/Account/Logout"
+                   style="color:#ef4444; margin-top:8px;"
+                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                    <i class="bi bi-box-arrow-left"></i>
+                    Cerrar sesión
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                        <div class="user-name">@(User.Identity?.Name ?? "Aprendiz")</div>
+                        <div class="user-role-tag">APRENDIZ</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+        <div class="main">
+            <!-- NAVBAR -->
+            <header class="navbar">
+                <button class="nav-hamburger" id="hamburger" onclick="openSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <div class="nav-title">Cafetería Virtual</div>
+                    <div class="nav-breadcrumb">
+                        <span>SenaPay</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Productos</span>
+                    </div>
+                </div>
+                <div class="nav-spacer"></div>
+                <div class="status-pill">
+                    <div class="status-dot"></div>
+                    Tienda abierta
+                </div>
+                <a asp-area="Tienda"
+                   asp-controller="Carrito"
+                   asp-action="Index">
+                    <i class="bi bi-cart3"></i>
+                    <span>Ver Carrito</span>
+                    <div class="cart-count" id="cartCount">@Model.ItemsEnCarrito</div>
+                </a>
+            </header>
+
+            <!-- PAGE BODY -->
+            <div class="page-body">
+
+                @if (TempData["Mensaje"] != null)
+                {
+                    <div class="alert-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        @TempData["Mensaje"]
+                    </div>
+                }
+
+                <!-- TOOLBAR -->
+                <div class="toolbar">
+                    <div class="search-wrap">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput"
+                               placeholder="Buscar producto, categoría o tienda…"
+                               value="@Model.BusquedaActiva"
+                               oninput="filtrarProductos()" />
+                    </div>
+                </div>
+
+                <!-- ✅ CHIPS DE CATEGORÍA — sin LINQ, sin lambda, sin Distinct() -->
+                <!-- Model.Categorias ya llegó limpio desde el caso de uso        -->
+                <div class="cats-row" id="catsRow" style="margin-bottom:20px;">
+
+                    <button class="cat-chip @(string.IsNullOrEmpty(Model.CategoriaActiva) ? "active" : "")"
+                            onclick="setCat('', this)">
+                        <i class="bi bi-grid-fill" style="font-size:11px;"></i> Todos
+                    </button>
+
+                    @foreach (var cat in Model.Categorias)
+                    {
+                        <button class="cat-chip @(Model.CategoriaActiva == cat ? "active" : "")"
+                                onclick="setCat('@cat', this)">
+                            @cat
+                        </button>
+                    }
+                </div>
+
+                <!-- ✅ GRID DE PRODUCTOS — sin expresiones lambda en la vista -->
+                <div class="products-grid" id="productsGrid">
+
+                    @if (!Model.Productos.Any())
+                    {
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-search"></i></div>
+                            <div class="empty-title">Sin resultados</div>
+                            <div class="empty-sub">Prueba con otro término o categoría</div>
+                        </div>
+                    }
+
+                    @{
+                        int idx = 0;
+                    }
+                    @foreach (var p in Model.Productos)
+                    {
+                        var color = thumbColors[idx % thumbColors.Length];
+                        var emoji = thumbEmoji[idx % thumbEmoji.Length];
+                        idx++;
+
+                        <div class="card-produto"
+                             data-nombre="@p.NombreProducto.ToLower()"
+                             data-cat="@p.NombreCategoria"
+                             data-tienda="@p.NombreTienda.ToLower()"
+                             style="animation-delay:@(idx * 0.04)s">
+
+                            <div class="card-thumb" style="background:@color;">@emoji</div>
+
+                            <div class="card-body">
+                                <div class="card-name">@p.NombreProducto</div>
+
+                                <div class="card-meta">
+                                    <!-- ✅ NombreCategoria ya resuelto, sin navegar IdCategoriaNavigation -->
+                                    @if (!string.IsNullOrEmpty(p.NombreCategoria))
+                                    {
+                                        <span class="meta-badge badge-cat">
+                                            <i class="bi bi-tag-fill" style="font-size:9px;"></i>
+                                            @p.NombreCategoria
+                                        </span>
+                                    }
+                                    <!-- ✅ NombreTienda ya resuelto, sin navegar IdTiendaNavigation -->
+                                    @if (!string.IsNullOrEmpty(p.NombreTienda))
+                                    {
+                                        <span class="meta-badge badge-shop">
+                                            <i class="bi bi-shop" style="font-size:9px;"></i>
+                                            @p.NombreTienda
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="card-price">
+                                    $@p.Precio.ToString("N0")
+                                    <span>COP</span>
+                                </div>
+
+                                <!-- ✅ StockCssClass, StockIconCss y StockLabel calculados en el caso de uso -->
+                                <div class="@p.StockCssClass">
+                                    <i class="bi @p.StockIconCss"></i>
+                                    @p.StockLabel
+                                </div>
+                            </div>
+
+                            <div class="card-footer">
+                                <form method="post" action="/Carrito/Agregar"
+                                      class="add-form"
+                                      onsubmit="onAgregar(event, this, '@p.NombreProducto')">
+
+                                    <input type="hidden" name="idProducto" value="@p.IdProducto" />
+                                    <input type="hidden" name="nombreProducto" value="@p.NombreProducto" />
+                                    <input type="hidden" name="precio" value="@p.Precio" />
+
+                                    <div class="qty-wrap">
+                                        <button type="button" class="qty-btn"
+                                                onclick="changeQty(this, -1, @p.Stock)">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number" name="cantidad"
+                                               class="qty-input" value="1"
+                                               min="1" max="@p.Stock" readonly />
+                                        <button type="button" class="qty-btn"
+                                                onclick="changeQty(this, 1, @p.Stock)">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- ✅ BtnLabel y Disponible calculados en el caso de uso -->
+                                    <button type="submit" class="btn-agregar"
+                                    @(!p.Disponible ? "disabled" : "")>
+                                        <i class="bi bi-cart-plus"></i>
+                                        @p.BtnLabel
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-panel" id="toastPanel">
+        <div class="toast-icon success" id="toastIcon">
+            <i class="bi bi-cart-check-fill"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="toast-title" id="toastTitle">Producto agregado</div>
+            <div class="toast-msg" id="toastMsg"></div>
+        </div>
+        <button class="toast-close" onclick="hideToast()"><i class="bi bi-x"></i></button>
+    </div>
+
+    <script>
+        /* ── Sidebar ─────────────────────────────────────────────────────── */
+        function openSidebar()  {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        /* ── Contador de carrito
+           ✅ Se inicializa desde el ViewModel, no desde sessionStorage ──── */
+        let cartItems = @Model.ItemsEnCarrito;
+
+        function updateCartUI() {
+            const el = document.getElementById('cartCount');
+            const sb = document.getElementById('sidebarCartBadge');
+            el.textContent  = cartItems;
+            if (sb) sb.textContent = cartItems;
+            el.style.display = cartItems === 0 ? 'none' : 'grid';
+        }
+
+        function bumpCart() {
+            cartItems++;
+            const el = document.getElementById('cartCount');
+            updateCartUI();
+            el.classList.remove('bump');
+            void el.offsetWidth;
+            el.classList.add('bump');
+            setTimeout(() => el.classList.remove('bump'), 350);
+        }
+
+        function onAgregar(e, form, nombre) {
+            bumpCart();
+            showToast(nombre);
+        }
+
+        function changeQty(btn, delta, maxStock) {
+            const wrap  = btn.closest('.qty-wrap');
+            const input = wrap.querySelector('input[name="cantidad"]');
+            let val = parseInt(input.value) + delta;
+            if (val < 1)        val = 1;
+            if (val > maxStock) val = maxStock;
+            input.value = val;
+        }
+
+        /* ── Filtro por texto (client-side sobre los data-* del DOM) ─────── */
+        let activeCat = '@(Model.CategoriaActiva ?? "")';
+
+        function filtrarProductos() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            document.querySelectorAll('.card-produto').forEach(card => {
+                const nombre  = card.dataset.nombre  || '';
+                const cat     = card.dataset.cat     || '';
+                const tienda  = card.dataset.tienda  || '';
+                const matchQ   = !q || nombre.includes(q) || tienda.includes(q) || cat.toLowerCase().includes(q);
+                const matchCat = !activeCat || cat === activeCat;
+                card.style.display = (matchQ && matchCat) ? '' : 'none';
+            });
+            checkEmpty();
+        }
+
+        function setCat(cat, chipEl) {
+            activeCat = cat;
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            chipEl.classList.add('active');
+            filtrarProductos();
+        }
+
+        function checkEmpty() {
+            const grid    = document.getElementById('productsGrid');
+            const visible = [...grid.querySelectorAll('.card-produto')]
+                                .filter(c => c.style.display !== 'none').length;
+            let emptyEl = grid.querySelector('.empty-state');
+            if (visible === 0 && !emptyEl) {
+                emptyEl = document.createElement('div');
+                emptyEl.className = 'empty-state';
+                emptyEl.innerHTML = `
+                    <div class="empty-icon"><i class="bi bi-search"></i></div>
+                    <div class="empty-title">Sin resultados</div>
+                    <div class="empty-sub">Prueba con otro término o categoría</div>`;
+                grid.appendChild(emptyEl);
+            } else if (visible > 0 && emptyEl) {
+                emptyEl.remove();
+            }
+        }
+
+        let toastTimer;
+        function showToast(nombre) {
+            document.getElementById('toastTitle').textContent = '¡Agregado al carrito!';
+            document.getElementById('toastMsg').textContent   = nombre + ' fue añadido correctamente.';
+            const panel = document.getElementById('toastPanel');
+            panel.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(hideToast, 3500);
+        }
+        function hideToast() {
+            document.getElementById('toastPanel').classList.remove('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartUI();
+        });
+    </script>
+</body>
+</html>

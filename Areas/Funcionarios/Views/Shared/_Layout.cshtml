@@ -1,0 +1,1026 @@
+﻿@{
+    var nombreUsuario = User.Identity?.Name ?? "Funcionario";
+
+    // Detecta qué acción está activa para resaltar el ítem del sidebar
+    var accionActual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var controlActual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | @ViewData["Title"]</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <style>
+        /* ─── RESET & TOKENS ─────────────────────────────────────── */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --c: #6D28D9;
+            --cg: rgba(109,40,217,.18);
+            --cr: rgba(109,40,217,.08);
+            --cd: #5B21B6;
+            --speed: .45s;
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --border: rgba(0,0,0,.06);
+            --text-main: #0f0f1a;
+            --text-muted: #64748b;
+            --sidebar-w: 240px;
+        }
+
+        /* ─── DARK MODE ──────────────────────────────────────────── */
+        @@media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #080810;
+                --surface: #13131f;
+                --border: rgba(255,255,255,.06);
+                --text-main: #f0f0ff;
+                --text-muted: #6b7a99;
+            }
+
+            .navbar {
+                background: #0d0d1a !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .sidebar {
+                background: #0d0d1a !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .card {
+                background: #13131f !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .stat-card {
+                background: #13131f !important;
+                border-color: rgba(255,255,255,.05) !important;
+            }
+
+            .form-control, .form-select {
+                background: #1c1c2e !important;
+                border-color: #2a2a3e !important;
+                color: #e2e8f0 !important;
+            }
+
+            .field-label {
+                color: #4a5578;
+            }
+
+            .nav-link-item {
+                color: #8899bb;
+            }
+
+                .nav-link-item:hover,
+                .nav-link-item.active {
+                    background: rgba(109,40,217,.18) !important;
+                    color: #a78bfa !important;
+                }
+
+            .toast-panel {
+                background: #1c1c2e;
+                border-color: rgba(255,255,255,.08);
+                color: #e2e8f0;
+            }
+        }
+
+        /* ─── BASE ───────────────────────────────────────────────── */
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── SHELL ──────────────────────────────────────────────── */
+        .shell {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ─── SIDEBAR ────────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform .35s cubic-bezier(.4,0,.2,1);
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--c);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 18px;
+            box-shadow: 0 6px 18px var(--cg);
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -.4px;
+        }
+
+        .brand-sub {
+            font-size: .62rem;
+            color: var(--text-muted);
+            letter-spacing: .4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 10px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .58rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            padding: 0 10px;
+            margin: 14px 0 6px;
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            transition: background .2s, color .2s;
+        }
+
+            .nav-link-item i {
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+
+            .nav-link-item:hover,
+            .nav-link-item.active {
+                background: rgba(109,40,217,.1);
+                color: var(--c);
+            }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--c);
+            color: #fff;
+            font-size: .6rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(109,40,217,.07);
+            border: 1px solid rgba(109,40,217,.12);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--c), #a78bfa);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+        }
+
+        .user-role-tag {
+            font-size: .6rem;
+            color: var(--c);
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+
+        /* ─── MAIN ───────────────────────────────────────────────── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ─── NAVBAR ─────────────────────────────────────────────── */
+        .navbar {
+            height: 62px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 14px;
+            flex-shrink: 0;
+            z-index: 30;
+        }
+
+        .nav-hamburger {
+            display: none;
+            border: none;
+            background: none;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .nav-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .nav-breadcrumb {
+            font-size: .72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .nav-breadcrumb i {
+                font-size: 10px;
+            }
+
+        .nav-spacer {
+            flex: 1;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34,197,94,.08);
+            border: 1px solid rgba(34,197,94,.18);
+            border-radius: 100px;
+            padding: 5px 12px;
+            font-size: .68rem;
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34,197,94,.7);
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34,197,94,.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(34,197,94,0);
+            }
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(239,68,68,.07);
+            border: 1px solid rgba(239,68,68,.15);
+            color: #ef4444;
+            font-family: 'Outfit', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s, border-color .2s, transform .15s;
+        }
+
+            .btn-logout:hover {
+                background: rgba(239,68,68,.14);
+                border-color: rgba(239,68,68,.3);
+                transform: translateY(-1px);
+            }
+
+        /* ─── PAGE BODY ──────────────────────────────────────────── */
+        .page-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 28px 48px;
+            scroll-behavior: smooth;
+        }
+
+        /* ─── CARD BASE ──────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+            animation: slideUp .65s cubic-bezier(.22,1,.36,1) .05s both;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── STAT CARDS ─────────────────────────────────────────── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+            animation: slideUp .6s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 28px rgba(0,0,0,.08);
+            }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-delta {
+            font-size: .68rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 2px;
+        }
+
+        .delta-up {
+            color: #22c55e;
+        }
+
+        .delta-down {
+            color: #ef4444;
+        }
+
+        /* ─── SECTION HEADER ─────────────────────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(109,40,217,.1);
+            display: grid;
+            place-items: center;
+            color: var(--c);
+            font-size: 16px;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section-sub {
+            font-size: .72rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── FORM STYLES ────────────────────────────────────────── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+            .field-group.full {
+                grid-column: 1 / -1;
+            }
+
+        .field-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .64rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .field-wrap {
+            position: relative;
+        }
+
+        .field-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b0bec5;
+            font-size: 14px;
+            pointer-events: none;
+            transition: color .25s;
+        }
+
+        .field-prefix {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: .75rem;
+            font-weight: 700;
+            color: #b0bec5;
+            pointer-events: none;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px 12px 12px 38px;
+            border: 1.5px solid #e9edf3;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: .86rem;
+            color: var(--text-main);
+            background: #fafbfc;
+            appearance: none;
+            outline: none;
+            transition: border-color .25s, box-shadow .25s;
+        }
+
+            .form-control.with-prefix {
+                padding-left: 42px;
+            }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--c);
+                box-shadow: 0 0 0 3.5px var(--cr);
+                background: #fff;
+            }
+
+        .field-error {
+            font-size: .67rem;
+            color: #ef4444;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
+        .form-divider {
+            grid-column: 1 / -1;
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 6px 0;
+        }
+
+        /* ─── BUTTONS ────────────────────────────────────────────── */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 13px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 8px 24px var(--cg);
+            transition: background .3s, transform .2s, box-shadow .3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn-primary:hover:not(:disabled) {
+                background: var(--cd);
+                transform: translateY(-2px);
+                box-shadow: 0 12px 32px var(--cg);
+            }
+
+            .btn-primary:disabled {
+                opacity: .65;
+                cursor: not-allowed;
+                filter: grayscale(.4);
+            }
+
+        .btn-icon-box {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: rgba(255,255,255,.2);
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+        }
+
+        /* ─── TABLE ──────────────────────────────────────────────── */
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 24px;
+        }
+
+        table.sp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .8rem;
+        }
+
+        .sp-table thead th {
+            font-family: 'Outfit', sans-serif;
+            font-size: .62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .sp-table tbody td {
+            padding: 13px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .sp-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sp-table tbody tr:hover td {
+            background: rgba(109,40,217,.03);
+        }
+
+        /* Role badges */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: .65rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: .4px;
+        }
+
+        .badge-aprendiz {
+            background: rgba(57,169,0,.1);
+            color: #39A900;
+        }
+
+        .badge-tienda {
+            background: rgba(232,108,0,.1);
+            color: #E86C00;
+        }
+
+        .badge-funcionario {
+            background: rgba(109,40,217,.1);
+            color: #6D28D9;
+        }
+
+        /* Action buttons */
+        .btn-action {
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .2s, transform .15s;
+        }
+
+            .btn-action:hover {
+                opacity: .85;
+                transform: translateY(-1px);
+            }
+
+        .btn-edit {
+            background: rgba(245,158,11,.12);
+            color: #d97706;
+        }
+
+        .btn-delete {
+            background: rgba(239,68,68,.10);
+            color: #ef4444;
+        }
+
+        /* ─── TOAST ──────────────────────────────────────────────── */
+        .toast-panel {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            min-width: 300px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 16px 48px rgba(0,0,0,.14);
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .4s cubic-bezier(.34,1.2,.64,1), opacity .3s;
+        }
+
+            .toast-panel.show {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .toast-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+
+            .toast-icon.success {
+                background: rgba(34,197,94,.12);
+                color: #16a34a;
+            }
+
+            .toast-icon.error {
+                background: rgba(239,68,68,.10);
+                color: #ef4444;
+            }
+
+        .toast-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .toast-msg {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            padding: 2px;
+        }
+
+        /* ─── SPINNER ────────────────────────────────────────────── */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            display: none;
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── OVERLAY MÓVIL ──────────────────────────────────────── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            z-index: 40;
+            backdrop-filter: blur(2px);
+        }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+        /* ─── RESPONSIVE ─────────────────────────────────────────── */
+        @@media (max-width: 768px) {
+            .shell {
+                position: relative;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+
+                .sidebar.open {
+                    transform: translateX(0);
+                }
+
+            .nav-hamburger {
+                display: flex;
+            }
+
+            .status-pill {
+                display: none;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field-group.full {
+                grid-column: 1;
+            }
+
+            .page-body {
+                padding: 20px 16px 48px;
+            }
+
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2,1fr);
+            }
+        }
+
+        @@media (max-width: 400px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-logout span {
+                display: none;
+            }
+        }
+    </style>
+
+    @* Sección para CSS adicional por vista *@
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+    <div class="shell">
+
+        <!-- ═══════════ SIDEBAR ═══════════ -->
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="bi bi-briefcase-fill"></i></div>
+                <div>
+                    <div class="brand-name">SenaPay</div>
+                    <div class="brand-sub">SENA · Ecosistema Digital</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Principal</div>
+
+                <a asp-area="Funcionarios" asp-controller="Funcionarios" asp-action="AgregarUsuarios"
+                   class="nav-link-item @(accionActual == "AgregarUsuarios" ? "active" : "")">
+                    <i class="bi bi-people-fill"></i>
+                    Usuarios
+                    <span class="nav-badge" id="badge-usuarios">@(ViewBag.TotalUsuarios ?? "")</span>
+                </a>
+
+                <a asp-area="Funcionarios" asp-controller="Tiendas" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Tiendas" ? "active" : "")">
+                    <i class="bi bi-shop"></i>
+                    Tiendas
+                </a>
+
+                <a asp-area="Funcionarios" asp-controller="Funcionarios" asp-action="Reportes"
+                   class="nav-link-item @(accionActual == "Reportes" ? "active" : "")">
+                    <i class="bi bi-flag-fill"></i>
+                    Reportes
+                </a>
+
+                <div class="nav-section-label">Sistema</div>
+
+                <a class="nav-link-item" href="/Account/Logout"
+                   style="color:#ef4444; margin-top:8px;"
+                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                    <i class="bi bi-box-arrow-left"></i>
+                    Cerrar sesión
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <div class="user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div>
+                        <div class="user-name">@nombreUsuario</div>
+                        <div class="user-role-tag">FUNCIONARIO</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+        <!-- ═══════════ MAIN ═══════════ -->
+        <div class="main">
+
+            <!-- NAVBAR -->
+            <header class="navbar">
+                <button class="nav-hamburger" id="hamburger" onclick="openSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <div class="nav-title">Panel Funcionario</div>
+                    <div class="nav-breadcrumb">
+                        <span>SenaPay</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>@(ViewData["Breadcrumb"] ?? "Panel")</span>
+                    </div>
+                </div>
+                <div class="nav-spacer"></div>
+                <div class="status-pill">
+                    <div class="status-dot"></div>
+                    Sistema operativo
+                </div>
+                <a href="/Account/Logout" class="btn-logout"
+                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Cerrar sesión</span>
+                </a>
+            </header>
+
+            <!-- CONTENIDO DE CADA VISTA -->
+            <div class="page-body" id="pageBody">
+                @RenderBody()
+            </div>
+
+        </div><!-- /main -->
+    </div><!-- /shell -->
+    <!-- TOAST GLOBAL -->
+    <div class="toast-panel" id="toastPanel">
+        <div class="toast-icon" id="toastIcon">
+            <i class="bi bi-check2" id="toastIco"></i>
+        </div>
+        <div style="flex:1;">
+            <div class="toast-title" id="toastTitle"></div>
+            <div class="toast-msg" id="toastMsg"></div>
+        </div>
+        <button class="toast-close" onclick="hideToast()"><i class="bi bi-x"></i></button>
+    </div>
+
+    <script>
+        /* ── Sidebar móvil ── */
+        function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+
+        /* ── Toast global reutilizable por todas las vistas ── */
+        function showToast(title, msg, type = 'success') {
+            const panel = document.getElementById('toastPanel');
+            const icon  = document.getElementById('toastIcon');
+            const ico   = document.getElementById('toastIco');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMsg').textContent   = msg;
+            icon.className = 'toast-icon ' + type;
+            ico.className  = type === 'success' ? 'bi bi-check2' : 'bi bi-x-lg';
+            panel.classList.add('show');
+            setTimeout(hideToast, 3500);
+        }
+        function hideToast() { document.getElementById('toastPanel').classList.remove('show'); }
+    </script>
+
+    @* Scripts específicos de cada vista se inyectan aquí *@
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

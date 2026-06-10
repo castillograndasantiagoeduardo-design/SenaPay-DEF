@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Compra Confirmada";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Confirmación – SenaPay</title>
+</head>
+<body style="font-family:Arial; max-width:600px; margin:40px auto; text-align:center;">
+    <h1 style="color:#39A900;">✅ ¡Compra Exitosa!</h1>
+    <p>Transacción No. <strong>#@ViewBag.IdTransaccion</strong></p>
+    <p>@ViewBag.Mensaje</p>
+    <a href="/Productos" style="padding:10px 20px; background:#39A900; color:white; text-decoration:none; border-radius:6px;">
+        Volver a la Cafetería
+    </a>
+</body>
+</html>

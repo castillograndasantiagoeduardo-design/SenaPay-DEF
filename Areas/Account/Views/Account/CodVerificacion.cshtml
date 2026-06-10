@@ -1,0 +1,836 @@
+﻿
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay | Verificar Código</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --c: #39A900;
+            --cg: rgba(57,169,0,.18);
+            --cr: rgba(57,169,0,.07);
+            --speed: .55s
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            body {
+                background: #060608;
+            }
+
+            .l-panel {
+                background: #111114 !important;
+                border-color: #222 !important;
+            }
+
+            .card {
+                background: #1a1a1e !important;
+                border-color: rgba(255,255,255,.05) !important;
+                color: #fff;
+            }
+
+            .brand-text h1 {
+                color: #fff !important;
+            }
+
+            .r-text h2 {
+                color: #fff !important;
+            }
+
+            .form-control {
+                background: #252529 !important;
+                border-color: #333 !important;
+                color: #eee !important;
+            }
+
+            .field-label {
+                color: #64748b;
+            }
+
+            .card-footer {
+                border-top-color: #252529;
+            }
+
+            .r-panel {
+                background: #060608 !important;
+            }
+
+            .r-text p {
+                color: rgba(255,255,255,.7);
+            }
+
+            .r-pill {
+                color: rgba(255,255,255,.8) !important;
+                background: rgba(255,255,255,.06) !important;
+                border-color: rgba(255,255,255,.1) !important;
+            }
+
+            .r-overlay {
+                background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(4,4,6,.6) 80%), linear-gradient(180deg,transparent 45%,rgba(4,4,6,.92)) !important;
+            }
+
+            .back-link {
+                color: rgba(255,255,255,.45) !important;
+            }
+
+                .back-link:hover {
+                    color: var(--c) !important;
+                }
+
+            .digit-box {
+                background: #252529 !important;
+                border-color: #333 !important;
+                color: #eee !important;
+            }
+
+            .countdown {
+                color: rgba(255,255,255,.5) !important;
+            }
+
+            .resend-link {
+                color: #64748b !important;
+            }
+        }
+
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: #060608;
+            -webkit-font-smoothing: antialiased
+        }
+
+        .shell {
+            display: flex;
+            height: 100vh
+        }
+
+        .l-panel {
+            width: 42%;
+            min-width: 420px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 20;
+            padding: 40px 28px;
+            overflow: hidden
+        }
+
+            .l-panel::after {
+                content: '';
+                position: absolute;
+                right: -1px;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: linear-gradient(180deg,transparent,rgba(0,0,0,.07) 40%,rgba(0,0,0,.07) 60%,transparent)
+            }
+
+        .card-tilt {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            z-index: 1;
+            transform-style: preserve-3d;
+            perspective: 900px;
+            animation: slideUp .7s cubic-bezier(.22,1,.36,1) both
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(32px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 36px 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+            border: 1px solid rgba(0,0,0,.045);
+            transform-style: preserve-3d;
+            will-change: transform
+        }
+
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px
+        }
+
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: var(--c);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 8px 24px var(--cg);
+            transition: background var(--speed), box-shadow var(--speed)
+        }
+
+        .brand-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0f0f0f;
+            line-height: 1;
+            letter-spacing: -.5px
+        }
+
+        .brand-text span {
+            font-size: .72rem;
+            color: #94a3b8;
+            letter-spacing: .5px;
+            display: block;
+            margin-top: 3px
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .section-title::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: #f1f5f9;
+            }
+
+        /* ── Cajas de dígito ── */
+        .digits-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 8px 0 20px;
+        }
+
+        .digit-box {
+            width: 52px;
+            height: 60px;
+            border: 1.5px solid #edf0f4;
+            border-radius: 14px;
+            background: #fafbfc;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: center;
+            outline: none;
+            transition: border-color .25s, box-shadow .25s, transform .15s;
+            caret-color: var(--c);
+        }
+
+            .digit-box:focus {
+                border-color: var(--c);
+                box-shadow: 0 0 0 3.5px var(--cr);
+                background: #fff;
+                transform: translateY(-2px);
+            }
+
+            .digit-box.filled {
+                border-color: var(--c);
+                color: var(--c);
+            }
+
+        /* campo oculto que acumula el código completo */
+        #codigoHidden {
+            display: none
+        }
+
+        .alert-ui {
+            font-size: 0.72rem;
+            color: #ef4444;
+            margin-top: 5px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            justify-content: center;
+        }
+
+        .info-hint {
+            font-size: .75rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+            .info-hint i {
+                color: var(--c);
+                margin-top: 2px;
+                flex-shrink: 0;
+            }
+
+        /* Contador de reenvío */
+        .resend-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .countdown {
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #94a3b8;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .resend-link {
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            background: none;
+            border: none;
+            cursor: not-allowed;
+            text-decoration: none;
+            transition: color .2s;
+            padding: 0;
+        }
+
+            .resend-link.active {
+                color: var(--c);
+                cursor: pointer;
+            }
+
+                .resend-link.active:hover {
+                    text-decoration: underline;
+                }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 14px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            box-shadow: 0 10px 30px var(--cg);
+            transition: all var(--speed);
+            position: relative;
+            overflow: hidden
+        }
+
+            .btn-submit:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                filter: grayscale(0.5);
+            }
+
+        .btn-arrow {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            background: rgba(255,255,255,.2);
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            transition: transform .3s
+        }
+
+        .card-footer {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .72rem;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color .2s;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+            .back-link:hover {
+                color: var(--c);
+            }
+
+        /* Panel derecho */
+        .r-panel {
+            flex: 1;
+            position: relative;
+            background: #f8fafc;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end
+        }
+
+        #geo-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1
+        }
+
+        .r-spotlight {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none
+        }
+
+        .r-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(255,255,255,.4) 80%), linear-gradient(180deg,transparent 45%,rgba(255,255,255,.95))
+        }
+
+        .r-text {
+            position: relative;
+            z-index: 5;
+            padding: 52px 56px;
+            max-width: 520px;
+            margin-bottom: 40px;
+        }
+
+            .r-text p {
+                color: #64748b;
+            }
+
+        .r-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(0,0,0,.04);
+            border: 1px solid rgba(0,0,0,.08);
+            border-radius: 100px;
+            padding: 6px 14px 6px 8px;
+            font-size: .72rem;
+            color: #475569;
+            backdrop-filter: blur(8px);
+            margin-bottom: 20px
+        }
+
+        .r-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--c);
+            box-shadow: 0 0 8px var(--c);
+            animation: sPulse 2s infinite
+        }
+
+        .r-text h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem,3vw,2.9rem);
+            font-weight: 800;
+            color: #0f0f0f;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 14px
+        }
+
+            .r-text h2 em {
+                font-style: normal;
+                color: var(--c);
+                transition: color var(--speed)
+            }
+
+        @@keyframes sPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34,197,94,.45)
+            }
+
+            55% {
+                box-shadow: 0 0 0 5px rgba(34,197,94,0)
+            }
+        }
+
+        @@keyframes rip {
+            to {
+                transform: scale(2.5);
+                opacity: 0
+            }
+        }
+
+        /* Animación de shake cuando el código es incorrecto */
+        @@keyframes shake {
+            0%, 100% {
+                transform: translateX(0)
+            }
+
+            20% {
+                transform: translateX(-6px)
+            }
+
+            40% {
+                transform: translateX(6px)
+            }
+
+            60% {
+                transform: translateX(-4px)
+            }
+
+            80% {
+                transform: translateX(4px)
+            }
+        }
+
+        .shake {
+            animation: shake .4s ease
+        }
+    </style>
+</head>
+<body>
+
+    <div class="shell">
+
+        <!-- ===== PANEL IZQUIERDO ===== -->
+        <div class="l-panel" id="lPanel">
+            <div class="card-tilt" id="tiltWrap">
+                <div class="card">
+
+                    <div class="brand-row">
+                        <div class="brand-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div class="brand-text">
+                            <h1>SenaPay</h1>
+                            <span>Verificación de código</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title">
+                        <i class="bi bi-envelope-fill" style="font-size:12px;color:var(--c)"></i>
+                        Código de verificación
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div style="font-size:.76rem;color:#ef4444;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:10px;padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;gap:6px;font-weight:500;">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            @Html.ValidationSummary(true)
+                        </div>
+                    }
+
+                    <form asp-action="VerificarCodigo" method="post" id="verForm" onsubmit="return validateForm(event)">
+                        @Html.AntiForgeryToken()
+
+                        <p class="info-hint" style="margin-bottom:18px;">
+                            <i class="bi bi-info-circle"></i>
+                            Ingresa el código de 6 dígitos que enviamos a tu correo o número registrado.
+                        </p>
+
+                        <!-- Cajas visuales -->
+                        <div class="digits-row" id="digitsRow">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="0" autocomplete="one-time-code">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="1">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="2">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="3">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="4">
+                            <input class="digit-box" type="text" inputmode="numeric" maxlength="1" data-index="5">
+                        </div>
+
+                        <!-- Campo oculto real que se envía al servidor -->
+                        <input type="hidden" name="Codigo" id="codigoHidden"  />
+
+                        <div id="err-code" class="alert-ui">
+                            <i class="bi bi-exclamation-circle"></i> Completa los 6 dígitos del código
+                        </div>
+                        <span  style="font-size:.72rem;color:#ef4444;margin-top:4px;display:flex;justify-content:center;"></span>
+
+                        <!-- Reenviar código -->
+                        <div class="resend-row" style="margin-top:14px;">
+                            <i class="bi bi-clock" style="font-size:.72rem;color:#94a3b8"></i>
+                            <span class="countdown" id="countdown">02:00</span>
+                            <button type="button" class="resend-link" id="resendBtn" onclick="resendCode()">
+                                Reenviar código
+                            </button>
+                        </div>
+
+                        <button asp-area="Account" asp-controller="Account" asp-action="VerificarCodigo" type="submit" class="btn-submit" id="submitBtn" onclick="btnRipple(event)">
+                            <span id="btnText">Verificar código</span>
+                            <div class="btn-arrow"><i class="bi bi-check2-circle"></i></div>
+                        </button>
+
+                    </form>
+
+                    <div class="card-footer">
+                        <div style="text-align:center;">
+                            <a asp-area="Account" asp-controller="Account" asp-action="ForgotPassword" class="back-link">
+                                <i class="bi bi-arrow-left"></i> Volver al paso anterior
+                            </a>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="font-size:.72rem;color:#cbd5e1">By <strong>CTA S.S.C</strong></div>
+                            <div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#94a3b8">
+                                <div style="width:6px;height:6px;border-radius:50%;background:#22c55e"></div>
+                                SSL Seguro
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL DERECHO ===== -->
+        <div class="r-panel" id="rPanel">
+            <svg id="geo-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="r-spotlight"></div>
+            <div class="r-overlay"></div>
+            <div class="r-text">
+                <div class="r-pill">
+                    <div class="r-pill-dot"></div> SENA · Colombia
+                </div>
+                <h2>Confirma tu<br><em>identidad digital</em></h2>
+                <p>Revisaste tu correo o mensaje de texto. Ingresa el código de 6 dígitos para continuar con la recuperación.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        const inputs = document.querySelectorAll('.digit-box');
+        const hiddenInput = document.getElementById('codigoHidden');
+
+        inputs.forEach((input, index) => {
+            // Pasar al siguiente cuadrito automáticamente
+            input.addEventListener('input', () => {
+                if (input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                actualizarCodigoOculto();
+            });
+
+            // Permitir borrar con Backspace y regresar al cuadrito anterior
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        function actualizarCodigoOculto() {
+            let codigoCompleto = "";
+            inputs.forEach(input => codigoCompleto += input.value);
+            hiddenInput.value = codigoCompleto;
+        }
+
+
+
+        /* ── Lógica de cajas de dígitos ── */
+        var boxes = Array.from(document.querySelectorAll('.digit-box'));
+        var hidden = document.getElementById('codigoHidden');
+
+        boxes.forEach(function (box, i) {
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !box.value && i > 0) {
+                    boxes[i - 1].focus();
+                    boxes[i - 1].value = '';
+                    boxes[i - 1].classList.remove('filled');
+                    syncHidden();
+                }
+            });
+
+            box.addEventListener('input', function () {
+                // Sólo números
+                box.value = box.value.replace(/\D/g, '').slice(-1);
+                if (box.value) {
+                    box.classList.add('filled');
+                    if (i < 5) boxes[i + 1].focus();
+                } else {
+                    box.classList.remove('filled');
+                }
+                syncHidden();
+            });
+
+            // Pegar código completo desde el portapapeles (OTP autocompletar)
+            box.addEventListener('paste', function (e) {
+                var data = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                if (data.length === 6) {
+                    e.preventDefault();
+                    boxes.forEach(function (b, idx) {
+                        b.value = data[idx] || '';
+                        b.classList.toggle('filled', !!b.value);
+                    });
+                    boxes[5].focus();
+                    syncHidden();
+                }
+            });
+        });
+
+        function syncHidden() {
+            hidden.value = boxes.map(function (b) { return b.value; }).join('');
+        }
+
+        /* ── Validación del formulario ── */
+        function validateForm(e) {
+            syncHidden();
+            var code = hidden.value;
+            if (code.length < 6) {
+                document.getElementById('err-code').style.display = 'flex';
+                document.getElementById('digitsRow').classList.add('shake');
+                setTimeout(function () {
+                    document.getElementById('digitsRow').classList.remove('shake');
+                }, 400);
+                return false;
+            }
+            document.getElementById('err-code').style.display = 'none';
+
+            if (!window.navigator.onLine) {
+                alert('No tienes conexión a internet.');
+                return false;
+            }
+            var btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            document.getElementById('btnText').innerText = 'Verificando...';
+            return true;
+        }
+
+        /* ── Contador de reenvío (2 minutos) ── */
+        var totalSeconds = 120;
+        var remaining   = totalSeconds;
+        var timer;
+
+        function startCountdown() {
+            remaining = totalSeconds;
+            var resendBtn = document.getElementById('resendBtn');
+            resendBtn.classList.remove('active');
+            resendBtn.disabled = true;
+
+            clearInterval(timer);
+            timer = setInterval(function () {
+                remaining--;
+                var m = Math.floor(remaining / 60);
+                var s = remaining % 60;
+                document.getElementById('countdown').textContent =
+                    (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('countdown').textContent = '00:00';
+                    resendBtn.classList.add('active');
+                    resendBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function resendCode() {
+            var resendBtn = document.getElementById('resendBtn');
+            if (!resendBtn.classList.contains('active')) return;
+
+            // Limpiar cajas
+            boxes.forEach(function (b) { b.value = ''; b.classList.remove('filled'); });
+            hidden.value = '';
+            boxes[0].focus();
+
+            // Aquí puedes hacer fetch/ajax para reenviar el código al servidor
+            // fetch('/Account/ReenviarCodigo', { method: 'POST', ... })
+
+            startCountdown();
+        }
+
+        startCountdown();
+        boxes[0].focus();
+
+        /* ── Tilt card ── */
+        var tiltWrap = document.getElementById('tiltWrap');
+        var tx = 0, ty = 0, ttx = 0, tty = 0;
+
+        document.getElementById('lPanel').addEventListener('mousemove', function (e) {
+            var r = tiltWrap.getBoundingClientRect();
+            ttx = (e.clientY - r.top  - r.height / 2) / r.height * -9;
+            tty = (e.clientX - r.left - r.width  / 2) / r.width  *  9;
+        });
+
+        document.getElementById('lPanel').addEventListener('mouseleave', function () {
+            ttx = 0; tty = 0;
+        });
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        (function loop() {
+            tx = lerp(tx, ttx, .08);
+            ty = lerp(ty, tty, .08);
+            tiltWrap.style.transform =
+                'perspective(900px) rotateX(' + tx.toFixed(2) + 'deg) rotateY(' + ty.toFixed(2) + 'deg)';
+            requestAnimationFrame(loop);
+        })();
+
+        /* ── Ripple en botón ── */
+        function btnRipple(e) {
+            var r  = e.currentTarget.getBoundingClientRect();
+            var sp = document.createElement('span');
+            sp.style.cssText =
+                'position:absolute;background:rgba(255,255,255,.3);border-radius:50%;'
+                + 'width:100px;height:100px;'
+                + 'left:' + (e.clientX - r.left - 50) + 'px;'
+                + 'top:'  + (e.clientY - r.top  - 50) + 'px;'
+                + 'transform:scale(0);animation:rip .6s ease-out';
+            e.currentTarget.appendChild(sp);
+            setTimeout(function () { sp.remove(); }, 600);
+        }
+    </script>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
+
+</body>
+</html>

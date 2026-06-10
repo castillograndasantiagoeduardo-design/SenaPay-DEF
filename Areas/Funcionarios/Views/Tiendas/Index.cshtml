@@ -1,0 +1,602 @@
+﻿@model IEnumerable<SenaPay.Application.UseCases.Funcionarios.DTOs.TiendaDto>
+@{
+    ViewData["Title"] = "Gestión de Tiendas";
+    ViewData["Breadcrumb"] = "Gestión de Tiendas";
+    var sedes = ViewBag.Sedes as List<SenaPay.Application.UseCases.Funcionarios.DTOs.SedeDto> ?? new();
+}
+
+@* ── ESTADÍSTICAS ── *@
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(232,108,0,.1); color:#E86C00;">
+            <i class="bi bi-shop"></i>
+        </div>
+        <div class="stat-value" id="stat-tienda">@Model.Count()</div>
+        <div class="stat-label">Tiendas</div>
+        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Habilitadas</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(234,179,8,.1); color:#ca8a04;">
+            <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stat-value" id="stat-saldo">—</div>
+        <div class="stat-label">Saldo en circulación</div>
+        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> COP</div>
+    </div>
+</div>
+
+@* ── SECCIÓN PRINCIPAL ── *@
+<div class="section-header" style="justify-content:space-between; align-items:center;">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div class="section-icon"><i class="bi bi-shop-fill"></i></div>
+        <div>
+            <div class="section-title">Gestión de Tiendas</div>
+            <div class="section-sub">Crea y administra las tiendas del ecosistema SenaPay</div>
+        </div>
+    </div>
+    <button class="btn-primary" onclick="abrirModalCrear()">
+        <div class="btn-icon-box"><i class="bi bi-plus-circle-fill"></i></div>
+        <span>Nueva Tienda</span>
+    </button>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="sp-table">
+            <thead>
+                <tr>
+                    <th>Tienda</th>
+                    <th>Sede</th>
+                    <th>Ubicación</th>
+                    <th>Administrador</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyTiendas">
+                @if (!Model.Any())
+                {
+                    <tr id="emptyRow">
+                        <td colspan="4" style="text-align:center; padding:40px; color:var(--text-muted);">
+                            <i class="bi bi-shop" style="font-size:1.6rem; display:block; margin-bottom:10px; opacity:.4;"></i>
+                            Aún no hay tiendas registradas
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td style="font-weight:600;">
+                                <span class="badge-tienda">
+                                    <i class="bi bi-shop"></i> @t.NombreTienda
+                                </span>
+                            </td>
+                            <td>@t.NombreSede</td>
+                            <td style="color:var(--text-muted);">@t.Ubicacion</td>
+                            <td>@t.NombreAdmin</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* ── MODAL NUEVA TIENDA ── *@
+<div id="modalTienda" class="modal-backdrop" onclick="cerrarSiBackdrop(event)">
+    <div class="modal-box" role="dialog" aria-modal="true">
+
+        <div class="modal-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="modal-icon"><i class="bi bi-shop-window"></i></div>
+                <div>
+                    <div class="modal-title">Nueva Tienda</div>
+                    <div class="modal-sub">Completa los datos de la tienda y su administrador</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            @Html.AntiForgeryToken()
+            <div class="form-grid">
+
+                <div class="section-group-label">
+                    <i class="bi bi-shop"></i> Datos de la Tienda
+                </div>
+
+                <div class="field-group full">
+                    <label class="field-label">Nombre de la Tienda</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-shop field-icon"></i>
+                        <input type="text" class="form-control" id="t-nombre"
+                               placeholder="Ej. Cafetería Central" autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Sede SENA</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-building field-icon"></i>
+                        <select class="form-select" id="t-sede">
+                            <option value="">— Selecciona una sede —</option>
+                            @foreach (var sede in sedes)
+                            {
+                                <option value="@sede.IdSede">@sede.Nombre — @sede.Ciudad</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Ubicación</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-geo-alt field-icon"></i>
+                        <input type="text" class="form-control" id="t-ubicacion"
+                               placeholder="Ej. Bloque A, Piso 1" autocomplete="off" />
+                    </div>
+                </div>
+
+                <hr class="form-divider" />
+
+                <div class="section-group-label">
+                    <i class="bi bi-person-badge"></i> Administrador de la Tienda
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Nombre completo</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-person field-icon"></i>
+                        <input type="text" class="form-control" id="a-nombre"
+                               placeholder="Nombre del administrador" autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Documento</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-hash field-icon"></i>
+                        <input type="text" class="form-control" id="a-documento"
+                               placeholder="0000000000" maxlength="12"
+                               onkeypress="return soloNumeros(event)" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Correo electrónico</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-envelope field-icon"></i>
+                        <input type="email" class="form-control" id="a-correo"
+                               placeholder="admin@sena.edu.co" autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Teléfono</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-telephone field-icon"></i>
+                        <input type="text" class="form-control" id="a-telefono"
+                               placeholder="300 000 0000" maxlength="10"
+                               onkeypress="return soloNumeros(event)" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn-modal-save" id="btnGuardar" onclick="submitCrearTienda()">
+                <div class="spinner" id="spinner"></div>
+                <span id="textoBtn">Crear Tienda</span>
+                <div class="btn-icon-box"><i class="bi bi-shop-window"></i></div>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .badge-tienda {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: .65rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            background: rgba(109,40,217,.1);
+            color: #6D28D9;
+        }
+
+        .section-group-label {
+            grid-column: 1 / -1;
+            font-family: 'Outfit', sans-serif;
+            font-size: .7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Modal dark overrides */
+        .modal-box {
+            background: #13131f;
+            border: 1px solid rgba(255,255,255,.07);
+        }
+
+            .modal-box .form-control,
+            .modal-box .form-select {
+                background: #1c1c2e !important;
+                border-color: rgba(255,255,255,.1) !important;
+                color: #e2e8f0 !important;
+            }
+
+                .modal-box .form-control:focus,
+                .modal-box .form-select:focus {
+                    border-color: #6D28D9 !important;
+                    box-shadow: 0 0 0 3px rgba(109,40,217,.2) !important;
+                    background: #1e1e32 !important;
+                }
+
+                .modal-box .form-control::placeholder {
+                    color: #4a5578;
+                }
+
+            .modal-box .field-label {
+                color: #4a5578;
+            }
+
+            .modal-box .field-icon {
+                color: #4a5578;
+            }
+
+            .modal-box .form-divider {
+                border-color: rgba(255,255,255,.06);
+            }
+
+            .modal-box .section-group-label {
+                color: #6b7a99;
+                border-color: rgba(255,255,255,.06);
+            }
+
+        .modal-header, .modal-footer {
+            border-color: rgba(255,255,255,.06);
+        }
+
+        .modal-title {
+            color: #f0f0ff;
+        }
+
+        .modal-sub {
+            color: #6b7a99;
+        }
+        /* ─── MODAL BASE ─────────────────────────────────────────── */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.65);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+
+            .modal-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 32px 80px rgba(0,0,0,.5);
+            transform: translateY(16px) scale(.98);
+            transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .25s;
+            opacity: 0;
+        }
+
+        .modal-backdrop.open .modal-box {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: rgba(109,40,217,.12);
+            display: grid;
+            place-items: center;
+            color: var(--c);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+            .modal-icon.edit-mode {
+                background: rgba(245,158,11,.12);
+                color: #d97706;
+            }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-sub {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            transition: background .2s, color .2s;
+            flex-shrink: 0;
+        }
+
+            .modal-close:hover {
+                background: rgba(239,68,68,.12);
+                color: #ef4444;
+                border-color: rgba(239,68,68,.2);
+            }
+
+        .modal-body {
+            padding: 22px 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px 22px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-modal-cancel {
+            padding: 11px 20px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+            .btn-modal-cancel:hover {
+                background: rgba(100,116,139,.08);
+                color: var(--text-main);
+            }
+
+        .btn-modal-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 22px;
+            border: none;
+            border-radius: 11px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background .2s, transform .15s, box-shadow .2s;
+            box-shadow: 0 6px 20px var(--cg);
+        }
+
+            .btn-modal-save:hover:not(:disabled) {
+                background: var(--cd);
+                transform: translateY(-1px);
+                box-shadow: 0 10px 28px var(--cg);
+            }
+
+            .btn-modal-save:disabled {
+                opacity: .55;
+                cursor: not-allowed;
+            }
+
+            .btn-modal-save.edit-mode {
+                background: #d97706;
+                box-shadow: 0 6px 20px rgba(245,158,11,.25);
+            }
+
+                .btn-modal-save.edit-mode:hover:not(:disabled) {
+                    background: #b45309;
+                }
+
+        /* SweetAlert2 dark */
+        .swal-popup-dark {
+            border: 1px solid var(--border) !important;
+            border-radius: 18px !important;
+        }
+
+        .swal-btn-confirm {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+            .swal-btn-confirm:hover {
+                background: var(--cd);
+            }
+
+        .swal-btn-cancel {
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function soloNumeros(e) { const c = e.which || e.keyCode; return (c >= 48 && c <= 57); }
+
+        function getToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        }
+
+        function abrirModalCrear() {
+            limpiarModal();
+            document.getElementById('modalTienda').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function cerrarModal() {
+            document.getElementById('modalTienda').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function cerrarSiBackdrop(e) {
+            if (e.target === document.getElementById('modalTienda')) cerrarModal();
+        }
+        function limpiarModal() {
+            ['t-nombre','t-ubicacion','a-nombre','a-correo','a-telefono','a-documento']
+                .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('t-sede').value = '';
+        }
+
+        async function submitCrearTienda() {
+            const payload = {
+                nombreTienda  : document.getElementById('t-nombre').value.trim(),
+                ubicacion     : document.getElementById('t-ubicacion').value.trim(),
+                idSede        : parseInt(document.getElementById('t-sede').value),
+                nombreAdmin   : document.getElementById('a-nombre').value.trim(),
+                correoAdmin   : document.getElementById('a-correo').value.trim(),
+                telefonoAdmin : document.getElementById('a-telefono').value.trim(),
+                documentoAdmin: parseInt(document.getElementById('a-documento').value)
+            };
+
+            if (!payload.nombreTienda || !payload.idSede || !payload.nombreAdmin ||
+                !payload.correoAdmin  || !payload.documentoAdmin) {
+                showToast('error', 'Campos incompletos', 'Completa todos los campos requeridos.');
+                return;
+            }
+
+            const btn     = document.getElementById('btnGuardar');
+            const spinner = document.getElementById('spinner');
+            const texto   = document.getElementById('textoBtn');
+            btn.disabled          = true;
+            spinner.style.display = 'block';
+            texto.textContent     = 'Guardando...';
+
+            try {
+                const res  = await fetch('/Funcionarios/Tiendas/Crear', {
+                    method : 'POST',
+                    headers: {
+                        'Content-Type'            : 'application/json',
+                        'RequestVerificationToken': getToken()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    cerrarModal();
+                    showToast('success', '¡Tienda creada!', data.msg);
+                    await cargarTiendas();
+                } else {
+                    showToast('error', 'Error', data.msg);
+                }
+            } catch {
+                showToast('error', 'Error', 'Problema de conexión.');
+            } finally {
+                btn.disabled          = false;
+                spinner.style.display = 'none';
+                texto.textContent     = 'Crear Tienda';
+            }
+        }
+
+        async function cargarTiendas() {
+            try {
+                const res     = await fetch('/Funcionarios/Tiendas/ObtenerTiendas');
+                const tiendas = await res.json();
+                const tbody   = document.getElementById('tbodyTiendas');
+
+                tbody.innerHTML = tiendas.length === 0
+                    ? `<tr id="emptyRow">
+                         <td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">
+                           <i class="bi bi-shop" style="font-size:1.6rem;display:block;margin-bottom:10px;opacity:.4;"></i>
+                           Aún no hay tiendas registradas
+                         </td>
+                       </tr>`
+                    : tiendas.map(t => `
+                        <tr>
+                          <td style="font-weight:600;">
+                            <span class="badge-tienda">
+                              <i class="bi bi-shop"></i> ${escHtml(t.nombreTienda)}
+                            </span>
+                          </td>
+                          <td>${escHtml(t.nombreSede)}</td>
+                          <td style="color:var(--text-muted);">${escHtml(t.ubicacion)}</td>
+                          <td>${escHtml(t.nombreAdmin)}</td>
+                        </tr>`).join('');
+            } catch(err) {
+                console.warn('No se cargaron tiendas:', err);
+            }
+        }
+
+        function escHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+    </script>
+}

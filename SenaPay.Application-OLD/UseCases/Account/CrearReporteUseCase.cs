@@ -2,7 +2,7 @@
 using SenaPay.Domain.Interfaces.Usuarios;
 
 namespace SenaPay.Application.UseCases.Account;
-
+//jjdjjdjdjdjdjdjdjdjdjjdjdj
 public sealed class CrearReporteUseCase
 {
     private readonly IReporteRepository _reporteRepo;

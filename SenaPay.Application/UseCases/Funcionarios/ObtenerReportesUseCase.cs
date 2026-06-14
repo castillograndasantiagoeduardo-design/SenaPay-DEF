@@ -1,4 +1,4 @@
-﻿using SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿using SenaPay.Application.DTOs.Reportes;
 using SenaPay.Domain.Interfaces.Usuarios;
 
 namespace SenaPay.Application.UseCases.Funcionarios;

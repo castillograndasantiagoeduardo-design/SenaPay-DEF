@@ -1,8 +1,8 @@
-﻿@model IEnumerable<SenaPay.Application.UseCases.Funcionarios.DTOs.TiendaDto>
+﻿@model IEnumerable<SenaPay.Application.DTOs.Tienda.TiendaDto>
 @{
     ViewData["Title"] = "Gestión de Tiendas";
     ViewData["Breadcrumb"] = "Gestión de Tiendas";
-    var sedes = ViewBag.Sedes as List<SenaPay.Application.UseCases.Funcionarios.DTOs.SedeDto> ?? new();
+    var sedes = ViewBag.Sedes as List<SenaPay.Application.DTOs.Tienda.SedeDto> ?? new();
 }
 
 @* ── ESTADÍSTICAS ── *@

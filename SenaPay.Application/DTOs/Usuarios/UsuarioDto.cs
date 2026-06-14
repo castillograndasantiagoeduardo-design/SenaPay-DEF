@@ -1,6 +1,6 @@
 ﻿//Modelo de datos que se usaran en la logica Application 
 
-namespace SenaPay.Application.UseCases.Funcionarios.DTOs;
+namespace SenaPay.Application.DTOs.Usuarios;
 
 /// <summary>
 /// DTO de respuesta para el listado y detalle de usuarios.

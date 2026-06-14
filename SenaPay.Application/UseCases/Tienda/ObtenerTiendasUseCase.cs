@@ -1,8 +1,8 @@
-﻿using SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿using SenaPay.Application.DTOs.Tienda;
 using SenaPay.Domain.Interfaces.Core;
 using SenaPay.Domain.Interfaces.Tienda;
 
-namespace SenaPay.Application.UseCases.Funcionarios;
+namespace SenaPay.Application.UseCases.Tienda;
 
 public class ObtenerTiendasUseCase
 {

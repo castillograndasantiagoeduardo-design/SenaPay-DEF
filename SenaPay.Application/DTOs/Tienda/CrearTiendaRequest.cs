@@ -1,4 +1,4 @@
-﻿namespace SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿namespace SenaPay.Application.DTOs.Tienda;
 
 /// <summary>
 /// Datos que llegan desde el formulario del Funcionario

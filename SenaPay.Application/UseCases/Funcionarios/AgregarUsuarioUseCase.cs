@@ -1,4 +1,4 @@
-﻿using SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿using SenaPay.Application.DTOs.Usuarios;
 using SenaPay.Domain.Entities;
 using SenaPay.Domain.Interfaces.Usuarios;
 

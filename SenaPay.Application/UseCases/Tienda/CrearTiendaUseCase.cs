@@ -1,11 +1,11 @@
-﻿using SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿using SenaPay.Application.DTOs.Tienda;
 using SenaPay.Domain.Entities;
 using SenaPay.Domain.Interfaces;
 using SenaPay.Domain.Interfaces.Core;
 using SenaPay.Domain.Interfaces.Tienda;
 using SenaPay.Domain.Interfaces.Usuarios;
 
-namespace SenaPay.Application.UseCases.Funcionarios;
+namespace SenaPay.Application.UseCases.Tienda;
 
 /// <summary>
 /// Crea una Tienda nueva junto con su usuario AdminTienda (Rol 3)

@@ -1,4 +1,4 @@
-﻿namespace SenaPay.Application.UseCases.Funcionarios.DTOs;
+﻿namespace SenaPay.Application.DTOs.Reportes;
 
 public sealed record ReporteItemDto(
     int IdReporte,

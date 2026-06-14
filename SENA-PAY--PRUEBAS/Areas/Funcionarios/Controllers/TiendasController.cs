@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.UseCases.Funcionarios;
-using SenaPay.Application.UseCases.Funcionarios.DTOs;
+using SenaPay.Application.DTOs.Usuarios;
+using SenaPay.Application.UseCases.Tienda;
+using SenaPay.Application.DTOs.Tienda;
 
 namespace SENA_PAY__PRUEBAS.Areas.Funcionarios.Controllers;
 

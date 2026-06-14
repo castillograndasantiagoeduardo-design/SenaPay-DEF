@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SENA-PAY--PRUEBAS", "SENA-PAY--PRUEBAS.csproj", "{EBF6DA46-AB8E-41F1-8A0D-B343E41D76A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SENA-PAY--PRUEBAS", "SENA-PAY--PRUEBAS\SENA-PAY--PRUEBAS.csproj", "{EBF6DA46-AB8E-41F1-8A0D-B343E41D76A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Domain", "..\SenaPay.Domain\SenaPay.Domain.csproj", "{51D48E60-1F75-43E9-B90E-4603F7BA11FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Domain", "SenaPay.Domain\SenaPay.Domain.csproj", "{51D48E60-1F75-43E9-B90E-4603F7BA11FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Application", "..\SenaPay.Application\SenaPay.Application.csproj", "{BB7CAEB5-3423-4FDB-80D7-6F9ADB87C35D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Application", "SenaPay.Application\SenaPay.Application.csproj", "{BB7CAEB5-3423-4FDB-80D7-6F9ADB87C35D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Infrastructure", "..\SenaPay.Infrastructure\SenaPay.Infrastructure.csproj", "{FE81BDE6-55D2-4D1C-B2DD-4CE1ABA900F8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SenaPay.Infrastructure", "SenaPay.Infrastructure\SenaPay.Infrastructure.csproj", "{FE81BDE6-55D2-4D1C-B2DD-4CE1ABA900F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

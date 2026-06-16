@@ -1,4 +1,4 @@
-﻿using SenaPay.Domain.Entities;
+using SenaPay.Domain.Entities;
 
 namespace SenaPay.Domain.Interfaces.Usuarios;
 
@@ -19,6 +19,12 @@ public interface IAprendizRepository
     /// </summary>
     Task<Aprendix?> ObtenerPerfilCompletoAsync(int documento, int cantidadTransacciones = 10);
 
-    Task<bool> DescontarSaldoAsync(int idAprendiz, decimal monto);
+    Task<bool>    DescontarSaldoAsync(int idAprendiz, decimal monto);
     Task<decimal> ConsultarSaldoAsync(int idAprendiz);
+
+    /// <summary>
+    /// Actualiza el correo y teléfono del aprendiz identificado por su documento.
+    /// Retorna false si no existe.
+    /// </summary>
+    Task<bool> ActualizarPerfilAsync(int documento, string correo, string? telefono);
 }

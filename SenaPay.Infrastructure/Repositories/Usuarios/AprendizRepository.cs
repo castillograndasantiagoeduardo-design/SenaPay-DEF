@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SenaPay.Domain.Entities;
 using SenaPay.Domain.Interfaces.Usuarios;
 using SenaPay.Infrastructure.Data;
@@ -66,5 +66,22 @@ public class AprendizRepository : IAprendizRepository
     {
         var aprendiz = await _context.Aprendices.FindAsync(idAprendiz);
         return aprendiz?.Saldo ?? 0m;
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ActualizarPerfilAsync(int documento, string correo, string? telefono)
+    {
+        // Busca el aprendiz por documento del usuario dueño del perfil
+        var aprendiz = await _context.Aprendices
+            .Include(a => a.IdUsuarioNavigation)
+            .FirstOrDefaultAsync(a => a.IdUsuarioNavigation.Documento == documento);
+
+        if (aprendiz is null) return false;
+
+        aprendiz.Correo   = correo;
+        aprendiz.Telefono = telefono;
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

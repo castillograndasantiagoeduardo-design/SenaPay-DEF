@@ -1,0 +1,238 @@
+﻿@model List<SenaPay.Application.DTOs.Tienda.TiendaSeleccionDto>
+@{
+    ViewData["Title"] = "Seleccionar Tienda";
+    Layout = null; // página limpia, sin sidebar
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay — Selecciona tu tienda</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: #0d0d1a;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Outfit', 'Segoe UI', sans-serif;
+            padding: 24px;
+        }
+        .container {
+            width: 100%; max-width: 520px;
+        }
+        .logo {
+            text-align: center; margin-bottom: 32px;
+        }
+        .logo-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(109,40,217,.12);
+            border: 1px solid rgba(109,40,217,.2);
+            border-radius: 14px; padding: 10px 20px;
+        }
+        .logo-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: #6D28D9; display: grid; place-items: center;
+            color: #fff; font-size: 18px;
+        }
+        .logo-text { font-size: 1.1rem; font-weight: 800; color: #f0f0ff; }
+        .logo-sub  { font-size: .72rem; color: #6b7a99; }
+
+        .card {
+            background: #13131f;
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 20px;
+            padding: 32px;
+        }
+        .card-title {
+            font-size: 1rem; font-weight: 700; color: #f0f0ff;
+            margin-bottom: 6px;
+        }
+        .card-sub {
+            font-size: .78rem; color: #6b7a99;
+            margin-bottom: 24px;
+        }
+
+        .tienda-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px; border-radius: 14px;
+            border: 1px solid rgba(255,255,255,.07);
+            background: #1a1a2e;
+            cursor: pointer;
+            transition: border-color .2s, background .2s, transform .15s;
+            margin-bottom: 10px;
+        }
+        .tienda-card:hover {
+            border-color: rgba(109,40,217,.4);
+            background: rgba(109,40,217,.08);
+            transform: translateY(-1px);
+        }
+        .tienda-card.selected {
+            border-color: #6D28D9;
+            background: rgba(109,40,217,.12);
+        }
+        .tienda-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: rgba(109,40,217,.15);
+            display: grid; place-items: center;
+            color: #6D28D9; font-size: 20px; flex-shrink: 0;
+        }
+        .tienda-nombre {
+            font-weight: 700; font-size: .88rem; color: #f0f0ff;
+        }
+        .tienda-detalle {
+            font-size: .73rem; color: #6b7a99; margin-top: 2px;
+        }
+        .tienda-check {
+            margin-left: auto; color: #6D28D9;
+            font-size: 20px; display: none;
+        }
+        .tienda-card.selected .tienda-check { display: block; }
+
+        .btn-entrar {
+            width: 100%; margin-top: 20px;
+            padding: 13px; border: none; border-radius: 12px;
+            background: #6D28D9; color: #fff;
+            font-family: inherit; font-size: .88rem;
+            font-weight: 700; letter-spacing: .5px;
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 6px 20px rgba(109,40,217,.3);
+            transition: background .2s, transform .15s;
+        }
+        .btn-entrar:hover:not(:disabled) {
+            background: #5b21b6; transform: translateY(-1px);
+        }
+        .btn-entrar:disabled { opacity: .5; cursor: not-allowed; }
+
+        .spinner {
+            display: none; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        @@keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg {
+            margin-top: 12px; padding: 10px 14px;
+            background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.2);
+            border-radius: 10px; color: #f87171;
+            font-size: .78rem; display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="logo">
+            <div class="logo-badge">
+                <div class="logo-icon"><i class="bi bi-shop"></i></div>
+                <div>
+                    <div class="logo-text">SenaPay</div>
+                    <div class="logo-sub">SENA · Ecosistema Digital</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">¿A cuál tienda deseas entrar?</div>
+            <div class="card-sub">
+                Tienes @Model.Count tiendas asignadas. Selecciona una para continuar.
+            </div>
+
+            <div id="listaTiendas">
+                @foreach (var t in Model)
+                {
+                    <div class="tienda-card"
+                         onclick="seleccionar(this, @t.IdTienda, '@t.Nombre')"
+                         data-id="@t.IdTienda"
+                         data-nombre="@t.Nombre">
+                        <div class="tienda-icon"><i class="bi bi-shop-window"></i></div>
+                        <div>
+                            <div class="tienda-nombre">@t.Nombre</div>
+                            <div class="tienda-detalle">
+                                <i class="bi bi-building"></i> @t.NombreSede
+                                &nbsp;·&nbsp;
+                                <i class="bi bi-geo-alt"></i> @t.Ubicacion
+                            </div>
+                        </div>
+                        <i class="bi bi-check-circle-fill tienda-check"></i>
+                    </div>
+                }
+            </div>
+
+            <button class="btn-entrar" id="btnEntrar" disabled onclick="confirmar()">
+                <div class="spinner" id="spinner"></div>
+                <i class="bi bi-box-arrow-in-right" id="iconoBtn"></i>
+                <span id="textoBtn">Selecciona una tienda</span>
+            </button>
+
+            <div class="error-msg" id="errorMsg"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let idSeleccionado   = null;
+        let nombreSeleccionado = null;
+
+        function seleccionar(el, idTienda, nombre) {
+            document.querySelectorAll('.tienda-card')
+                .forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+
+            idSeleccionado     = idTienda;
+            nombreSeleccionado = nombre;
+
+            const btn = document.getElementById('btnEntrar');
+            btn.disabled = false;
+            document.getElementById('textoBtn').textContent = `Entrar a ${nombre}`;
+        }
+
+        async function confirmar() {
+            if (!idSeleccionado) return;
+
+            const btn     = document.getElementById('btnEntrar');
+            const spinner = document.getElementById('spinner');
+            const icono   = document.getElementById('iconoBtn');
+            const texto   = document.getElementById('textoBtn');
+
+            btn.disabled      = true;
+            spinner.style.display = 'block';
+            icono.style.display   = 'none';
+            texto.textContent     = 'Entrando...';
+
+            try {
+                const res  = await fetch('/AdminCafeteria/ConfirmarTienda', {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({
+                        idTienda    : idSeleccionado,
+                        nombreTienda: nombreSeleccionado
+                    })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    mostrarError(data.msg);
+                }
+            } catch {
+                mostrarError('Error de conexión. Intenta de nuevo.');
+            } finally {
+                btn.disabled          = false;
+                spinner.style.display = 'none';
+                icono.style.display   = '';
+            }
+        }
+
+        function mostrarError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent    = msg;
+            el.style.display  = 'block';
+        }
+    </script>
+</body>
+</html>

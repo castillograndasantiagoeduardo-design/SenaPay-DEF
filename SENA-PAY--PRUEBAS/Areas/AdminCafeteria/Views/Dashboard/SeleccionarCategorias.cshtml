@@ -1,0 +1,501 @@
+﻿@model IEnumerable<SenaPay.Application.DTOs.Categoria.CategoriaSeleccionDto>
+@{
+    ViewData["Title"] = "Seleccionar Categorías";
+    ViewData["Breadcrumb"] = "Configuración inicial";
+    Layout = "~/Areas/AdminCafeteria/Views/Shared/_Layout.cshtml";
+    var categorias = Model.ToList();
+}
+
+@section Styles {
+    <style>
+        /* ── Wizard wrapper ── */
+        .wizard-wrap {
+            max-width: 780px;
+            margin: 0 auto;
+            animation: slideUp .6s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        /* ── Progress header ── */
+        .wizard-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .wizard-step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 99px;
+            background: rgba(232,108,0,.1);
+            border: 1px solid rgba(232,108,0,.2);
+            color: var(--c);
+            font-size: .68rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: .8px;
+            margin-bottom: 14px;
+        }
+
+        .wizard-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -.4px;
+            margin-bottom: 8px;
+        }
+
+        .wizard-sub {
+            font-size: .85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+            .wizard-sub strong {
+                color: var(--c);
+            }
+
+        /* ── Progress bar ── */
+        .progress-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: .7rem;
+            font-weight: 700;
+        }
+
+            .step-dot.done {
+                background: var(--c);
+                color: #fff;
+            }
+
+            .step-dot.current {
+                background: rgba(232,108,0,.15);
+                border: 2px solid var(--c);
+                color: var(--c);
+            }
+
+            .step-dot.pending {
+                background: var(--border);
+                color: var(--text-muted);
+            }
+
+        .step-label.active {
+            color: var(--c);
+        }
+
+        .step-label.muted {
+            color: var(--text-muted);
+        }
+
+        .progress-line {
+            width: 40px;
+            height: 2px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+            .progress-line.done {
+                background: var(--c);
+            }
+
+        /* ── Card form ── */
+        .wizard-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.05);
+        }
+
+        .cat-section-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .cat-section-label::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+
+        /* ── Category grid ── */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        /* Toggle card */
+        .cat-toggle {
+            position: relative;
+        }
+
+            .cat-toggle input[type="checkbox"] {
+                position: absolute;
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .cat-toggle-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 14px;
+            border-radius: 14px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            transition: all .2s;
+            text-align: center;
+            user-select: none;
+        }
+
+            .cat-toggle-label:hover {
+                border-color: rgba(232,108,0,.4);
+                background: rgba(232,108,0,.04);
+            }
+
+        .cat-toggle input:checked + .cat-toggle-label {
+            border-color: var(--c);
+            background: rgba(232,108,0,.08);
+            box-shadow: 0 0 0 3px rgba(232,108,0,.12);
+        }
+
+        .cat-icon-wrap {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            background: rgba(232,108,0,.08);
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            color: var(--c);
+            transition: background .2s;
+        }
+
+        .cat-toggle input:checked + .cat-toggle-label .cat-icon-wrap {
+            background: rgba(232,108,0,.18);
+        }
+
+        .cat-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .cat-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            color: transparent;
+            background: transparent;
+            transition: all .2s;
+        }
+
+        .cat-toggle input:checked + .cat-toggle-label .cat-check {
+            background: var(--c);
+            border-color: var(--c);
+            color: #fff;
+        }
+
+        /* ── Empty state ── */
+        .empty-cats {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+            .empty-cats i {
+                font-size: 40px;
+                margin-bottom: 12px;
+                opacity: .4;
+            }
+
+            .empty-cats p {
+                font-size: .85rem;
+            }
+
+        /* ── Footer actions ── */
+        .wizard-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .selection-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .78rem;
+            color: var(--text-muted);
+        }
+
+        .selection-count {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--c);
+        }
+
+        .btn-select-all {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .btn-select-all:hover {
+                border-color: var(--c);
+                color: var(--c);
+                background: rgba(232,108,0,.05);
+            }
+
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 28px;
+            border: none;
+            border-radius: 13px;
+            background: var(--c);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(232,108,0,.3);
+            transition: background .2s, transform .15s, box-shadow .2s;
+        }
+
+            .btn-save:hover:not(:disabled) {
+                background: var(--cd);
+                transform: translateY(-2px);
+                box-shadow: 0 12px 32px rgba(232,108,0,.35);
+            }
+
+            .btn-save:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+
+        @@media (max-width: 576px) {
+            .cat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .wizard-card {
+                padding: 20px;
+            }
+
+            .wizard-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-save {
+                justify-content: center;
+            }
+        }
+    </style>
+}
+
+<div class="wizard-wrap">
+
+    <!-- ── Header ── -->
+    <div class="wizard-header">
+        <div class="wizard-step-badge">
+            <i class="bi bi-stars"></i>
+            CONFIGURACIÓN INICIAL
+        </div>
+        <h1 class="wizard-title">¿Qué categorías maneja tu tienda?</h1>
+        <p class="wizard-sub">
+            Selecciona las categorías de productos que ofrecerás.
+            Podrás <strong>cambiarlas en cualquier momento</strong> desde el menú Categorías.
+        </p>
+
+        <!-- Progress -->
+        <div class="progress-track">
+            <div class="progress-step">
+                <div class="step-dot done"><i class="bi bi-check-lg"></i></div>
+                <span class="step-label active">Acceso</span>
+            </div>
+            <div class="progress-line done"></div>
+            <div class="progress-step">
+                <div class="step-dot current">2</div>
+                <span class="step-label active">Categorías</span>
+            </div>
+            <div class="progress-line"></div>
+            <div class="progress-step">
+                <div class="step-dot pending">3</div>
+                <span class="step-label muted">Inventario</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Card con el formulario ── -->
+    <div class="wizard-card">
+
+        @if (!categorias.Any())
+        {
+            <div class="empty-cats">
+                <i class="bi bi-tags"></i>
+                <p>
+                    Aún no hay categorías globales creadas.<br>
+                    Pide a un Funcionario que las agregue primero.
+                </p>
+            </div>
+        }
+        else
+        {
+            <form asp-area="AdminCafeteria"
+                  asp-controller="Dashboard"
+                  asp-action="GuardarCategorias"
+                  method="post"
+                  id="formCategorias">
+                @Html.AntiForgeryToken()
+
+                <div class="cat-section-label">
+                    <i class="bi bi-tags-fill" style="color:var(--c)"></i>
+                    Categorías disponibles (@categorias.Count)
+                </div>
+
+                <div class="cat-grid" id="catGrid">
+                    @foreach (var cat in categorias)
+                    {
+                        <div class="cat-toggle">
+                            <input type="checkbox"
+                                   id="cat_@cat.IdCategoria"
+                                   name="idsSeleccionados"
+                                   value="@cat.IdCategoria"
+                            @(cat.Habilitada ? "checked" : "")
+                                   onchange="actualizarContador()" />
+                            <label class="cat-toggle-label" for="cat_@cat.IdCategoria">
+                                <div class="cat-icon-wrap">
+                                    <i class="bi bi-tag-fill"></i>
+                                </div>
+                                <span class="cat-name">@cat.NombreCategoria</span>
+                                <div class="cat-check">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <div class="wizard-footer">
+                    <div class="selection-info">
+                        <i class="bi bi-info-circle" style="color:var(--c)"></i>
+                        <span>
+                            <span class="selection-count" id="contadorSeleccion">
+                                @categorias.Count(c => c.Habilitada)
+                            </span>
+                            de @categorias.Count seleccionadas
+                        </span>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" class="btn-select-all" onclick="toggleSeleccionarTodas()">
+                            <i class="bi bi-check2-all" id="iconSelectAll"></i>
+                            <span id="textoSelectAll">Seleccionar todas</span>
+                        </button>
+
+                        <button type="submit" class="btn-save" id="btnGuardar">
+                            <div class="btn-icon-box"><i class="bi bi-check-lg"></i></div>
+                            Guardar y continuar
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const totalCats = @categorias.Count;
+
+        function actualizarContador() {
+            const checks  = document.querySelectorAll('#catGrid input[type="checkbox"]:checked');
+            const contador = document.getElementById('contadorSeleccion');
+            const btnGuardar = document.getElementById('btnGuardar');
+            const total = checks.length;
+
+            if (contador) contador.textContent = total;
+
+            // Botón deshabilitado si no hay ninguna seleccionada
+            if (btnGuardar) btnGuardar.disabled = total === 0;
+
+            // Texto del botón "Seleccionar todas"
+            const textoBtn = document.getElementById('textoSelectAll');
+            if (textoBtn) {
+                textoBtn.textContent = total === totalCats ? 'Deseleccionar todas' : 'Seleccionar todas';
+            }
+        }
+
+        function toggleSeleccionarTodas() {
+            const checks  = document.querySelectorAll('#catGrid input[type="checkbox"]');
+            const checked = document.querySelectorAll('#catGrid input[type="checkbox"]:checked');
+            const selAll  = checked.length < totalCats;
+
+            checks.forEach(ch => { ch.checked = selAll; });
+            actualizarContador();
+        }
+
+        // Inicializar contador al cargar
+        document.addEventListener('DOMContentLoaded', actualizarContador);
+    </script>
+}

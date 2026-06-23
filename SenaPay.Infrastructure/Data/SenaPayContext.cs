@@ -41,6 +41,7 @@ public partial class SenaPayContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Sede> Sedes { get; set; }
     public virtual DbSet<Reporte> Reportes { get; set; }
+    public virtual DbSet<TiendaCategoria> TiendaCategoria { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -222,20 +223,24 @@ public partial class SenaPayContext : DbContext
             entity.HasKey(e => e.IdTienda).HasName("PK__Tienda__C76BF1710F3C424A");
 
             entity.Property(e => e.IdTienda).HasColumnName("Id_Tienda");
-            entity.Property(e => e.IdAdminCafeteria).HasColumnName("Id_Admin_Cafeteria");
+            entity.Property(e => e.IdAdminCafeteria)
+                .HasColumnName("Id_Admin_Cafeteria")
+                .IsRequired(false);          // ← nullable
             entity.Property(e => e.IdSede).HasColumnName("Id_Sede");
             entity.Property(e => e.Nombre).IsUnicode(false);
             entity.Property(e => e.Ubicacion).IsUnicode(false);
 
-            entity.HasOne(d => d.IdAdminCafeteriaNavigation).WithMany(p => p.Tienda)
+            entity.HasOne(d => d.IdAdminCafeteriaNavigation)
+                .WithMany(p => p.Tienda)
                 .HasForeignKey(d => d.IdAdminCafeteria)
-                .OnDelete(DeleteBehavior.ClientSetNull)
+                .OnDelete(DeleteBehavior.SetNull)      // ← cambio clave
                 .HasConstraintName("FK_AdminCa_Tienda");
 
-            entity.HasOne(d => d.IdSedeNavigation).WithMany(p => p.Tienda)
-               .HasForeignKey(d => d.IdSede)
-               .OnDelete(DeleteBehavior.ClientSetNull)
-               .HasConstraintName("FK_Tienda_Sedes");
+            entity.HasOne(d => d.IdSedeNavigation)
+                .WithMany(p => p.Tienda)
+                .HasForeignKey(d => d.IdSede)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Tienda_Sedes");
         });
 
         modelBuilder.Entity<Transaccione>(entity =>
@@ -261,6 +266,11 @@ public partial class SenaPayContext : DbContext
             entity.Property(e => e.Clave).IsUnicode(false);
             entity.Property(e => e.IdRol).HasColumnName("Id_Rol");
             entity.Property(e => e.IdSede).HasColumnName("Id_Sede");
+            // 1. CONFIGURACIÓN DE LA NUEVA COLUMNA:
+            // Le decimos a SQL que por defecto ponga esta columna en 'true' (1)
+            entity.Property(e => e.Activo)
+                  .HasColumnName("Activo")
+                  .HasDefaultValue(true);
 
             entity.HasOne(d => d.IdRolNavigation).WithMany(p => p.Usuarios)
                 .HasForeignKey(d => d.IdRol)
@@ -343,6 +353,13 @@ public partial class SenaPayContext : DbContext
                   .HasForeignKey(d => d.Id_Usuario)
                   .OnDelete(DeleteBehavior.ClientSetNull)
                   .HasConstraintName("FK_Reportes_Usuarios");
+        });
+
+        modelBuilder.Entity<TiendaCategoria>(entity =>
+        {
+            entity.HasKey(e => new { e.IdTienda, e.IdCategoria });
+            entity.HasOne(e => e.IdTiendaNavigation).WithMany().HasForeignKey(e => e.IdTienda);
+            entity.HasOne(e => e.IdCategoriaNavigation).WithMany().HasForeignKey(e => e.IdCategoria);
         });
 
         OnModelCreatingPartial(modelBuilder);

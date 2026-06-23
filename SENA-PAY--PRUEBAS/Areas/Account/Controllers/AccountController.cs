@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.UseCases.Account;
-using SenaPay.Application.UseCases.Account.DTOs;
+using SenaPay.Application.DTOs.Usuarios;
 using SENA_PAY_PRUEBAS.Areas.Account.Models;
+using SenaPay.Application.UseCases.Reportes;
+using SenaPay.Application.UseCases.RecuperacionContraseña;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace SENA_PAY__PRUEBAS.Areas.Account.Controllers;
 
@@ -35,6 +39,7 @@ public class AccountController : Controller
 
     // ── VALIDAR ACCESO ────────────────────────────────────────
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ValidarAcceso(string documento, string password, int idRol)
     {
         if (!int.TryParse(documento, out int docNum))
@@ -52,16 +57,51 @@ public class AccountController : Controller
             return View("Login");
         }
 
-        // ── Sesión: responsabilidad de la capa de Presentación ──
+        // ── Construir Claims ──────────────────────────────────────
+        var claims = new List<Claim>
+    {
+        new(ClaimTypes.Name,           resultado.Nombre),
+        new(ClaimTypes.Role,           resultado.IdRol.ToString()),
+        new(ClaimTypes.NameIdentifier,    resultado.IdUsuario.ToString()), // ← AGREGAR
+        new("Documento",               resultado.DocumentoSesion),
+        new("IdRol",                   resultado.IdRol.ToString()),
+    };
+
+        // Claims opcionales según el rol
+        if (resultado.IdTienda.HasValue)
+            claims.Add(new Claim("IdTienda", resultado.IdTienda.Value.ToString()));
+
+        if (resultado.IdAdminCafeteria.HasValue)
+            claims.Add(new Claim("IdAdminCafeteria", resultado.IdAdminCafeteria.Value.ToString()));
+
+        var identity = new ClaimsIdentity(claims, "SenaPayCookies");
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync("SenaPayCookies", principal,
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+            });
+
+        // Mantener sesión como respaldo (opcional, puedes quitarlo)
         HttpContext.Session.SetString("UsuarioDoc", resultado.DocumentoSesion);
 
         return resultado.IdRol switch
         {
-            // 1 => Redirecciona a la Acción "Perfil", del Controlador "PerfilAprendiz", en el Área "Usuarios"
             1 => RedirectToAction("Perfil", "PerfilAprendiz", new { area = "Usuarios" }),
-            2 => RedirectToAction("AgregarUsuarios","Funcionarios", new { area = "Funcionarios" }),
+            2 => RedirectToAction("AgregarUsuarios", "Funcionarios", new { area = "Funcionarios" }),
+            3 => RedirectToAction("SeleccionarTienda", "AccesoTienda", new { area = "AdminCafeteria" }),
             _ => View("Login")
         };
+    }
+
+    // ── Logout ────────────────────────────────────────────────────
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync("SenaPayCookies");
+        HttpContext.Session.Clear();
+        return RedirectToAction("Login");
     }
 
     // ── RECUPERAR CONTRASEÑA ──────────────────────────────────

@@ -11,7 +11,7 @@ public partial class Tiendum
 
     public string Ubicacion { get; set; } = null!;
 
-    public int IdAdminCafeteria { get; set; }
+    public int? IdAdminCafeteria { get; set; }
 
     public virtual AdminCafeterium IdAdminCafeteriaNavigation { get; set; } = null!;
 

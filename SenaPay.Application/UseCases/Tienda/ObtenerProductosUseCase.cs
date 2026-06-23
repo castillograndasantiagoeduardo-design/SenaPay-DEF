@@ -1,5 +1,5 @@
-﻿using SenaPay.Application.UseCases.Tienda.DTOs;
-using SenaPay.Domain.Interfaces.Tienda;
+﻿using SenaPay.Application.DTOs.Tienda;
+using SenaPay.Domain.Interfaces;
 
 namespace SenaPay.Application.UseCases.Tienda;
 

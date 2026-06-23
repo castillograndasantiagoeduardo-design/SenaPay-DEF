@@ -1,4 +1,4 @@
-using SenaPay.Domain.Interfaces.Usuarios;
+using SenaPay.Domain.Interfaces;
 
 namespace SenaPay.Application.UseCases.Aprendiz;
 

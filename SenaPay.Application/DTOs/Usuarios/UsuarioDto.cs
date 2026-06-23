@@ -14,7 +14,8 @@ public record UsuarioDto(
     string Documento,
     decimal Saldo,
     string Rol,
-    int IdRol
+    int IdRol,
+    bool Activo
 );
 
 /// <summary>
@@ -39,6 +40,17 @@ public record EditarUsuarioRequest(
     string Correo,
     string Telefono,
     decimal Saldo
+);
+
+public record ValidarAccesoResultado(bool Ok,
+    string Mensaje,
+    int IdRol,
+    string DocumentoSesion,
+    // ── Datos extra para Claims ──
+    string Nombre,
+    int IdUsuario,      // ← AGREGAR
+    int? IdTienda,           // solo Rol 3
+    int? IdAdminCafeteria    // solo Rol 3
 );
 
 /// <summary>

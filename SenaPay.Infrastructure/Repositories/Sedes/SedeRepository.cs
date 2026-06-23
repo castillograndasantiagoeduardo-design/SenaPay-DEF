@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Domain.Entities;
-using SenaPay.Domain.Interfaces.Core;
-using SenaPay.Domain.Interfaces.Tienda;
+using SenaPay.Domain.Interfaces;
 using SenaPay.Infrastructure.Data;
 
 namespace SenaPay.Infrastructure.Repositories.Sedes;

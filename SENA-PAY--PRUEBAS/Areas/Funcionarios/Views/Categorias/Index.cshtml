@@ -1,0 +1,498 @@
+﻿@* Areas/Funcionarios/Views/Categorias/Index.cshtml *@
+@model IEnumerable<SenaPay.Application.DTOs.Categorias.CategoriaDto>
+@{
+    ViewData["Title"] = "Categorías";
+    ViewData["Breadcrumb"] = "Categorías";
+    Layout = "~/Areas/Funcionarios/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        /* ── Grid de tarjetas ── */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .cat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            transition: transform .2s, box-shadow .2s;
+            animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+        }
+
+            .cat-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(109,40,217,.1);
+            }
+
+        .cat-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(109,40,217,.1);
+            display: grid;
+            place-items: center;
+            color: var(--c);
+            font-size: 18px;
+        }
+
+        .cat-card-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        .cat-card-id {
+            font-size: .65rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .cat-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+        }
+
+        /* Tarjeta "Nueva categoría" */
+        .cat-card-new {
+            border: 1.5px dashed rgba(109,40,217,.35);
+            background: rgba(109,40,217,.03);
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+            min-height: 140px;
+            color: var(--c);
+            font-family: 'Outfit', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            gap: 8px;
+            transition: background .2s, border-color .2s, transform .2s;
+        }
+
+            .cat-card-new:hover {
+                background: rgba(109,40,217,.07);
+                border-color: var(--c);
+                transform: translateY(-3px);
+            }
+
+            .cat-card-new i {
+                font-size: 26px;
+            }
+
+        /* Modal */
+        .modal-backdrop-sp {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            backdrop-filter: blur(3px);
+            z-index: 1000;
+            display: none;
+            place-items: center;
+        }
+
+            .modal-backdrop-sp.open {
+                display: grid;
+            }
+
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 32px;
+            width: min(460px, 92vw);
+            box-shadow: 0 24px 64px rgba(0,0,0,.18);
+            animation: slideUp .4s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 20px;
+            padding: 2px;
+            line-height: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+            .empty-state i {
+                font-size: 48px;
+                opacity: .3;
+            }
+
+            .empty-state p {
+                margin-top: 12px;
+                font-size: .85rem;
+            }
+    </style>
+}
+
+<!-- ══════════════ ENCABEZADO ══════════════ -->
+<div class="section-header">
+    <div class="section-icon"><i class="bi bi-tags-fill"></i></div>
+    <div>
+        <div class="section-title">Categorías de Productos</div>
+        <div class="section-sub">Gestiona las categorías globales disponibles para todas las tiendas</div>
+    </div>
+</div>
+
+<!-- Stat rápido -->
+<div class="stats-row" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); max-width: 500px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(109,40,217,.1); color:var(--c);">
+            <i class="bi bi-tags-fill"></i>
+        </div>
+        <div class="stat-value" id="totalCategorias">@Model.Count()</div>
+        <div class="stat-label">Categorías registradas</div>
+    </div>
+</div>
+
+<!-- ══════════════ GRID DE TARJETAS ══════════════ -->
+<div class="card">
+    <div id="catGrid" class="cat-grid">
+
+        @* Tarjeta "Nueva" siempre al inicio *@
+        <div class="cat-card cat-card-new" onclick="abrirModal()">
+            <i class="bi bi-plus-circle-fill"></i>
+            Nueva Categoría
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state" style="grid-column: 1 / -1; display:flex; flex-direction:column; align-items:center;">
+                <i class="bi bi-inbox"></i>
+                <p>Aún no hay categorías. ¡Crea la primera!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var cat in Model)
+            {
+                <div class="cat-card" id="cat-@cat.Id_Categoria">
+                    <div class="cat-card-icon"><i class="bi bi-tag-fill"></i></div>
+                    <div class="cat-card-name">@cat.Nombre_Categoria</div>
+                    <div class="cat-card-id"># @cat.Id_Categoria</div>
+                    <div class="cat-card-actions">
+                        <button class="btn-action btn-delete"
+                                onclick="eliminarCategoria(@cat.Id_Categoria, '@cat.Nombre_Categoria')">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                        <button class="btn-action btn-edit btn-edit-cat"
+                                onclick="abrirModalEditar(@cat.Id_Categoria, '@cat.Nombre_Categoria')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- ══════════════ MODAL CREAR ══════════════ -->
+<div class="modal-backdrop-sp" id="modalBackdrop" onclick="cerrarModalSiFuera(event)">
+    <div class="modal-box">
+        <div class="modal-title">
+            <div class="section-icon" style="width:32px;height:32px;">
+                <i class="bi bi-tags-fill" style="font-size:14px;"></i>
+            </div>
+            Nueva Categoría
+            <button class="modal-close" onclick="cerrarModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label">Nombre de la Categoría</label>
+            <div class="field-wrap">
+                <i class="bi bi-tag field-icon"></i>
+                <input type="text" id="inputNombre" class="form-control"
+                       placeholder="Ej: Bebidas, Snacks, Almuerzos…"
+                       maxlength="80" autocomplete="off" />
+            </div>
+            <span class="field-error" id="errorNombre" style="display:flex;">
+                <i class="bi bi-exclamation-circle"></i>
+                <span id="errorNombreMsg"></span>
+            </span>
+        </div>
+
+        <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn-action btn-edit" style="padding:10px 20px;"
+                    onclick="cerrarModal()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-primary" id="btnCrear" onclick="crearCategoria()">
+                <div class="btn-icon-box"><i class="bi bi-plus-lg"></i></div>
+                <div class="spinner" id="spinnerCrear"></div>
+                Crear Categoría
+            </button>
+        </div>
+    </div>
+</div>
+<!-- ══════════════ MODAL EDITAR ══════════════ -->
+<div class="modal-backdrop-sp" id="modalEditar" onclick="cerrarModalEditarSiFuera(event)">
+    <div class="modal-box">
+        <div class="modal-title">
+            <div class="section-icon" style="width:32px;height:32px;">
+                <i class="bi bi-pencil-fill" style="font-size:14px;"></i>
+            </div>
+            Editar Categoría
+            <button class="modal-close" onclick="cerrarModalEditar()"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label">Nuevo nombre</label>
+            <div class="field-wrap">
+                <i class="bi bi-tag field-icon"></i>
+                <input type="text" id="inputNombreEditar" class="form-control"
+                       placeholder="Nombre de la categoría"
+                       maxlength="80" autocomplete="off" />
+            </div>
+            <span class="field-error" id="errorNombreEditar" style="display:none;">
+                <i class="bi bi-exclamation-circle"></i>
+                <span></span>
+            </span>
+        </div>
+
+        <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn-action btn-edit" style="padding:10px 20px;"
+                    onclick="cerrarModalEditar()">
+                Cancelar
+            </button>
+            <button type="button" class="btn-primary" id="btnEditar" onclick="editarCategoria()">
+                <div class="btn-icon-box"><i class="bi bi-check-lg"></i></div>
+                <div class="spinner" id="spinnerEditar"></div>
+                Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ─── Modal Crear ────────────────────────────────────────────
+        function abrirModal() {
+            document.getElementById('modalBackdrop').classList.add('open');
+            setTimeout(() => document.getElementById('inputNombre').focus(), 100);
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalBackdrop').classList.remove('open');
+            document.getElementById('inputNombre').value = '';
+            ocultarError('errorNombre');
+        }
+
+        function cerrarModalSiFuera(e) {
+            if (e.target.id === 'modalBackdrop') cerrarModal();
+        }
+
+        document.getElementById('inputNombre')
+            .addEventListener('keydown', e => { if (e.key === 'Enter') crearCategoria(); });
+
+        // ─── Modal Editar ────────────────────────────────────────────
+        let editandoId = null;
+
+        function abrirModalEditar(id, nombre) {
+            editandoId = id;
+            document.getElementById('inputNombreEditar').value = nombre;
+            document.getElementById('modalEditar').classList.add('open');
+            setTimeout(() => document.getElementById('inputNombreEditar').focus(), 100);
+        }
+
+        function cerrarModalEditar() {
+            document.getElementById('modalEditar').classList.remove('open');
+            document.getElementById('inputNombreEditar').value = '';
+            ocultarError('errorNombreEditar');
+            editandoId = null;
+        }
+
+        function cerrarModalEditarSiFuera(e) {
+            if (e.target.id === 'modalEditar') cerrarModalEditar();
+        }
+
+        document.getElementById('inputNombreEditar')
+            .addEventListener('keydown', e => { if (e.key === 'Enter') editarCategoria(); });
+
+        // ─── CRUD ────────────────────────────────────────────────────
+        async function crearCategoria() {
+            const nombre = document.getElementById('inputNombre').value.trim();
+            if (!nombre || nombre.length < 2) {
+                mostrarError('errorNombre', 'El nombre debe tener al menos 2 caracteres.');
+                return;
+            }
+
+            const btn     = document.getElementById('btnCrear');
+            const spinner = document.getElementById('spinnerCrear');
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            ocultarError('errorNombre');
+
+            try {
+                const res  = await fetch('/Funcionarios/Categorias/Crear', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ Nombre_Categoria: nombre })
+                });
+                const data = await res.json();
+
+                if (!res.ok) { mostrarError('errorNombre', data.mensaje); return; }
+
+                cerrarModal();
+                agregarTarjeta(data.categoria);
+                actualizarContador(1);
+                showToast('¡Listo!', `Categoría "${data.categoria.nombre_Categoria}" creada.`, 'success');
+            } catch {
+                mostrarError('errorNombre', 'Error de conexión. Intenta de nuevo.');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function editarCategoria() {
+            const nombre = document.getElementById('inputNombreEditar').value.trim();
+            if (!nombre || nombre.length < 2) {
+                mostrarError('errorNombreEditar', 'El nombre debe tener al menos 2 caracteres.');
+                return;
+            }
+
+            const btn     = document.getElementById('btnEditar');
+            const spinner = document.getElementById('spinnerEditar');
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            ocultarError('errorNombreEditar');
+
+            try {
+                const res  = await fetch(`/Funcionarios/Categorias/Editar/${editandoId}`, {
+                    method:  'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ Nombre_Categoria: nombre })
+                });
+                const data = await res.json();
+
+                if (!res.ok) { mostrarError('errorNombreEditar', data.mensaje); return; }
+
+                // Actualiza la tarjeta en el DOM
+                const card = document.getElementById(`cat-${editandoId}`);
+                if (card) {
+                    card.querySelector('.cat-card-name').textContent = data.categoria.nombre_Categoria;
+                    // Actualiza los atributos del botón editar
+                    card.querySelector('.btn-edit-cat')
+                        .setAttribute('onclick',
+                            `abrirModalEditar(${data.categoria.id_Categoria}, '${data.categoria.nombre_Categoria}')`);
+                }
+
+                cerrarModalEditar();
+                showToast('Actualizada', `Categoría renombrada a "${data.categoria.nombre_Categoria}".`, 'success');
+            } catch {
+                mostrarError('errorNombreEditar', 'Error de conexión. Intenta de nuevo.');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function eliminarCategoria(id, nombre) {
+            const result = await Swal.fire({
+                title:              `¿Eliminar "${nombre}"?`,
+                text:               'Esta acción no se puede deshacer.',
+                icon:               'warning',
+                showCancelButton:   true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor:  '#6D28D9',
+                confirmButtonText:  'Sí, eliminar',
+                cancelButtonText:   'Cancelar'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await fetch(`/Funcionarios/Categorias/Eliminar/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    document.getElementById(`cat-${id}`)?.remove();
+                    actualizarContador(-1);
+                    showToast('Eliminada', `"${nombre}" fue eliminada.`, 'success');
+                } else {
+                    const data = await res.json();
+                    showToast('Error', data.mensaje ?? 'No se pudo eliminar.', 'error');
+                }
+            } catch {
+                showToast('Error', 'Error de conexión.', 'error');
+            }
+        }
+
+        // ─── DOM helpers ─────────────────────────────────────────────
+        function agregarTarjeta(cat) {
+            document.querySelector('.empty-state')?.remove();
+            const grid    = document.getElementById('catGrid');
+            const newCard = document.querySelector('.cat-card-new');
+            const div     = document.createElement('div');
+            div.className = 'cat-card';
+            div.id        = `cat-${cat.id_Categoria}`;
+            div.innerHTML = tarjetaHtml(cat.id_Categoria, cat.nombre_Categoria);
+            newCard.insertAdjacentElement('afterend', div);
+        }
+
+        function tarjetaHtml(id, nombre) {
+            return `
+                <div class="cat-card-icon"><i class="bi bi-tag-fill"></i></div>
+                <div class="cat-card-name">${nombre}</div>
+                <div class="cat-card-id"># ${id}</div>
+                <div class="cat-card-actions">
+                    <button class="btn-action btn-edit btn-edit-cat"
+                            onclick="abrirModalEditar(${id}, '${nombre}')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-action btn-delete"
+                            onclick="eliminarCategoria(${id}, '${nombre}')">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>`;
+        }
+
+        function actualizarContador(delta) {
+            const el = document.getElementById('totalCategorias');
+            el.textContent = parseInt(el.textContent) + delta;
+        }
+
+        function mostrarError(id, msg) {
+            const el = document.getElementById(id);
+            el.querySelector('span').textContent = msg;
+            el.style.display = 'flex';
+        }
+
+        function ocultarError(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+}}

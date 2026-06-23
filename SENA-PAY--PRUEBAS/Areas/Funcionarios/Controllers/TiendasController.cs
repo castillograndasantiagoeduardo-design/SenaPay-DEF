@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SenaPay.Application.UseCases.Funcionarios;
-using SenaPay.Application.DTOs.Usuarios;
-using SenaPay.Application.UseCases.Tienda;
+﻿// Areas/Funcionarios/Controllers/TiendasController.cs
+using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.DTOs.Tienda;
+using SenaPay.Application.UseCases.Sedes;
+using SenaPay.Application.UseCases.Tienda;
 
 namespace SENA_PAY__PRUEBAS.Areas.Funcionarios.Controllers;
 
@@ -12,30 +12,35 @@ public class TiendasController : Controller
     private readonly CrearTiendaUseCase _crearTiendaUseCase;
     private readonly ObtenerTiendasUseCase _obtenerTiendasUseCase;
     private readonly ObtenerSedesUseCase _obtenerSedesUseCase;
+    private readonly ObtenerAdminsDisponiblesUseCase _obtenerAdminsUseCase;
 
     public TiendasController(
         CrearTiendaUseCase crearTiendaUseCase,
         ObtenerTiendasUseCase obtenerTiendasUseCase,
-        ObtenerSedesUseCase obtenerSedesUseCase)
+        ObtenerSedesUseCase obtenerSedesUseCase,
+        ObtenerAdminsDisponiblesUseCase obtenerAdminsUseCase)
     {
         _crearTiendaUseCase = crearTiendaUseCase;
         _obtenerTiendasUseCase = obtenerTiendasUseCase;
         _obtenerSedesUseCase = obtenerSedesUseCase;
+        _obtenerAdminsUseCase = obtenerAdminsUseCase;
     }
 
-    // ── GET /Funcionarios/Tiendas ─────────────────────────────
+    // GET /Funcionarios/Tiendas ─────────────────────────────────────────────
     [HttpGet]
     [Route("Funcionarios/Tiendas")]
     public async Task<IActionResult> Index()
     {
         var tiendas = await _obtenerTiendasUseCase.EjecutarAsync();
         var sedes = await _obtenerSedesUseCase.EjecutarAsync();
+        var admins = await _obtenerAdminsUseCase.EjecutarAsync();
 
         ViewBag.Sedes = sedes;
+        ViewBag.Admins = admins; // lista de AdminCafeteriaListItem para el modal
         return View(tiendas);
     }
 
-    // ── POST /Funcionarios/Tiendas/Crear ─────────────────────
+    // POST /Funcionarios/Tiendas/Crear ─────────────────────────────────────
     [HttpPost]
     [Route("Funcionarios/Tiendas/Crear")]
     [ValidateAntiForgeryToken]
@@ -48,7 +53,7 @@ public class TiendasController : Controller
         return Json(new { ok = resultado.Ok, msg = resultado.Mensaje });
     }
 
-    // ── GET /Funcionarios/Tiendas/ObtenerTiendas ─────────────
+    // GET /Funcionarios/Tiendas/ObtenerTiendas ─────────────────────────────
     [HttpGet]
     [Route("Funcionarios/Tiendas/ObtenerTiendas")]
     public async Task<IActionResult> ObtenerTiendas()
@@ -57,12 +62,21 @@ public class TiendasController : Controller
         return Json(tiendas);
     }
 
-    // ── GET /Funcionarios/Tiendas/ObtenerSedes ───────────────
+    // GET /Funcionarios/Tiendas/ObtenerSedes ───────────────────────────────
     [HttpGet]
     [Route("Funcionarios/Tiendas/ObtenerSedes")]
     public async Task<IActionResult> ObtenerSedes()
     {
         var sedes = await _obtenerSedesUseCase.EjecutarAsync();
         return Json(sedes);
+    }
+
+    // GET /Funcionarios/Tiendas/ObtenerAdmins ──────────────────────────────
+    [HttpGet]
+    [Route("Funcionarios/Tiendas/ObtenerAdmins")]
+    public async Task<IActionResult> ObtenerAdmins()
+    {
+        var admins = await _obtenerAdminsUseCase.EjecutarAsync();
+        return Json(admins);
     }
 }

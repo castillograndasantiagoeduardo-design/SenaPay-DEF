@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SenaPay.Application.UseCases.Funcionarios;
 using SenaPay.Application.DTOs.Usuarios;
 using SENA_PAY__PRUEBAS.Filters;
+using SenaPay.Application.UseCases.Usuarios;
+using SenaPay.Application.UseCases.Reportes;
 
 namespace SENA_PAY__PRUEBAS.Areas.Funcionarios.Controllers;
 
@@ -17,6 +18,7 @@ public class FuncionariosController : Controller
     private readonly ObtenerReportesUseCase _obtenerReportesUseCase;
     private readonly CambiarEstadoReporteUseCase _cambiarEstadoUseCase;
     private readonly ObtenerEstadisticasReportesUseCase _estadisticasUseCase;
+    private readonly CambiarEstadoUsuarioUseCase _cambiarEstadoUsuarioUseCase;
 
 
     public FuncionariosController(
@@ -27,6 +29,7 @@ public class FuncionariosController : Controller
         EliminarUsuarioUseCase eliminarUseCase,
         ObtenerReportesUseCase obtenerReportesUseCase,
         CambiarEstadoReporteUseCase cambiarEstadoReporteUseCase,
+        CambiarEstadoUsuarioUseCase cambiarEstadoUsuarioUseCase,  
         ObtenerEstadisticasReportesUseCase obtenerEstadisticasReportesUseCase)
     {
         _agregarUseCase = agregarUseCase;
@@ -36,6 +39,7 @@ public class FuncionariosController : Controller
         _eliminarUseCase = eliminarUseCase;
         _obtenerReportesUseCase = obtenerReportesUseCase;
         _cambiarEstadoUseCase = cambiarEstadoReporteUseCase;
+        _cambiarEstadoUsuarioUseCase = cambiarEstadoUsuarioUseCase;
         _estadisticasUseCase = obtenerEstadisticasReportesUseCase;
     }
 
@@ -119,5 +123,15 @@ public class FuncionariosController : Controller
         {
             return Json(new { ok = false, msg = "Error interno." });
         }
+    }
+
+    // ── CAMBIAR ESTADO (Activar / Desactivar) ─────────────────────
+    [HttpPost]
+    [Route("Funcionarios/CambiarEstadoUsuario")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CambiarEstadoUsuario(int idUsuario, bool activar)
+    {
+        var resultado = await _cambiarEstadoUsuarioUseCase.EjecutarAsync(idUsuario, activar);
+        return Json(new { ok = resultado.Ok, msg = resultado.Mensaje });
     }
 }

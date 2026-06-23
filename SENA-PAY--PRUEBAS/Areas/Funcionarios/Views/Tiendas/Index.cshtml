@@ -1,34 +1,28 @@
 ﻿@model IEnumerable<SenaPay.Application.DTOs.Tienda.TiendaDto>
+@using System.Text.Json
+@using SenaPay.Domain.Interfaces
 @{
     ViewData["Title"] = "Gestión de Tiendas";
     ViewData["Breadcrumb"] = "Gestión de Tiendas";
     var sedes = ViewBag.Sedes as List<SenaPay.Application.DTOs.Tienda.SedeDto> ?? new();
+    var admins = ViewBag.Admins as List<AdminCafeteriaListItem> ?? new();
 }
 
 @* ── ESTADÍSTICAS ── *@
 <div class="stats-row">
     <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(232,108,0,.1); color:#E86C00;">
+        <div class="stat-icon" style="background:rgba(232,108,0,.1);color:#E86C00;">
             <i class="bi bi-shop"></i>
         </div>
-        <div class="stat-value" id="stat-tienda">@Model.Count()</div>
+        <div class="stat-value">@Model.Count()</div>
         <div class="stat-label">Tiendas</div>
         <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> Habilitadas</div>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(234,179,8,.1); color:#ca8a04;">
-            <i class="bi bi-wallet2"></i>
-        </div>
-        <div class="stat-value" id="stat-saldo">—</div>
-        <div class="stat-label">Saldo en circulación</div>
-        <div class="stat-delta delta-up"><i class="bi bi-arrow-up-short"></i> COP</div>
-    </div>
 </div>
 
-@* ── SECCIÓN PRINCIPAL ── *@
-<div class="section-header" style="justify-content:space-between; align-items:center;">
-    <div style="display:flex; align-items:center; gap:12px;">
+@* ── ENCABEZADO DE SECCIÓN ── *@
+<div class="section-header" style="justify-content:space-between;align-items:center;">
+    <div style="display:flex;align-items:center;gap:12px;">
         <div class="section-icon"><i class="bi bi-shop-fill"></i></div>
         <div>
             <div class="section-title">Gestión de Tiendas</div>
@@ -41,6 +35,7 @@
     </button>
 </div>
 
+@* ── TABLA ── *@
 <div class="card">
     <div class="table-wrap">
         <table class="sp-table">
@@ -56,8 +51,8 @@
                 @if (!Model.Any())
                 {
                     <tr id="emptyRow">
-                        <td colspan="4" style="text-align:center; padding:40px; color:var(--text-muted);">
-                            <i class="bi bi-shop" style="font-size:1.6rem; display:block; margin-bottom:10px; opacity:.4;"></i>
+                        <td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">
+                            <i class="bi bi-shop" style="font-size:1.6rem;display:block;margin-bottom:10px;opacity:.4;"></i>
                             Aún no hay tiendas registradas
                         </td>
                     </tr>
@@ -68,9 +63,7 @@
                     {
                         <tr>
                             <td style="font-weight:600;">
-                                <span class="badge-tienda">
-                                    <i class="bi bi-shop"></i> @t.NombreTienda
-                                </span>
+                                <span class="badge-tienda"><i class="bi bi-shop"></i> @t.NombreTienda</span>
                             </td>
                             <td>@t.NombreSede</td>
                             <td style="color:var(--text-muted);">@t.Ubicacion</td>
@@ -88,7 +81,7 @@
     <div class="modal-box" role="dialog" aria-modal="true">
 
         <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
                 <div class="modal-icon"><i class="bi bi-shop-window"></i></div>
                 <div>
                     <div class="modal-title">Nueva Tienda</div>
@@ -104,6 +97,7 @@
             @Html.AntiForgeryToken()
             <div class="form-grid">
 
+                @* ── Datos de la tienda ── *@
                 <div class="section-group-label">
                     <i class="bi bi-shop"></i> Datos de la Tienda
                 </div>
@@ -142,46 +136,101 @@
 
                 <hr class="form-divider" />
 
-                <div class="section-group-label">
-                    <i class="bi bi-person-badge"></i> Administrador de la Tienda
-                </div>
-
-                <div class="field-group">
-                    <label class="field-label">Nombre completo</label>
-                    <div class="field-wrap">
-                        <i class="bi bi-person field-icon"></i>
-                        <input type="text" class="form-control" id="a-nombre"
-                               placeholder="Nombre del administrador" autocomplete="off" />
+                @* ── Administrador — header con toggle ── *@
+                <div class="section-group-label" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span><i class="bi bi-person-badge"></i> Administrador de la Tienda</span>
+                    <div class="modo-toggle">
+                        <button type="button" id="btnModoNuevo"
+                                class="modo-btn active" onclick="setModo('Nuevo')">
+                            <i class="bi bi-person-plus"></i> Crear nuevo
+                        </button>
+                        <button type="button" id="btnModoExistente"
+                                class="modo-btn" onclick="setModo('Existente')">
+                            <i class="bi bi-people"></i> Seleccionar existente
+                        </button>
                     </div>
                 </div>
 
-                <div class="field-group">
-                    <label class="field-label">Documento</label>
-                    <div class="field-wrap">
-                        <i class="bi bi-hash field-icon"></i>
-                        <input type="text" class="form-control" id="a-documento"
-                               placeholder="0000000000" maxlength="12"
-                               onkeypress="return soloNumeros(event)" />
+                @* ── Panel: Crear nuevo ── *@
+                <div id="panelNuevo" class="field-group full">
+                    <div class="form-grid" style="padding:0;">
+
+                        <div class="field-group">
+                            <label class="field-label">Nombre completo</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-person field-icon"></i>
+                                <input type="text" class="form-control" id="a-nombre"
+                                       placeholder="Nombre del administrador" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">Documento</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-hash field-icon"></i>
+                                <input type="text" class="form-control" id="a-documento"
+                                       placeholder="0000000000" maxlength="12"
+                                       onkeypress="return soloNumeros(event)" />
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">Correo electrónico</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-envelope field-icon"></i>
+                                <input type="email" class="form-control" id="a-correo"
+                                       placeholder="admin@sena.edu.co" autocomplete="off" />
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label">Teléfono</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-telephone field-icon"></i>
+                                <input type="text" class="form-control" id="a-telefono"
+                                       placeholder="300 000 0000" maxlength="10"
+                                       onkeypress="return soloNumeros(event)" />
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <div class="field-group">
-                    <label class="field-label">Correo electrónico</label>
-                    <div class="field-wrap">
-                        <i class="bi bi-envelope field-icon"></i>
-                        <input type="email" class="form-control" id="a-correo"
-                               placeholder="admin@sena.edu.co" autocomplete="off" />
-                    </div>
-                </div>
+                @* ── Panel: Seleccionar existente ── *@
+                <div id="panelExistente" class="field-group full" style="display:none;">
 
-                <div class="field-group">
-                    <label class="field-label">Teléfono</label>
+                    <label class="field-label">Selecciona un administrador</label>
                     <div class="field-wrap">
-                        <i class="bi bi-telephone field-icon"></i>
-                        <input type="text" class="form-control" id="a-telefono"
-                               placeholder="300 000 0000" maxlength="10"
-                               onkeypress="return soloNumeros(event)" />
+                        <i class="bi bi-people field-icon"></i>
+                        <select class="form-select" id="a-existente" onchange="mostrarPreview()">
+                            <option value="">— Selecciona un administrador —</option>
+                            @foreach (var a in admins)
+                            {
+                                var badge = a.TiendasAsignadas == 0
+                                ? "Sin tiendas"
+                                : $"{a.TiendasAsignadas} tienda(s)";
+                                <option value="@a.IdAdminCafeteria"
+                                        data-nombre="@a.Nombre"
+                                        data-correo="@a.Correo"
+                                        data-telefono="@a.Telefono"
+                                        data-tiendas="@badge">
+                                    @a.Nombre — @badge
+                                </option>
+                            }
+                        </select>
                     </div>
+
+                    @* Preview del admin seleccionado *@
+                    <div id="adminPreview" class="admin-preview" style="display:none;">
+                        <div class="preview-avatar"><i class="bi bi-person-fill"></i></div>
+                        <div class="preview-info">
+                            <div class="preview-nombre" id="pv-nombre"></div>
+                            <div class="preview-detalle" id="pv-correo"></div>
+                            <div class="preview-detalle" id="pv-telefono"></div>
+                            <div class="preview-badge" id="pv-tiendas"></div>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -201,6 +250,7 @@
 
 @section Styles {
     <style>
+        /* ── Badges ── */
         .badge-tienda {
             display: inline-flex;
             align-items: center;
@@ -209,14 +259,14 @@
             border-radius: 99px;
             font-size: .65rem;
             font-weight: 700;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit',sans-serif;
             background: rgba(109,40,217,.1);
             color: #6D28D9;
         }
 
         .section-group-label {
-            grid-column: 1 / -1;
-            font-family: 'Outfit', sans-serif;
+            grid-column: 1/-1;
+            font-family: 'Outfit',sans-serif;
             font-size: .7rem;
             font-weight: 800;
             color: var(--text-muted);
@@ -226,59 +276,85 @@
             border-bottom: 1px solid var(--border);
         }
 
-        /* Modal dark overrides */
-        .modal-box {
-            background: #13131f;
-            border: 1px solid rgba(255,255,255,.07);
+        /* ── Toggle modo ── */
+        .modo-toggle {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 10px;
+            padding: 3px;
         }
 
-            .modal-box .form-control,
-            .modal-box .form-select {
-                background: #1c1c2e !important;
-                border-color: rgba(255,255,255,.1) !important;
-                color: #e2e8f0 !important;
-            }
-
-                .modal-box .form-control:focus,
-                .modal-box .form-select:focus {
-                    border-color: #6D28D9 !important;
-                    box-shadow: 0 0 0 3px rgba(109,40,217,.2) !important;
-                    background: #1e1e32 !important;
-                }
-
-                .modal-box .form-control::placeholder {
-                    color: #4a5578;
-                }
-
-            .modal-box .field-label {
-                color: #4a5578;
-            }
-
-            .modal-box .field-icon {
-                color: #4a5578;
-            }
-
-            .modal-box .form-divider {
-                border-color: rgba(255,255,255,.06);
-            }
-
-            .modal-box .section-group-label {
-                color: #6b7a99;
-                border-color: rgba(255,255,255,.06);
-            }
-
-        .modal-header, .modal-footer {
-            border-color: rgba(255,255,255,.06);
+        .modo-btn {
+            padding: 5px 12px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit',sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s,color .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .modal-title {
-            color: #f0f0ff;
+            .modo-btn.active {
+                background: var(--c);
+                color: #fff;
+                box-shadow: 0 2px 8px var(--cg);
+            }
+
+        /* ── Preview admin ── */
+        .admin-preview {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(109,40,217,.07);
+            border: 1px solid rgba(109,40,217,.18);
+            border-radius: 12px;
+            padding: 12px 16px;
         }
 
-        .modal-sub {
-            color: #6b7a99;
+        .preview-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(109,40,217,.15);
+            color: #6D28D9;
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            flex-shrink: 0;
         }
-        /* ─── MODAL BASE ─────────────────────────────────────────── */
+
+        .preview-nombre {
+            font-weight: 700;
+            font-size: .85rem;
+            color: var(--text-main);
+        }
+
+        .preview-detalle {
+            font-size: .75rem;
+            color: var(--text-muted);
+        }
+
+        .preview-badge {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: .65rem;
+            font-weight: 700;
+            background: rgba(109,40,217,.12);
+            color: #6D28D9;
+            border-radius: 99px;
+            padding: 2px 9px;
+        }
+
+        /* ── Modal ── */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -300,16 +376,16 @@
             }
 
         .modal-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: #13131f;
+            border: 1px solid rgba(255,255,255,.07);
             border-radius: 20px;
             width: 100%;
-            max-width: 600px;
+            max-width: 620px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 32px 80px rgba(0,0,0,.5);
             transform: translateY(16px) scale(.98);
-            transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .25s;
+            transition: transform .3s cubic-bezier(.22,1,.36,1),opacity .25s;
             opacity: 0;
         }
 
@@ -323,7 +399,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 22px 24px 18px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255,255,255,.06);
         }
 
         .modal-icon {
@@ -335,24 +411,18 @@
             place-items: center;
             color: var(--c);
             font-size: 16px;
-            flex-shrink: 0;
         }
 
-            .modal-icon.edit-mode {
-                background: rgba(245,158,11,.12);
-                color: #d97706;
-            }
-
         .modal-title {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: .95rem;
             font-weight: 700;
-            color: var(--text-main);
+            color: #f0f0ff;
         }
 
         .modal-sub {
             font-size: .72rem;
-            color: var(--text-muted);
+            color: #6b7a99;
             margin-top: 2px;
         }
 
@@ -360,21 +430,19 @@
             width: 32px;
             height: 32px;
             border-radius: 8px;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,.08);
             background: transparent;
-            color: var(--text-muted);
+            color: #6b7a99;
             cursor: pointer;
             display: grid;
             place-items: center;
             font-size: 14px;
-            transition: background .2s, color .2s;
-            flex-shrink: 0;
+            transition: background .2s,color .2s;
         }
 
             .modal-close:hover {
                 background: rgba(239,68,68,.12);
                 color: #ef4444;
-                border-color: rgba(239,68,68,.2);
             }
 
         .modal-body {
@@ -387,7 +455,36 @@
             justify-content: flex-end;
             gap: 10px;
             padding: 16px 24px 22px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(255,255,255,.06);
+        }
+
+        .modal-box .form-control,
+        .modal-box .form-select {
+            background: #1c1c2e !important;
+            border-color: rgba(255,255,255,.1) !important;
+            color: #e2e8f0 !important;
+        }
+
+            .modal-box .form-control:focus,
+            .modal-box .form-select:focus {
+                border-color: #6D28D9 !important;
+                box-shadow: 0 0 0 3px rgba(109,40,217,.2) !important;
+            }
+
+            .modal-box .form-control::placeholder {
+                color: #4a5578;
+            }
+
+        .modal-box .field-label {
+            color: #4a5578;
+        }
+
+        .modal-box .field-icon {
+            color: #4a5578;
+        }
+
+        .modal-box .form-divider {
+            border-color: rgba(255,255,255,.06);
         }
 
         .btn-modal-cancel {
@@ -396,11 +493,10 @@
             border-radius: 11px;
             background: transparent;
             color: var(--text-muted);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: .8rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background .2s;
         }
 
             .btn-modal-cancel:hover {
@@ -417,19 +513,18 @@
             border-radius: 11px;
             background: var(--c);
             color: #fff;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit',sans-serif;
             font-size: .8rem;
             font-weight: 700;
             letter-spacing: 1px;
             cursor: pointer;
-            transition: background .2s, transform .15s, box-shadow .2s;
             box-shadow: 0 6px 20px var(--cg);
+            transition: background .2s,transform .15s;
         }
 
             .btn-modal-save:hover:not(:disabled) {
                 background: var(--cd);
                 transform: translateY(-1px);
-                box-shadow: 0 10px 28px var(--cg);
             }
 
             .btn-modal-save:disabled {
@@ -437,62 +532,66 @@
                 cursor: not-allowed;
             }
 
-            .btn-modal-save.edit-mode {
-                background: #d97706;
-                box-shadow: 0 6px 20px rgba(245,158,11,.25);
-            }
-
-                .btn-modal-save.edit-mode:hover:not(:disabled) {
-                    background: #b45309;
-                }
-
-        /* SweetAlert2 dark */
-        .swal-popup-dark {
-            border: 1px solid var(--border) !important;
-            border-radius: 18px !important;
+        .spinner {
+            display: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
         }
 
-        .swal-btn-confirm {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 10px 22px;
-            border-radius: 10px;
-            background: var(--c);
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            font-size: .82rem;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-        }
-
-            .swal-btn-confirm:hover {
-                background: var(--cd);
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
-
-        .swal-btn-cancel {
-            padding: 10px 22px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-muted);
-            font-family: 'Outfit', sans-serif;
-            font-size: .82rem;
-            font-weight: 600;
-            cursor: pointer;
         }
     </style>
 }
 
 @section Scripts {
     <script>
-        function soloNumeros(e) { const c = e.which || e.keyCode; return (c >= 48 && c <= 57); }
+        // ── Estado ────────────────────────────────────────────────────────────
+        let modoAdmin = 'Nuevo'; // coincide con el enum en C#
 
+        function soloNumeros(e) {
+            const c = e.which || e.keyCode;
+            return c >= 48 && c <= 57;
+        }
         function getToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
         }
 
+        // ── Toggle Nuevo / Existente ──────────────────────────────────────────
+        function setModo(modo) {
+            modoAdmin = modo;
+            document.getElementById('panelNuevo').style.display     = modo === 'Nuevo'     ? '' : 'none';
+            document.getElementById('panelExistente').style.display = modo === 'Existente' ? '' : 'none';
+            document.getElementById('btnModoNuevo').classList.toggle('active',     modo === 'Nuevo');
+            document.getElementById('btnModoExistente').classList.toggle('active', modo === 'Existente');
+            ocultarPreview();
+        }
+
+        // ── Preview admin existente ───────────────────────────────────────────
+        function mostrarPreview() {
+            const sel = document.getElementById('a-existente');
+            const opt = sel.options[sel.selectedIndex];
+            const pv  = document.getElementById('adminPreview');
+
+            if (!sel.value) { ocultarPreview(); return; }
+
+            document.getElementById('pv-nombre').textContent   = opt.dataset.nombre   ?? '';
+            document.getElementById('pv-correo').textContent   = opt.dataset.correo   ?? '';
+            document.getElementById('pv-telefono').textContent = opt.dataset.telefono ?? '';
+            document.getElementById('pv-tiendas').textContent  = opt.dataset.tiendas  ?? '';
+            pv.style.display = 'flex';
+        }
+        function ocultarPreview() {
+            document.getElementById('adminPreview').style.display = 'none';
+        }
+
+        // ── Modal ─────────────────────────────────────────────────────────────
         function abrirModalCrear() {
             limpiarModal();
             document.getElementById('modalTienda').classList.add('open');
@@ -507,27 +606,50 @@
         }
         function limpiarModal() {
             ['t-nombre','t-ubicacion','a-nombre','a-correo','a-telefono','a-documento']
-                .forEach(id => document.getElementById(id).value = '');
-            document.getElementById('t-sede').value = '';
+                .forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('t-sede').value      = '';
+            document.getElementById('a-existente').value = '';
+            ocultarPreview();
+            setModo('Nuevo'); // reset al modo por defecto
         }
 
+        // ── Submit ────────────────────────────────────────────────────────────
         async function submitCrearTienda() {
             const payload = {
-                nombreTienda  : document.getElementById('t-nombre').value.trim(),
-                ubicacion     : document.getElementById('t-ubicacion').value.trim(),
-                idSede        : parseInt(document.getElementById('t-sede').value),
-                nombreAdmin   : document.getElementById('a-nombre').value.trim(),
-                correoAdmin   : document.getElementById('a-correo').value.trim(),
-                telefonoAdmin : document.getElementById('a-telefono').value.trim(),
-                documentoAdmin: parseInt(document.getElementById('a-documento').value)
+                nombreTienda : document.getElementById('t-nombre').value.trim(),
+                ubicacion    : document.getElementById('t-ubicacion').value.trim(),
+                idSede       : parseInt(document.getElementById('t-sede').value) || 0,
+                modoAdmin    : modoAdmin, // 'Nuevo' | 'Existente' → JsonStringEnumConverter
+
+                // Modo Existente
+                idAdminExistente : modoAdmin === 'Existente'
+                    ? parseInt(document.getElementById('a-existente').value) || null
+                    : null,
+
+                // Modo Nuevo
+                nombreAdmin   : modoAdmin === 'Nuevo' ? document.getElementById('a-nombre').value.trim()    : null,
+                correoAdmin   : modoAdmin === 'Nuevo' ? document.getElementById('a-correo').value.trim()    : null,
+                telefonoAdmin : modoAdmin === 'Nuevo' ? document.getElementById('a-telefono').value.trim()  : null,
+                documentoAdmin: modoAdmin === 'Nuevo' ? parseInt(document.getElementById('a-documento').value) || null : null
             };
 
-            if (!payload.nombreTienda || !payload.idSede || !payload.nombreAdmin ||
-                !payload.correoAdmin  || !payload.documentoAdmin) {
-                showToast('error', 'Campos incompletos', 'Completa todos los campos requeridos.');
-                return;
+            // Validación cliente
+            if (!payload.nombreTienda)
+                return showToast('error', 'Campo requerido', 'Ingresa el nombre de la tienda.');
+            if (!payload.idSede)
+                return showToast('error', 'Campo requerido', 'Selecciona una sede.');
+            if (!payload.ubicacion)
+                return showToast('error', 'Campo requerido', 'Ingresa la ubicación.');
+
+            if (modoAdmin === 'Existente' && !payload.idAdminExistente)
+                return showToast('error', 'Campo requerido', 'Selecciona un administrador existente.');
+
+            if (modoAdmin === 'Nuevo') {
+                if (!payload.nombreAdmin || !payload.correoAdmin || !payload.documentoAdmin)
+                    return showToast('error', 'Campos incompletos', 'Completa nombre, correo y documento del administrador.');
             }
 
+            // UI: loading
             const btn     = document.getElementById('btnGuardar');
             const spinner = document.getElementById('spinner');
             const texto   = document.getElementById('textoBtn');
@@ -554,7 +676,7 @@
                     showToast('error', 'Error', data.msg);
                 }
             } catch {
-                showToast('error', 'Error', 'Problema de conexión.');
+                showToast('error', 'Error de conexión', 'Intenta de nuevo.');
             } finally {
                 btn.disabled          = false;
                 spinner.style.display = 'none';
@@ -562,6 +684,7 @@
             }
         }
 
+        // ── Recarga la tabla sin recargar la página ───────────────────────────
         async function cargarTiendas() {
             try {
                 const res     = await fetch('/Funcionarios/Tiendas/ObtenerTiendas');
@@ -569,29 +692,25 @@
                 const tbody   = document.getElementById('tbodyTiendas');
 
                 tbody.innerHTML = tiendas.length === 0
-                    ? `<tr id="emptyRow">
-                         <td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">
-                           <i class="bi bi-shop" style="font-size:1.6rem;display:block;margin-bottom:10px;opacity:.4;"></i>
-                           Aún no hay tiendas registradas
-                         </td>
-                       </tr>`
+                    ? `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">
+                         <i class="bi bi-shop" style="font-size:1.6rem;display:block;margin-bottom:10px;opacity:.4;"></i>
+                         Aún no hay tiendas registradas
+                       </td></tr>`
                     : tiendas.map(t => `
                         <tr>
                           <td style="font-weight:600;">
-                            <span class="badge-tienda">
-                              <i class="bi bi-shop"></i> ${escHtml(t.nombreTienda)}
-                            </span>
+                            <span class="badge-tienda"><i class="bi bi-shop"></i> ${esc(t.nombreTienda)}</span>
                           </td>
-                          <td>${escHtml(t.nombreSede)}</td>
-                          <td style="color:var(--text-muted);">${escHtml(t.ubicacion)}</td>
-                          <td>${escHtml(t.nombreAdmin)}</td>
+                          <td>${esc(t.nombreSede)}</td>
+                          <td style="color:var(--text-muted);">${esc(t.ubicacion)}</td>
+                          <td>${esc(t.nombreAdmin)}</td>
                         </tr>`).join('');
             } catch(err) {
-                console.warn('No se cargaron tiendas:', err);
+                console.warn('Error al cargar tiendas:', err);
             }
         }
 
-        function escHtml(str) {
+        function esc(str) {
             return String(str ?? '')
                 .replace(/&/g,'&amp;').replace(/</g,'&lt;')
                 .replace(/>/g,'&gt;').replace(/"/g,'&quot;');

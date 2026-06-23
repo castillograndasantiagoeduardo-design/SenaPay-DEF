@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Domain.Entities;
-using SenaPay.Domain.Interfaces.Usuarios;
+using SenaPay.Domain.Interfaces;
 using SenaPay.Domain.ValueObjects;
 using SenaPay.Infrastructure.Data;
 using System;

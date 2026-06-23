@@ -2,8 +2,6 @@
 
 public record ValidarAccesoRequest(int Documento, string Password, int IdRol);
 
-public record ValidarAccesoResultado(bool Ok, string Mensaje, int IdRol, string DocumentoSesion);
-
 public record RecuperarPasswordRequest(int Documento);
 
 public record RecuperarPasswordResultado(bool Ok, string Mensaje);

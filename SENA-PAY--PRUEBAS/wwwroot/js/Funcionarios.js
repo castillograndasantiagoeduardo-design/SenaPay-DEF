@@ -242,65 +242,18 @@ async function submitModal() {
     }
 }
 
-// ── Eliminar con SweetAlert2 ──────────────────────────────────
+// ── Carga inicial ─────────────────────────────────────────────
 
-/**
- * Muestra la alerta de confirmación de SweetAlert2.
- * Solo llama al backend si el usuario confirma.
- * @param {number} id       - IdUsuario
- * @param {string} nombre   - Nombre para mostrar en la alerta
- */
-async function confirmarEliminar(id, nombre) {
-    const result = await Swal.fire({
-        title: '¿Eliminar usuario?',
-        html: `Estás a punto de eliminar a <strong>${escHtml(nombre)}</strong>.<br>
-                             <span style="font-size:.85rem; color:#94a3b8;">
-                                Esta acción no se puede deshacer.
-                             </span>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-trash3-fill"></i> Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: 'transparent',
-        background: '#13131f',
-        color: '#e2e8f0',
-        customClass: {
-            popup: 'swal-popup-dark',
-            confirmButton: 'swal-btn-confirm',
-            cancelButton: 'swal-btn-cancel'
-        },
-        buttonsStyling: false   // usamos nuestras clases personalizadas
-    });
-
-    if (!result.isConfirmed) return;
-
-    // Usuario confirmó → llamar al backend
+async function cargarUsuariosIniciales() {
     try {
-        const body = new URLSearchParams({
-            idUsuario: id,
-            __RequestVerificationToken: getAntiforgeryToken()
-        });
-
-        const res = await fetch('/Funcionarios/EliminarUsuario', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body.toString()
-        });
+        const res = await fetch('/Funcionarios/ObtenerUsuarios');
         const data = await res.json();
-
-        if (data.ok) {
-            showToast('success', '¡Eliminado!', data.msg);
-            usuarios = usuarios.filter(u => u.idUsuario != id);
-            renderTabla();
-        } else {
-            showToast('error', 'Error', data.msg);
-        }
-    } catch {
-        showToast('error', 'Error', 'Problema de conexión.');
+        if (Array.isArray(data)) { usuarios = data; renderTabla(); }
+    } catch (err) {
+        console.warn('[SenaPay] No se cargaron usuarios:', err.message);
+        actualizarEstadisticas();
     }
 }
-
 // ── Render tabla ──────────────────────────────────────────────
 function renderTabla() {
     const tbody = document.getElementById('tbodyUsuarios');
@@ -319,41 +272,126 @@ function renderTabla() {
     const badgeIcon = { Aprendiz: 'bi-person-badge-fill', AdminTienda: 'bi-shop', Funcionario: 'bi-briefcase-fill'};
 
     usuarios.forEach(u => {
+
+        // Badge de estado
+        const estadoBadge = u.activo
+            ? `<span style="
+                display:inline-flex; align-items:center; gap:5px;
+                background:rgba(34,197,94,.12); color:#22c55e;
+                padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:700;">
+                <i class="bi bi-circle-fill" style="font-size:.45rem;"></i> Activo
+               </span>`
+            : `<span style="
+                display:inline-flex; align-items:center; gap:5px;
+                background:rgba(100,116,139,.12); color:#94a3b8;
+                padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:700;">
+                <i class="bi bi-circle" style="font-size:.45rem;"></i> Inactivo
+               </span>`;
+
+        // Botón activar/desactivar
+        const estadoBtn = u.activo
+            ? `<button class="btn-action" style="margin-left:6px; background:rgba(234,179,8,.1);
+               color:#ca8a04; border:1px solid rgba(234,179,8,.2);"
+               onclick="cambiarEstado(${u.idUsuario}, false, '${escHtml(u.nombre)}')">
+               <i class="bi bi-pause-circle-fill"></i> Desactivar
+               </button>`
+            : `<button class="btn-action" style="margin-left:6px; background:rgba(34,197,94,.1);
+               color:#22c55e; border:1px solid rgba(34,197,94,.2);"
+               onclick="cambiarEstado(${u.idUsuario}, true, '${escHtml(u.nombre)}')">
+               <i class="bi bi-play-circle-fill"></i> Activar
+               </button>`;
+
         const tr = document.createElement('tr');
+        if (!u.activo) tr.style.opacity = '0.5';
         tr.dataset.id = u.idUsuario;
+        // ✅ Reemplazar por esto — con columna Estado y sin Eliminar
         tr.innerHTML = `
-            <td style="font-weight:600;">${escHtml(u.nombre)}</td>
-            <td style="font-family:'Outfit',sans-serif;">${escHtml(u.documento)}</td>
-            <td>
-                <span class="role-badge ${badgeClass[u.rol] || ''}">
-                    <i class="bi ${badgeIcon[u.rol] || 'bi-person'}"></i>
-                    ${escHtml(u.rol)}
-                </span>
-            </td>
-            <td style="font-family:'Outfit',sans-serif; font-weight:700;">
-                $${Number(u.saldo).toLocaleString('es-CO')}
-            </td>
-            <td style="text-align:right;">
-                <button class="btn-action btn-edit"
-                        onclick="abrirModalEditar(${u.idUsuario})">
-                    <i class="bi bi-pencil-fill"></i> Editar
-                </button>
-                <button class="btn-action btn-delete" style="margin-left:6px;"
-                        onclick="confirmarEliminar(${u.idUsuario}, '${escHtml(u.nombre)}')">
-                    <i class="bi bi-trash3-fill"></i> Eliminar
-                </button>
-            </td>`;
+              <td style="font-weight:600;">${escHtml(u.nombre)}</td>
+              <td style="font-family:'Outfit',sans-serif;">${escHtml(u.documento)}</td>
+              <td>
+              <span class="role-badge ${badgeClass[u.rol] || ''}">
+              <i class="bi ${badgeIcon[u.rol] || 'bi-person'}"></i>
+              ${escHtml(u.rol)}
+              </span>
+              </td>
+              <td style="font-family:'Outfit',sans-serif; font-weight:700;">
+              $${Number(u.saldo).toLocaleString('es-CO')}
+              </td>
+              <td>${estadoBadge}</td>
+              <td style="text-align:right;">
+              <button class="btn-action btn-edit"
+              onclick="abrirModalEditar(${u.idUsuario})">
+              <i class="bi bi-pencil-fill"></i> Editar
+              </button>
+              ${estadoBtn}
+              </td>`;
         tbody.appendChild(tr);
     });
 
     actualizarEstadisticas();
 }
 
+async function cambiarEstado(id, activar, nombre) {
+    const accion = activar ? 'activar' : 'desactivar';
+    const icono = activar ? 'bi-play-circle-fill' : 'bi-pause-circle-fill';
+    const color = activar ? '#22c55e' : '#ca8a04';
+
+    const result = await Swal.fire({
+        title: `¿${activar ? 'Activar' : 'Desactivar'} usuario?`,
+        html: `Estás a punto de <strong>${accion}</strong> a <strong>${escHtml(nombre)}</strong>.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: `<i class="bi ${icono}"></i> Sí, ${accion}`,
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: color,
+        background: '#13131f',
+        color: '#e2e8f0',
+        customClass: {
+            popup: 'swal-popup-dark',
+            confirmButton: 'swal-btn-confirm',
+            cancelButton: 'swal-btn-cancel'
+        },
+        buttonsStyling: false
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const body = new URLSearchParams({
+            idUsuario: id,
+            activar: activar,
+            __RequestVerificationToken: getAntiforgeryToken()
+        });
+
+        const res = await fetch('/Funcionarios/CambiarEstadoUsuario', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+            // Actualizar en memoria sin recargar toda la lista
+            const u = usuarios.find(u => u.idUsuario === id);
+            if (u) u.activo = activar;
+            renderTabla();
+            showToast('success', activar ? '¡Activado!' : '¡Desactivado!', data.msg);
+        } else {
+            showToast('error', 'Error', data.msg);
+        }
+    } catch {
+        showToast('error', 'Error', 'Problema de conexión.');
+    }
+}
+
 function actualizarEstadisticas() {
-    const total = usuarios.length;
-    const aprend = usuarios.filter(u => u.rol === 'Aprendiz').length;
-    const tienda = usuarios.filter(u => u.rol === 'AdminTienda').length;
-    const saldo = usuarios.reduce((a, u) => a + (parseFloat(u.saldo) || 0), 0);
+    const activos = usuarios.filter(u => u.activo);          // ← solo activos
+    const total = activos.length;
+    const aprend = activos.filter(u => u.rol === 'Aprendiz').length;
+    const tienda = activos.filter(u => u.rol === 'AdminTienda').length;
+    const saldo = activos.reduce((a, u) => a + (parseFloat(u.saldo) || 0), 0);
+
     document.getElementById('stat-total').textContent = total;
     document.getElementById('stat-aprendiz').textContent = aprend;
     document.getElementById('stat-tienda').textContent = tienda;
@@ -361,17 +399,6 @@ function actualizarEstadisticas() {
     document.getElementById('badge-usuarios').textContent = total;
 }
 
-// ── Carga inicial ─────────────────────────────────────────────
-async function cargarUsuariosIniciales() {
-    try {
-        const res = await fetch('/Funcionarios/ObtenerUsuarios');
-        const data = await res.json();
-        if (Array.isArray(data)) { usuarios = data; renderTabla(); }
-    } catch (err) {
-        console.warn('[SenaPay] No se cargaron usuarios:', err.message);
-        actualizarEstadisticas();
-    }
-}
 
 // ── Sección Bloquear (sin cambios) ────────────────────────────
 function clearBlkError(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
@@ -426,3 +453,21 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarEstadisticas();
     cargarUsuariosIniciales();
 });
+
+
+async function cargarUsuariosIniciales() {
+    try {
+        const res = await fetch('/Funcionarios/ObtenerUsuarios');
+        const data = await res.json();
+
+        // ← DIAGNÓSTICO TEMPORAL
+        console.log('Primer usuario:', JSON.stringify(data[0]));
+        console.log('activo (minúscula):', data[0]?.activo);
+        console.log('Activo (mayúscula):', data[0]?.Activo);
+
+        if (Array.isArray(data)) { usuarios = data; renderTabla(); }
+    } catch (err) {
+        console.warn('[SenaPay] No se cargaron usuarios:', err.message);
+        actualizarEstadisticas();
+    }
+}

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Domain.Entities;
-using SenaPay.Domain.Interfaces.Core;
-using SenaPay.Domain.Interfaces.Tienda;
+using SenaPay.Domain.Interfaces;
 using SenaPay.Infrastructure.Data;
 
 namespace SenaPay.Infrastructure.Repositories.Usuarios;
@@ -36,6 +35,15 @@ public class TiendaRepository : ITiendaRepository
             .FirstOrDefaultAsync(t =>
                 t.IdAdminCafeteriaNavigation != null &&
                 t.IdAdminCafeteriaNavigation.IdUsuario == idUsuario);
+
+    // Implementación en TiendaRepository
+    public async Task<List<Tiendum>> ObtenerPorAdminUsuarioAsync(int idUsuario) =>
+        await _context.Tienda
+            .Include(t => t.IdSedeNavigation)
+            .Include(t => t.IdAdminCafeteriaNavigation)
+            .Where(t => t.IdAdminCafeteriaNavigation != null &&
+                        t.IdAdminCafeteriaNavigation.IdUsuario == idUsuario)
+            .ToListAsync();
 
     public async Task CrearAsync(Tiendum tienda) =>
         await _context.Tienda.AddAsync(tienda);

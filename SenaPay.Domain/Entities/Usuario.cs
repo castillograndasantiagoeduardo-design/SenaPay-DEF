@@ -12,6 +12,7 @@
         public string Clave { get; set; } = null!;
 
         public int IdRol { get; set; }
+        public bool Activo { get; set; } = true;
 
         public virtual ICollection<AdminCafeterium> AdminCafeteria { get; set; } = new List<AdminCafeterium>();
 

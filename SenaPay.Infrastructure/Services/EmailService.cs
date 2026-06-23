@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
-using SenaPay.Domain.Interfaces.Core;
+using SenaPay.Application.Interfaces;
 
 namespace SenaPay.Infrastructure.Services;
 

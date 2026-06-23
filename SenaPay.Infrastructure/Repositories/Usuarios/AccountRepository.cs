@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Domain.Entities;
-using SenaPay.Domain.Interfaces.Usuarios;
+using SenaPay.Domain.Interfaces;
 using SenaPay.Infrastructure.Data;
 
 namespace SenaPay.Infrastructure.Repositories.Usuarios;
@@ -10,22 +10,32 @@ public class AccountRepository : IAccountRepository
     private readonly SenaPayContext _context;
     public AccountRepository(SenaPayContext context) => _context = context;
 
-    public async Task<Usuario?> ObtenerUsuarioPorDocumentoYClaveAsync(int documento, string clave) =>
-        await _context.Usuarios
-            .FirstOrDefaultAsync(u => u.Documento == documento && u.Clave == clave);
+    public async Task<Usuario?> ObtenerUsuarioPorDocumentoYClaveAsync(int documento, string clave)
+    {
+        return await _context.Usuarios
+            .Include(u => u.AdminCafeteria)
+                .ThenInclude(a => a.Tienda)   // ← carga la tienda del admin
+            .Include(u => u.Funcionarios)
+            .Include(u => u.Aprendices)
+            .FirstOrDefaultAsync(u =>
+                u.Documento == documento && u.Clave == clave &&
+                u.Activo);
+    }
 
     public async Task<(Usuario? usuario, string? correo)> ObtenerUsuarioConCorreoAsync(int documento)
     {
         var usuario = await _context.Usuarios
             .Include(u => u.Aprendices)
             .Include(u => u.Funcionarios)
-            .FirstOrDefaultAsync(u => u.Documento == documento);
+            .Include(u => u.AdminCafeteria)
+            .FirstOrDefaultAsync(u => u.Documento == documento &&
+                u.Activo);
 
         if (usuario is null) return (null, null);
 
         string? correo = usuario.Aprendices.FirstOrDefault()?.Correo
-                      ?? _context.Funcionarios
-                             .FirstOrDefault(f => f.IdUsuario == usuario.IdUsuario)?.Correo;
+                      ?? usuario.Funcionarios.FirstOrDefault()?.Correo
+                      ?? usuario.AdminCafeteria.FirstOrDefault()?.Correo;
 
         return (usuario, correo);
     }

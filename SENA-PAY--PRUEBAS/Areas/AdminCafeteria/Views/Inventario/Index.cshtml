@@ -1,0 +1,972 @@
+﻿@using SenaPay.Application.DTOs.Producto
+@using SenaPay.Application.DTOs.Categoria
+@{
+    ViewData["Title"] = "Inventario";
+    ViewData["Breadcrumb"] = "Inventario";
+    Layout = "~/Areas/AdminCafeteria/Views/Shared/_Layout.cshtml";
+
+    var productos = (ViewBag.Productos as IEnumerable<ProductoDto>)?.ToList() ?? new();
+    var categorias = (ViewBag.Categorias as IEnumerable<CategoriaSeleccionDto>)?.ToList() ?? new();
+    var filtroActual = (int?)ViewBag.CategoriaFiltro;
+    var habilitadas = categorias.Where(c => c.Habilitada).ToList();
+}
+
+@section Styles {
+    <style>
+        /* ── Page header ── */
+        .inv-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .inv-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .inv-sub {
+            font-size: .75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Filter tabs ── */
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            animation: slideUp .55s cubic-bezier(.22,1,.36,1) .04s both;
+        }
+
+        /* ── Table card ── */
+        .inv-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: slideUp .6s cubic-bezier(.22,1,.36,1) .06s both;
+        }
+
+        .inv-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .inv-count {
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+            .inv-count span {
+                color: var(--c);
+                font-size: 1rem;
+                font-weight: 800;
+            }
+
+        /* ── Table ── */
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table.inv-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .inv-table thead th {
+            font-family: 'Outfit', sans-serif;
+            font-size: .62rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 12px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            background: rgba(0,0,0,.02);
+        }
+
+        .inv-table tbody td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            vertical-align: middle;
+            font-size: .83rem;
+        }
+
+        .inv-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .inv-table tbody tr {
+            transition: background .15s;
+        }
+
+            .inv-table tbody tr:hover td {
+                background: rgba(232,108,0,.03);
+            }
+
+        /* Product cell */
+        .prod-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .prod-thumb {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--border);
+        }
+
+        .prod-thumb-placeholder {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px dashed var(--border);
+            display: grid;
+            place-items: center;
+            color: var(--text-muted);
+            font-size: 18px;
+            flex-shrink: 0;
+            background: rgba(0,0,0,.02);
+        }
+
+        .prod-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .prod-id {
+            font-size: .68rem;
+            color: var(--text-muted);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            font-size: .65rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+        }
+
+        .badge-cat {
+            background: rgba(232,108,0,.1);
+            color: var(--c);
+        }
+
+        .badge-ok {
+            background: rgba(34,197,94,.1);
+            color: #16a34a;
+        }
+
+        .badge-warning {
+            background: rgba(245,158,11,.12);
+            color: #d97706;
+        }
+
+        .badge-danger {
+            background: rgba(239,68,68,.1);
+            color: #ef4444;
+        }
+
+        .badge-off {
+            background: rgba(100,116,139,.1);
+            color: #64748b;
+        }
+
+        .price-cell {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--c);
+        }
+
+        /* Action buttons */
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .btn-tbl {
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity .2s, transform .15s;
+            text-decoration: none;
+        }
+
+            .btn-tbl:hover {
+                opacity: .85;
+                transform: translateY(-1px);
+            }
+
+        .btn-edit {
+            background: rgba(232,108,0,.12);
+            color: var(--c);
+        }
+
+        .btn-toggle {
+            background: rgba(34,197,94,.1);
+            color: #16a34a;
+        }
+
+            .btn-toggle.off {
+                background: rgba(100,116,139,.1);
+                color: #64748b;
+            }
+
+        .btn-del {
+            background: rgba(239,68,68,.1);
+            color: #ef4444;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+        }
+
+        .empty-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: rgba(232,108,0,.08);
+            display: grid;
+            place-items: center;
+            font-size: 32px;
+            color: var(--c);
+            margin: 0 auto 16px;
+        }
+
+        .empty-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .empty-sub {
+            font-size: .8rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        /* ── MODAL ── */
+        .sp-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .sp-modal-backdrop.open {
+                display: flex;
+            }
+
+        .sp-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 64px rgba(0,0,0,.3);
+            animation: modalIn .3s cubic-bezier(.34,1.2,.64,1);
+        }
+
+        @@keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .sp-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            background: rgba(232,108,0,.12);
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+            color: var(--c);
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-sub {
+            font-size: .72rem;
+            color: var(--text-muted);
+        }
+
+        .btn-modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background .15s;
+        }
+
+            .btn-modal-close:hover {
+                background: var(--border);
+            }
+
+        .sp-modal-body {
+            padding: 24px;
+        }
+
+        .sp-modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Form inside modal */
+        .modal-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .mfg-full {
+            grid-column: 1 / -1;
+        }
+
+        .modal-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: .63rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 11px;
+            font-family: 'Inter', sans-serif;
+            font-size: .84rem;
+            color: var(--text-main);
+            background: rgba(0,0,0,.03);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+            .modal-input:focus {
+                border-color: var(--c);
+                box-shadow: 0 0 0 3px rgba(232,108,0,.1);
+                background: var(--surface);
+            }
+
+        /* Image upload */
+        .img-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+        }
+
+            .img-upload-area:hover, .img-upload-area.drag-over {
+                border-color: var(--c);
+                background: rgba(232,108,0,.04);
+            }
+
+            .img-upload-area input[type="file"] {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        .img-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin: 0 auto 8px;
+            display: block;
+            border: 2px solid var(--c);
+        }
+
+        .img-upload-icon {
+            font-size: 28px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .img-upload-text {
+            font-size: .75rem;
+            color: var(--text-muted);
+        }
+
+            .img-upload-text strong {
+                color: var(--c);
+            }
+
+        /* Btn cancel */
+        .btn-cancel {
+            padding: 11px 20px;
+            border-radius: 11px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+            .btn-cancel:hover {
+                border-color: var(--c);
+                color: var(--c);
+            }
+
+        @@media (max-width: 640px) {
+            .modal-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mfg-full {
+                grid-column: 1;
+            }
+
+            .sp-modal {
+                margin: 12px;
+            }
+        }
+    </style>
+}
+
+<!-- ── Page Header ── -->
+<div class="inv-header">
+    <div>
+        <div class="inv-title">Inventario</div>
+        <div class="inv-sub">
+            @productos.Count producto@(productos.Count != 1 ? "s" : "") en tu tienda
+        </div>
+    </div>
+    <button class="btn-primary" onclick="abrirModalCrear()">
+        <div class="btn-icon-box"><i class="bi bi-plus-lg"></i></div>
+        Agregar producto
+    </button>
+</div>
+
+<!-- ── Filtro por categoría ── -->
+<div class="filter-row">
+    <a asp-area="AdminCafeteria" asp-controller="Inventario" asp-action="Index"
+       class="ftab @(filtroActual == null ? "active" : "")">
+        <i class="bi bi-grid-3x3-gap-fill"></i> Todos
+    </a>
+    @foreach (var cat in habilitadas)
+    {
+        <a asp-area="AdminCafeteria" asp-controller="Inventario" asp-action="Index"
+           asp-route-categoriaFiltro="@cat.IdCategoria"
+           class="ftab @(filtroActual == cat.IdCategoria ? "active" : "")">
+            @cat.NombreCategoria
+        </a>
+    }
+</div>
+
+<!-- ── Tabla de productos ── -->
+<div class="inv-card">
+    <div class="inv-card-header">
+        <div class="inv-count">
+            Total: <span>@productos.Count</span>
+            @if (filtroActual != null)
+            {
+                var catNombre = habilitadas.FirstOrDefault(c => c.IdCategoria == filtroActual)?.NombreCategoria;
+                <span style="color:var(--text-muted); font-weight:400"> · Filtrado por <strong style="color:var(--c)">@catNombre</strong></span>
+            }
+        </div>
+    </div>
+
+    <div class="table-scroll">
+        @if (!productos.Any())
+        {
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+                <div class="empty-title">No hay productos aquí</div>
+                <div class="empty-sub">
+                    @if (filtroActual != null)
+                    {
+                        <span>No tienes productos en esta categoría.</span>
+                    }
+                    else
+                    {
+                        <span>Agrega tu primer producto para empezar a vender.</span>
+                    }
+                </div>
+                <button class="btn-primary" onclick="abrirModalCrear()">
+                    <i class="bi bi-plus-lg"></i> Agregar producto
+                </button>
+            </div>
+        }
+        else
+        {
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th style="text-align:right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in productos)
+                    {
+                        <tr>
+                            <td>
+                                <div class="prod-cell">
+                                    @if (!string.IsNullOrEmpty(p.Imagen))
+                                    {
+                                        <img src="@p.Imagen" alt="@p.NombreProducto" class="prod-thumb" />
+                                    }
+                                    else
+                                    {
+                                        <div class="prod-thumb-placeholder">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                    }
+                                    <div>
+                                        <div class="prod-name">@p.NombreProducto</div>
+                                        <div class="prod-id">#@p.IdProducto</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(p.NombreCategoria))
+                                {
+                                    <span class="badge badge-cat">
+                                        <i class="bi bi-tag-fill"></i> @p.NombreCategoria
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="color:var(--text-muted); font-size:.78rem">—</span>
+                                }
+                            </td>
+                            <td class="price-cell">@p.PrecioFormateado</td>
+                            <td>
+                                <span class="badge @p.StockCssClass">
+                                    @p.Stock uds · @p.StockLabel
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @(p.Estado ? "badge-ok" : "badge-off")">
+                                    <i class="bi bi-@(p.Estado ? "check-circle-fill" : "pause-circle-fill")"></i>
+                                    @(p.Estado ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="actions-cell" style="justify-content:flex-end">
+                                    <button class="btn-tbl btn-edit"
+                                            onclick="abrirModalEditar(
+                                                @p.IdProducto,
+                                                '@Html.Raw(p.NombreProducto.Replace("'","\\\'"))',
+                                                @p.Precio.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                                @p.Stock,
+                                                @(p.IdCategoria?.ToString() ?? "null"),
+                                                '@(p.Imagen ?? "")',
+                                                @(p.Estado ? "true" : "false"))">
+                                        <i class="bi bi-pencil-fill"></i> Editar
+                                    </button>
+
+                                    <form asp-area="AdminCafeteria"
+                                          asp-controller="Inventario"
+                                          asp-action="Eliminar"
+                                          method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@p.IdProducto" />
+                                        <button type="button" class="btn-tbl btn-del"
+                                                onclick="confirmarEliminar(this, '@Html.Raw(p.NombreProducto.Replace("'","\\\'"))')">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- ════════════════ MODAL CREAR ════════════════ -->
+<div class="sp-modal-backdrop" id="modalCrear">
+    <div class="sp-modal">
+        <div class="sp-modal-header">
+            <div class="modal-icon"><i class="bi bi-plus-lg"></i></div>
+            <div>
+                <div class="modal-title">Nuevo producto</div>
+                <div class="modal-sub">Completa los datos del producto</div>
+            </div>
+            <button class="btn-modal-close" onclick="cerrarModal('modalCrear')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form asp-area="AdminCafeteria"
+              asp-controller="Inventario"
+              asp-action="Crear"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="sp-modal-body">
+                <div class="modal-form-grid">
+
+                    <!-- Imagen -->
+                    <div class="mfg-full">
+                        <label class="modal-label">Imagen del producto</label>
+                        <div class="img-upload-area" id="uploadAreaCrear"
+                             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                             ondragleave="this.classList.remove('drag-over')"
+                             ondrop="handleDrop(event,'previewCrear','uploadAreaCrear')">
+                            <input type="file" name="ImagenFile" accept="image/*"
+                                   onchange="previewImagen(this,'previewCrear','uploadAreaCrear')" />
+                            <img id="previewCrear" class="img-preview" style="display:none" src="" alt="" />
+                            <div id="placeholderCrear">
+                                <div class="img-upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                                <div class="img-upload-text">
+                                    <strong>Haz clic</strong> o arrastra una imagen aquí<br>
+                                    <span>PNG, JPG, WEBP · Máx. 5MB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="mfg-full">
+                        <label class="modal-label" for="crear_nombre">Nombre del producto *</label>
+                        <input id="crear_nombre" name="NombreProducto" type="text"
+                               class="modal-input" placeholder="Ej: Café americano" required />
+                    </div>
+
+                    <!-- Precio -->
+                    <div>
+                        <label class="modal-label" for="crear_precio">Precio (COP) *</label>
+                        <input id="crear_precio" name="Precio" type="number"
+                               min="0" step="50" class="modal-input"
+                               placeholder="1800" required />
+                    </div>
+
+                    <!-- Stock -->
+                    <div>
+                        <label class="modal-label" for="crear_stock">Stock inicial *</label>
+                        <input id="crear_stock" name="Stock" type="number"
+                               min="0" class="modal-input" placeholder="50" required />
+                    </div>
+
+                    <!-- Categoría -->
+                    <div class="mfg-full">
+                        <label class="modal-label" for="crear_cat">Categoría</label>
+                        <select id="crear_cat" name="IdCategoria" class="modal-input">
+                            <option value="">Sin categoría</option>
+                            @foreach (var cat in habilitadas)
+                            {
+                                <option value="@cat.IdCategoria">@cat.NombreCategoria</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="sp-modal-footer">
+                <button type="button" class="btn-cancel" onclick="cerrarModal('modalCrear')">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary">
+                    <div class="btn-icon-box"><i class="bi bi-check-lg"></i></div>
+                    Guardar producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ════════════════ MODAL EDITAR ════════════════ -->
+<div class="sp-modal-backdrop" id="modalEditar">
+    <div class="sp-modal">
+        <div class="sp-modal-header">
+            <div class="modal-icon"><i class="bi bi-pencil-fill"></i></div>
+            <div>
+                <div class="modal-title">Editar producto</div>
+                <div class="modal-sub">Modifica los datos del producto</div>
+            </div>
+            <button class="btn-modal-close" onclick="cerrarModal('modalEditar')">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form asp-area="AdminCafeteria"
+              asp-controller="Inventario"
+              asp-action="Editar"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="IdProducto" id="edit_id" />
+            <input type="hidden" name="Imagen" id="edit_imagenActual" />
+
+            <div class="sp-modal-body">
+                <div class="modal-form-grid">
+
+                    <!-- Imagen -->
+                    <div class="mfg-full">
+                        <label class="modal-label">Imagen del producto</label>
+                        <div class="img-upload-area" id="uploadAreaEditar"
+                             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                             ondragleave="this.classList.remove('drag-over')"
+                             ondrop="handleDrop(event,'previewEditar','uploadAreaEditar')">
+                            <input type="file" name="ImagenFile" accept="image/*"
+                                   onchange="previewImagen(this,'previewEditar','uploadAreaEditar')" />
+                            <img id="previewEditar" class="img-preview" style="display:none" src="" alt="" />
+                            <div id="placeholderEditar">
+                                <div class="img-upload-icon"><i class="bi bi-arrow-repeat"></i></div>
+                                <div class="img-upload-text">
+                                    <strong>Cambiar imagen</strong> o dejar la actual<br>
+                                    <span>PNG, JPG, WEBP · Máx. 5MB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="mfg-full">
+                        <label class="modal-label" for="edit_nombre">Nombre del producto *</label>
+                        <input id="edit_nombre" name="NombreProducto" type="text"
+                               class="modal-input" required />
+                    </div>
+
+                    <!-- Precio -->
+                    <div>
+                        <label class="modal-label" for="edit_precio">Precio (COP) *</label>
+                        <input id="edit_precio" name="Precio" type="number"
+                               min="0" step="50" class="modal-input" required />
+                    </div>
+
+                    <!-- Stock -->
+                    <div>
+                        <label class="modal-label" for="edit_stock">Stock *</label>
+                        <input id="edit_stock" name="Stock" type="number"
+                               min="0" class="modal-input" required />
+                    </div>
+
+                    <!-- Categoría -->
+                    <div>
+                        <label class="modal-label" for="edit_cat">Categoría</label>
+                        <select id="edit_cat" name="IdCategoria" class="modal-input">
+                            <option value="">Sin categoría</option>
+                            @foreach (var cat in habilitadas)
+                            {
+                                <option value="@cat.IdCategoria">@cat.NombreCategoria</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Estado -->
+                    <div>
+                        <label class="modal-label" for="edit_estado">Estado</label>
+                        <select id="edit_estado" name="Estado" class="modal-input">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="sp-modal-footer">
+                <button type="button" class="btn-cancel" onclick="cerrarModal('modalEditar')">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn-primary">
+                    <div class="btn-icon-box"><i class="bi bi-check-lg"></i></div>
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        /* ── Modales ── */
+        function abrirModalCrear() {
+            document.getElementById('modalCrear').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function abrirModalEditar(id, nombre, precio, stock, idCat, imagen, estado) {
+            document.getElementById('edit_id').value            = id;
+            document.getElementById('edit_nombre').value        = nombre;
+            document.getElementById('edit_precio').value        = precio;
+            document.getElementById('edit_stock').value         = stock;
+            document.getElementById('edit_estado').value        = estado ? 'true' : 'false';
+            document.getElementById('edit_imagenActual').value  = imagen;
+
+            const catSelect = document.getElementById('edit_cat');
+            catSelect.value = idCat ?? '';
+
+            // Mostrar imagen actual si existe
+            const preview     = document.getElementById('previewEditar');
+            const placeholder = document.getElementById('placeholderEditar');
+            if (imagen) {
+                preview.src           = imagen;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            } else {
+                preview.style.display     = 'none';
+                placeholder.style.display = 'block';
+            }
+
+            document.getElementById('modalEditar').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        /* ── Preview imagen ── */
+        function previewImagen(input, previewId, areaId) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Imagen muy grande', 'El archivo no debe superar 5MB.', 'error');
+                input.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const preview     = document.getElementById(previewId);
+                const placeholder = document.getElementById(
+                    areaId === 'uploadAreaCrear' ? 'placeholderCrear' : 'placeholderEditar');
+                preview.src           = e.target.result;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleDrop(event, previewId, areaId) {
+            event.preventDefault();
+            document.getElementById(areaId).classList.remove('drag-over');
+            const input = document.querySelector(`#${areaId} input[type="file"]`);
+            input.files = event.dataTransfer.files;
+            previewImagen(input, previewId, areaId);
+        }
+
+        /* ── Confirmar eliminar con SweetAlert2 ── */
+        function confirmarEliminar(btn, nombre) {
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                html: `<span style="color:#8890a8">Se eliminará <strong style="color:#f0f0ff">${nombre}</strong> de forma permanente.</span>`,
+                icon: 'warning',
+                background: '#13131f',
+                color: '#f0f0ff',
+                iconColor: '#ef4444',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#2a2a3e',
+            }).then(result => {
+                if (result.isConfirmed)
+                    btn.closest('form').submit();
+            });
+        }
+
+        /* ── Cerrar modal al hacer clic fuera ── */
+        document.querySelectorAll('.sp-modal-backdrop').forEach(backdrop => {
+            backdrop.addEventListener('click', e => {
+                if (e.target === backdrop) cerrarModal(backdrop.id);
+            });
+        });
+
+        /* ── Cerrar con Escape ── */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.sp-modal-backdrop.open')
+                        .forEach(m => cerrarModal(m.id));
+            }
+        });
+    </script>
+}

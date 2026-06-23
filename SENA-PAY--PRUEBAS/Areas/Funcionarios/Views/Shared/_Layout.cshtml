@@ -911,29 +911,36 @@
                 <div class="nav-section-label">Principal</div>
 
                 <a asp-area="Funcionarios" asp-controller="Funcionarios" asp-action="AgregarUsuarios"
-                   class="nav-link-item @(accionActual == "AgregarUsuarios" ? "active" : "")">
+                    class="nav-link-item @(accionActual == "AgregarUsuarios" ? "active" : "")">
                     <i class="bi bi-people-fill"></i>
                     Usuarios
                     <span class="nav-badge" id="badge-usuarios">@(ViewBag.TotalUsuarios ?? "")</span>
                 </a>
 
                 <a asp-area="Funcionarios" asp-controller="Tiendas" asp-action="Index"
-                   class="nav-link-item @(controlActual == "Tiendas" ? "active" : "")">
+                    class="nav-link-item @(controlActual == "Tiendas" ? "active" : "")">
                     <i class="bi bi-shop"></i>
                     Tiendas
                 </a>
 
                 <a asp-area="Funcionarios" asp-controller="Funcionarios" asp-action="Reportes"
-                   class="nav-link-item @(accionActual == "Reportes" ? "active" : "")">
+                    class="nav-link-item @(accionActual == "Reportes" ? "active" : "")">
                     <i class="bi bi-flag-fill"></i>
                     Reportes
                 </a>
 
+                <a asp-area="Funcionarios" asp-controller="Categorias" asp-action="Index"
+                    class="nav-link-item @(controlActual == "Categorias" ? "active" : "")">
+                    <i class="bi bi-flag-fill"></i>
+                    Categorias
+                </a>
+
                 <div class="nav-section-label">Sistema</div>
 
-                <a class="nav-link-item" href="/Account/Logout"
-                   style="color:#ef4444; margin-top:8px;"
-                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                <a asp-area="Account" asp-controller="Account" asp-action="Login"
+                    class="nav-link-item @(controlActual == "Account" ? "active" : "")"
+                    style="color:#ef4444; margin-top:8px;"
+                    onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
                     <i class="bi bi-box-arrow-left"></i>
                     Cerrar sesión
                 </a>
@@ -973,8 +980,9 @@
                     <div class="status-dot"></div>
                     Sistema operativo
                 </div>
-                <a href="/Account/Logout" class="btn-logout"
-                   onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
+                <a asp-area="Account" asp-controller="Account" asp-action="Login"
+                   class="btn-logout @(controlActual == "Account" ? "active" : "")"
+                    onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Cerrar sesión</span>
                 </a>

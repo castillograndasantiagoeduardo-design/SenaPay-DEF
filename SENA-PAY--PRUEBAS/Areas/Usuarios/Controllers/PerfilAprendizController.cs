@@ -1,54 +1,81 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SenaPay.Application.UseCases.Aprendiz; //Se conecta con la capa de aplicacion Aprendiz
+using SenaPay.Application.UseCases.Aprendiz;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using SenaPay.Application.DTOs.Aprendiz;
 
 namespace SENA_PAY__PRUEBAS.Areas.Usuarios.Controllers;
 
 /// <summary>
-/// Responsabilidad única: recibir la petición HTTP, leer la sesión,
-/// delegar al caso de uso y devolver la vista o redirección.
-/// Sin lógica de negocio. Sin DbContext ni hablar con la base de datos.
-/// Ahora es un controlador limpio y delgado
+/// Responsabilidad única: leer sesión, delegar al caso de uso y devolver la vista.
+/// Sin lógica de negocio. Sin DbContext.
 /// </summary>
 [Area("Usuarios")]
+[Authorize(Roles = "1")]
 public class PerfilAprendizController : Controller
 {
-    //Se guarda el caso de uso
     private readonly GetPerfilAprendizUseCase _getPerfilUseCase;
+    private readonly ActualizarPerfilAprendizUseCase _actualizarPerfilUseCase;
 
-    //Constructor del caso de uso
-    public PerfilAprendizController(GetPerfilAprendizUseCase getPerfilUseCase)
+    public PerfilAprendizController(
+        GetPerfilAprendizUseCase getPerfilUseCase,
+        ActualizarPerfilAprendizUseCase actualizarPerfilUseCase)
     {
         _getPerfilUseCase = getPerfilUseCase;
+        _actualizarPerfilUseCase = actualizarPerfilUseCase;
     }
 
-    //Accion que se dispara al momento que el usuario lo decida
+    // GET /Usuarios/PerfilAprendiz/Perfil
     public async Task<IActionResult> Perfil()
     {
-        // ── 1. Validar sesión (responsabilidad de la capa de Presentación) ──
-        string? doc = HttpContext.Session.GetString("UsuarioDoc");
+        var doc = User.FindFirstValue("Documento"); // ← claim "Documento" del login
 
-        //Esto se hace por seguridad de la interfaz, evalua 2 cosas
-        //Si el documento esta vacio (IsNullOrEmpty)
-        //Si el texto de la sesion no se puede convetir a numero entero
-        //Si cumple una de las dos cancela el inicio de sesion y lo redirigue al login 
         if (string.IsNullOrEmpty(doc) || !int.TryParse(doc, out int documento))
             return RedirectToAction("Login", "Account", new { area = "Account" });
 
-        // ── . Delegar al Caso de Uso ────────────────────────────────────────
-        //Se le manda el documento al caso de uso para que el caso de uso busque en la BSD y devuelva nulo o el aprendiz
         var perfil = await _getPerfilUseCase.EjecutarAsync(documento);
 
-        //Si retorna null lo redirigue al login
         if (perfil is null)
             return RedirectToAction("Login", "Account", new { area = "Account" });
 
-        // ── . Pasar datos a la Vista (solo mapeo de DTO → ViewBag) ──────────
-        ViewBag.Nombre = perfil.Nombre;
-        ViewBag.Saldo = perfil.Saldo;
-        ViewBag.Ficha = perfil.Ficha;
-        ViewBag.Correo = perfil.Correo;
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+        return View(perfil);
+    }
 
-        //Por ultimo retorna a la vista del perfil del aprendiz ya con sus datos pintados en la vista 
-        return View();
+    // POST /Usuarios/PerfilAprendiz/ActualizarPerfil
+    [HttpPost]
+    public async Task<IActionResult> ActualizarPerfil([FromBody] ActualizarPerfilDto dto)
+    {
+        var doc = User.FindFirstValue("Documento"); // ← claim "Documento" del login
+
+        if (string.IsNullOrEmpty(doc) || !int.TryParse(doc, out int documento))
+            return Json(new { ok = false, msg = "Sesión expirada. Inicia sesión de nuevo." });
+
+        if (string.IsNullOrWhiteSpace(dto?.Correo) ||
+            !System.Text.RegularExpressions.Regex.IsMatch(
+                dto.Correo, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+            return Json(new { ok = false, msg = "El correo no es válido." });
+
+        bool actualizado = await _actualizarPerfilUseCase.EjecutarAsync(documento, dto);
+
+        return actualizado
+            ? Json(new { ok = true, msg = "Perfil actualizado correctamente." })
+            : Json(new { ok = false, msg = "No se encontró el aprendiz." });
+    }
+
+    // GET /Usuarios/PerfilAprendiz/CerrarSesion
+    public IActionResult CerrarSesion()
+    {
+        Response.Cookies.Delete("sp-auth", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
+            Path = "/"
+        });
+        HttpContext.Session.Clear();
+        return RedirectToAction("Login", "Account", new { area = "Account" });
     }
 }

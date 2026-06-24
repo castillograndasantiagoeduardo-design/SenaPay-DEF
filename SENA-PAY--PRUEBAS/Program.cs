@@ -84,6 +84,7 @@ builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
 
 // ── Casos de Uso: Aprendiz ────────────────────────────────────────────────────
 builder.Services.AddScoped<GetPerfilAprendizUseCase>();
+builder.Services.AddScoped<ActualizarPerfilAprendizUseCase>();
 
 // ── Casos de Uso: Account ─────────────────────────────────────────────────────
 builder.Services.AddScoped<ValidarAccesoUseCase>();

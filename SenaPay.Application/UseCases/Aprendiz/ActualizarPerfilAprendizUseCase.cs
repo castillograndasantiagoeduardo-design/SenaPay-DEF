@@ -1,3 +1,4 @@
+using SenaPay.Application.DTOs.Aprendiz;
 using SenaPay.Domain.Interfaces;
 
 namespace SenaPay.Application.UseCases.Aprendiz;

@@ -105,6 +105,7 @@ builder.Services.AddScoped<CrearTiendaUseCase>();
 builder.Services.AddScoped<ObtenerTiendasUseCase>();
 builder.Services.AddScoped<ObtenerSedesUseCase>();
 builder.Services.AddScoped<ObtenerAdminsDisponiblesUseCase>();
+builder.Services.AddScoped<AsignarAdminTiendaUseCase>();
 
 // ── Casos de Uso: Selección de Tienda (AdminCafeteria) ───────────────────────
 builder.Services.AddScoped<ObtenerTiendasDeAdminUseCase>();

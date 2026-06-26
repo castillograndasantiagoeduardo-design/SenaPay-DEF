@@ -13,17 +13,20 @@ public class TiendasController : Controller
     private readonly ObtenerTiendasUseCase _obtenerTiendasUseCase;
     private readonly ObtenerSedesUseCase _obtenerSedesUseCase;
     private readonly ObtenerAdminsDisponiblesUseCase _obtenerAdminsUseCase;
+    private readonly AsignarAdminTiendaUseCase _asignarAdminUseCase;
 
     public TiendasController(
         CrearTiendaUseCase crearTiendaUseCase,
         ObtenerTiendasUseCase obtenerTiendasUseCase,
         ObtenerSedesUseCase obtenerSedesUseCase,
-        ObtenerAdminsDisponiblesUseCase obtenerAdminsUseCase)
+        ObtenerAdminsDisponiblesUseCase obtenerAdminsUseCase,
+        AsignarAdminTiendaUseCase asignarAdminUseCase)
     {
         _crearTiendaUseCase = crearTiendaUseCase;
         _obtenerTiendasUseCase = obtenerTiendasUseCase;
         _obtenerSedesUseCase = obtenerSedesUseCase;
         _obtenerAdminsUseCase = obtenerAdminsUseCase;
+        _asignarAdminUseCase = asignarAdminUseCase;
     }
 
     // GET /Funcionarios/Tiendas ─────────────────────────────────────────────
@@ -78,5 +81,18 @@ public class TiendasController : Controller
     {
         var admins = await _obtenerAdminsUseCase.EjecutarAsync();
         return Json(admins);
+    }
+
+    // ── POST /Funcionarios/Tiendas/AsignarAdmin ──────────────────────────
+    [HttpPost]
+    [Route("Funcionarios/Tiendas/AsignarAdmin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AsignarAdmin([FromBody] AsignarAdminRequest request)
+    {
+        if (request is null)
+            return Json(new { ok = false, msg = "Datos inválidos." });
+
+        var resultado = await _asignarAdminUseCase.EjecutarAsync(request);
+        return Json(new { ok = resultado.Ok, msg = resultado.Mensaje });
     }
 }

@@ -5,7 +5,8 @@ public record TiendaDto(
     string NombreTienda,
     string Ubicacion,
     string NombreSede,
-    string NombreAdmin
+    string NombreAdmin,
+    int? IdAdminCafeteria
 );
 
 public record SedeDto(int IdSede, string Nombre, string Ciudad);

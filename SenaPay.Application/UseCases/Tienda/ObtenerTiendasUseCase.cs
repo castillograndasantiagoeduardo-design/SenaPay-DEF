@@ -18,7 +18,8 @@ public class ObtenerTiendasUseCase
             t.Nombre,
             t.IdSedeNavigation?.Nombre ?? "—",
             t.Ubicacion,
-            t.IdAdminCafeteriaNavigation?.Nombre ?? "—"
+            t.IdAdminCafeteriaNavigation?.Nombre ?? "—",
+            t.IdAdminCafeteria
         )).ToList();
     }
 }

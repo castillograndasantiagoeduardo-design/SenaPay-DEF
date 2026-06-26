@@ -12,4 +12,5 @@ public interface ITiendaRepository
     // Agregar en ITiendaRepository
     Task<List<Tiendum>> ObtenerPorAdminUsuarioAsync(int idUsuario);
     Task GuardarCambiosAsync();
+    Task<bool> AsignarAdminAsync(int idTienda, int? idAdmin);
 }

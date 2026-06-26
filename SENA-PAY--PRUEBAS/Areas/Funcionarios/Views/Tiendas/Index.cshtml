@@ -45,6 +45,7 @@
                     <th>Sede</th>
                     <th>Ubicación</th>
                     <th>Administrador</th>
+                    <th style="text-align:center;">Acción</th>  <!-- NUEVO -->
                 </tr>
             </thead>
             <tbody id="tbodyTiendas">
@@ -67,7 +68,28 @@
                             </td>
                             <td>@t.NombreSede</td>
                             <td style="color:var(--text-muted);">@t.Ubicacion</td>
-                            <td>@t.NombreAdmin</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(t.NombreAdmin))
+                                {
+                                    <span class="badge-admin-asignado">
+                                        <i class="bi bi-person-check-fill"></i> @t.NombreAdmin
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-sin-admin">
+                                        <i class="bi bi-person-dash"></i> Sin asignar
+                                    </span>
+                                }
+                            </td>
+                            <td style="text-align:center;">
+                                <!-- NUEVO -->
+                                <button class="btn-asignar"
+                                        onclick="abrirModalAsignar(@t.IdTienda, '@Html.Raw(t.NombreTienda)', @(t.IdAdminCafeteria.HasValue ? t.IdAdminCafeteria.Value.ToString() : "null"))">
+                                    <i class="bi bi-person-gear"></i>
+                                    @(string.IsNullOrEmpty(t.NombreAdmin) ? "Asignar" : "Cambiar")
+                                </button>
+                            </td>
                         </tr>
                     }
                 }
@@ -232,7 +254,6 @@
                     </div>
 
                 </div>
-
             </div>
         </div>
 
@@ -242,6 +263,80 @@
                 <div class="spinner" id="spinner"></div>
                 <span id="textoBtn">Crear Tienda</span>
                 <div class="btn-icon-box"><i class="bi bi-shop-window"></i></div>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@* ── MODAL ASIGNAR ADMIN ── *@
+<div id="modalAsignar" class="modal-backdrop" onclick="cerrarSiBackdropAsignar(event)">
+    <div class="modal-box" style="max-width:480px;" role="dialog" aria-modal="true">
+
+        <div class="modal-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div class="modal-icon"><i class="bi bi-person-gear"></i></div>
+                <div>
+                    <div class="modal-title">Asignar Administrador</div>
+                    <div class="modal-sub" id="asignar-sub">Tienda seleccionada</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="cerrarModalAsignar()" aria-label="Cerrar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            @Html.AntiForgeryToken()
+
+            <div class="field-group full">
+                <label class="field-label">Administrador de Cafetería</label>
+                <div class="field-wrap">
+                    <i class="bi bi-people field-icon"></i>
+                    <select class="form-select" id="as-admin" onchange="mostrarPreviewAsignar()">
+                        <option value="">— Sin administrador (desasignar) —</option>
+                        @foreach (var a in admins)
+                        {
+                            var badge = a.TiendasAsignadas == 0
+                            ? "Sin tiendas"
+                            : $"{a.TiendasAsignadas} tienda(s)";
+                            <option value="@a.IdAdminCafeteria"
+                                    data-nombre="@a.Nombre"
+                                    data-correo="@a.Correo"
+                                    data-telefono="@a.Telefono"
+                                    data-tiendas="@badge">
+                                @a.Nombre — @badge
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @* Preview *@
+            <div id="asignarPreview" class="admin-preview" style="display:none;margin-top:14px;">
+                <div class="preview-avatar"><i class="bi bi-person-fill"></i></div>
+                <div class="preview-info">
+                    <div class="preview-nombre" id="as-pv-nombre"></div>
+                    <div class="preview-detalle" id="as-pv-correo"></div>
+                    <div class="preview-detalle" id="as-pv-telefono"></div>
+                    <div class="preview-badge" id="as-pv-tiendas"></div>
+                </div>
+            </div>
+
+            @* Aviso desasignar *@
+            <div id="avisoDesasignar" class="aviso-warning" style="display:none;margin-top:14px;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                La tienda quedará <strong>sin administrador asignado</strong>.
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="cerrarModalAsignar()">Cancelar</button>
+            <button class="btn-modal-save" id="btnGuardarAsignar" onclick="submitAsignarAdmin()">
+                <div class="spinner" id="spinnerAsignar"></div>
+                <span id="textoBtnAsignar">Guardar</span>
+                <div class="btn-icon-box"><i class="bi bi-person-check-fill"></i></div>
             </button>
         </div>
 
@@ -547,6 +642,67 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* ── Badges admin en tabla ── */
+        .badge-admin-asignado {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: .68rem;
+            font-weight: 700;
+            background: rgba(34,197,94,.1);
+            color: #22c55e;
+        }
+
+        .badge-sin-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: .68rem;
+            font-weight: 700;
+            background: rgba(100,116,139,.1);
+            color: #64748b;
+        }
+
+        /* ── Botón asignar en fila ── */
+        .btn-asignar {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border: 1px solid rgba(109,40,217,.3);
+            border-radius: 8px;
+            background: rgba(109,40,217,.07);
+            color: #a78bfa;
+            font-family: 'Outfit', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, border-color .2s, color .2s;
+        }
+
+            .btn-asignar:hover {
+                background: rgba(109,40,217,.18);
+                border-color: rgba(109,40,217,.55);
+                color: #c4b5fd;
+            }
+
+        /* ── Aviso desasignar ── */
+        .aviso-warning {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: rgba(245,158,11,.08);
+            border: 1px solid rgba(245,158,11,.25);
+            color: #f59e0b;
+            font-size: .78rem;
+        }
     </style>
 }
 
@@ -685,14 +841,14 @@
         }
 
         // ── Recarga la tabla sin recargar la página ───────────────────────────
-        async function cargarTiendas() {
+                async function cargarTiendas() {
             try {
                 const res     = await fetch('/Funcionarios/Tiendas/ObtenerTiendas');
                 const tiendas = await res.json();
                 const tbody   = document.getElementById('tbodyTiendas');
 
                 tbody.innerHTML = tiendas.length === 0
-                    ? `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted);">
+                    ? `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">
                          <i class="bi bi-shop" style="font-size:1.6rem;display:block;margin-bottom:10px;opacity:.4;"></i>
                          Aún no hay tiendas registradas
                        </td></tr>`
@@ -703,7 +859,18 @@
                           </td>
                           <td>${esc(t.nombreSede)}</td>
                           <td style="color:var(--text-muted);">${esc(t.ubicacion)}</td>
-                          <td>${esc(t.nombreAdmin)}</td>
+                          <td>
+                            ${t.nombreAdmin
+                              ? `<span class="badge-admin-asignado"><i class="bi bi-person-check-fill"></i> ${esc(t.nombreAdmin)}</span>`
+                              : `<span class="badge-sin-admin"><i class="bi bi-person-dash"></i> Sin asignar</span>`}
+                          </td>
+                          <td style="text-align:center;">
+                            <button class="btn-asignar"
+                                    onclick="abrirModalAsignar(${t.idTienda}, '${esc(t.nombreTienda)}', ${t.idAdminCafeteria ?? 'null'})">
+                              <i class="bi bi-person-gear"></i>
+                              ${t.nombreAdmin ? 'Cambiar' : 'Asignar'}
+                            </button>
+                          </td>
                         </tr>`).join('');
             } catch(err) {
                 console.warn('Error al cargar tiendas:', err);
@@ -717,5 +884,108 @@
         }
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+
+                // ── Estado modal asignar ─────────────────────────────────────────────
+        let _idTiendaSeleccionada = null;
+
+        function abrirModalAsignar(idTienda, nombreTienda, idAdminActual) {
+            _idTiendaSeleccionada = idTienda;
+
+            document.getElementById('asignar-sub').textContent =
+                `Tienda: ${nombreTienda}`;
+
+            // Pre-seleccionar admin actual si lo tiene
+            const sel = document.getElementById('as-admin');
+            sel.value = idAdminActual ?? '';
+            mostrarPreviewAsignar();
+
+            document.getElementById('modalAsignar').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModalAsignar() {
+            document.getElementById('modalAsignar').classList.remove('open');
+            document.body.style.overflow = '';
+            _idTiendaSeleccionada = null;
+            document.getElementById('asignarPreview').style.display  = 'none';
+            document.getElementById('avisoDesasignar').style.display = 'none';
+        }
+
+        function cerrarSiBackdropAsignar(e) {
+            if (e.target === document.getElementById('modalAsignar'))
+                cerrarModalAsignar();
+        }
+
+        function mostrarPreviewAsignar() {
+            const sel     = document.getElementById('as-admin');
+            const preview = document.getElementById('asignarPreview');
+            const aviso   = document.getElementById('avisoDesasignar');
+
+            if (!sel.value) {
+                // Opción "Sin administrador"
+                preview.style.display = 'none';
+                aviso.style.display   = 'flex';
+                return;
+            }
+
+            aviso.style.display = 'none';
+            const opt = sel.options[sel.selectedIndex];
+            document.getElementById('as-pv-nombre').textContent   = opt.dataset.nombre   ?? '';
+            document.getElementById('as-pv-correo').textContent   = opt.dataset.correo   ?? '';
+            document.getElementById('as-pv-telefono').textContent = opt.dataset.telefono ?? '';
+            document.getElementById('as-pv-tiendas').textContent  = opt.dataset.tiendas  ?? '';
+            preview.style.display = 'flex';
+        }
+
+        async function submitAsignarAdmin() {
+            if (!_idTiendaSeleccionada) return;
+
+            const idAdmin = document.getElementById('as-admin').value;
+
+            const payload = {
+                idTienda         : _idTiendaSeleccionada,
+                idAdminCafeteria : idAdmin ? parseInt(idAdmin) : null
+            };
+
+            const btn     = document.getElementById('btnGuardarAsignar');
+            const spinner = document.getElementById('spinnerAsignar');
+            const texto   = document.getElementById('textoBtnAsignar');
+            btn.disabled          = true;
+            spinner.style.display = 'block';
+            texto.textContent     = 'Guardando...';
+
+            try {
+                const res  = await fetch('/Funcionarios/Tiendas/AsignarAdmin', {
+                    method : 'POST',
+                    headers: {
+                        'Content-Type'            : 'application/json',
+                        'RequestVerificationToken': getToken()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    cerrarModalAsignar();
+                    showToast('success', '¡Listo!', data.msg);
+                    await cargarTiendas(); // recarga la tabla sin recargar la página
+                } else {
+                    showToast('error', 'Error', data.msg);
+                }
+            } catch {
+                showToast('error', 'Error de conexión', 'Intenta de nuevo.');
+            } finally {
+                btn.disabled          = false;
+                spinner.style.display = 'none';
+                texto.textContent     = 'Guardar';
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                cerrarModal();
+                cerrarModalAsignar();
+            }
+        });
     </script>
 }

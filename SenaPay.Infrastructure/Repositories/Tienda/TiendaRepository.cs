@@ -48,6 +48,17 @@ public class TiendaRepository : ITiendaRepository
     public async Task CrearAsync(Tiendum tienda) =>
         await _context.Tienda.AddAsync(tienda);
 
+    //Metodo para asignar admin a tienda
+    public async Task<bool> AsignarAdminAsync(int idTienda, int? idAdmin)
+    {
+        var tienda = await _context.Tienda.FindAsync(idTienda);
+        if (tienda is null) return false;
+
+        tienda.IdAdminCafeteria = idAdmin; // null = desasignar
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task GuardarCambiosAsync() =>
         await _context.SaveChangesAsync();
 }

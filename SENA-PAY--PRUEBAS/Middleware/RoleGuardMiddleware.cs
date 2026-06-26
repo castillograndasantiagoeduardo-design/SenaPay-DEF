@@ -15,9 +15,11 @@ public class RoleGuardMiddleware
     // Prefijos de ruta → roles permitidos (IdRol como string en el claim)
     private static readonly Dictionary<string, string[]> _areaRoles = new(StringComparer.OrdinalIgnoreCase)
     {
-        { "/Usuarios/",       new[] { "1" } },        // Solo Aprendiz
-        { "/Funcionarios/",   new[] { "2" } },        // Solo Funcionario
-        { "/AdminCafeteria/", new[] { "3" } },        // Solo Admin de tienda
+        { "/Usuarios/",       new[] { "1" } },           // Solo Aprendiz
+        { "/Funcionarios/",   new[] { "2" } },           // Solo Funcionario
+        { "/AdminCafeteria/", new[] { "3" } },           // Solo Admin de tienda
+        { "/Tienda/",         new[] { "1", "2" } },      // Aprendiz y Funcionario
+        { "/Tienda",          new[] { "1", "2" } },      // ruta raíz /Tienda
     };
 
     public RoleGuardMiddleware(RequestDelegate next) => _next = next;

@@ -18,6 +18,7 @@ using SenaPay.Domain.Interfaces;
 using SenaPay.Application.UseCases.AdminTienda;
 using System.Text.Json.Serialization;
 using SenaPay.Application.Interfaces;
+using SenaPay.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ITiendaCategoriaRepository, TiendaCategoriaRepository>();
 builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
+builder.Services.AddScoped<ITransaccionRepository, TransaccionRepository>();
 
 
 // ── Casos de Uso: Aprendiz ────────────────────────────────────────────────────
@@ -119,6 +121,10 @@ builder.Services.AddScoped<GestionarCategoriasTiendaUseCase>();
 builder.Services.AddScoped<ObtenerProductosUseCase>();
 builder.Services.AddScoped<ObtenerDetalleProductoUseCase>();
 
+// ── Casos de Uso: Tienda pública (Aprendiz + Funcionario) ─────────────────────
+builder.Services.AddScoped<ObtenerProductosPorSedeUseCase>();
+builder.Services.AddScoped<RealizarCompraUseCase>();
+
 // ── Casos de Uso: Categorías ──────────────────────────────────────────────────
 builder.Services.AddScoped<CrearCategoriaUseCase>();
 builder.Services.AddScoped<ObtenerCategoriasUseCase>();
@@ -151,6 +157,11 @@ app.UseSession();
 app.UseAuthentication();
 app.UseMiddleware<RoleGuardMiddleware>(); // ← intercepta roles ANTES de los controladores
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "tienda",
+    pattern: "Tienda/{action=Index}/{id?}",
+    defaults: new { controller = "Tienda" });
 
 app.MapControllerRoute(
     name: "areas",

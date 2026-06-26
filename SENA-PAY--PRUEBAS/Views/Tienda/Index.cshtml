@@ -1,0 +1,150 @@
+@using SenaPay.Application.DTOs.Tienda
+@model List<SedeDto>
+@{
+    Layout = null;
+    var esMobile = false;
+    var nombre = ViewBag.NombreUsuario as string ?? "Usuario";
+    var esAprendiz = (bool)(ViewBag.EsAprendiz ?? true);
+    var iniciales = nombre.Split(' ')
+        .Where(p => p.Length > 0).Take(2)
+        .Select(p => p[0].ToString().ToUpper())
+        .Aggregate("", (a, b) => a + b);
+    var errorMsg = TempData["Error"] as string;
+}
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenaPay · Tienda</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script>(function(){var t=localStorage.getItem('sp-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        :root,[data-theme="dark"]{--bg-base:#0d0d18;--bg-surface:#13131f;--bg-card:#1a1a2e;--bg-input:#1e1e30;--border:rgba(255,255,255,.07);--border-strong:rgba(255,255,255,.14);--text-primary:#e8eaf0;--text-secondary:#94a3b8;--text-muted:#5a6478;--sena-green:#39A900;--sena-green-dim:rgba(57,169,0,.15);--sena-green-glow:rgba(57,169,0,.35);--accent-red:#ef4444;--card-shadow:0 4px 24px rgba(0,0,0,.45);}
+        [data-theme="light"]{--bg-base:#f0f4f0;--bg-surface:#fff;--bg-card:#fff;--bg-input:#f3f6f3;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15);--text-primary:#1a2e1a;--text-secondary:#4a6741;--text-muted:#8aab84;--sena-green:#2d8a00;--sena-green-dim:rgba(45,138,0,.10);--sena-green-glow:rgba(45,138,0,.25);--accent-red:#dc2626;--card-shadow:0 2px 16px rgba(57,169,0,.10);}
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--bg-base);color:var(--text-primary);min-height:100vh;transition:background .3s,color .3s;}
+        h1,h2,h3,h4{font-family:'Outfit',sans-serif;}
+
+        /* Topbar */
+        .topbar{background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;height:62px;position:sticky;top:0;z-index:100;}
+        .topbar-logo{display:flex;align-items:center;gap:10px;font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:800;color:var(--sena-green);text-decoration:none;}
+        .topbar-divider{width:1px;height:24px;background:var(--border);}
+        .topbar-title{font-size:.82rem;color:var(--text-secondary);font-weight:500;}
+        .topbar-spacer{flex:1;}
+        .btn-theme{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:.2s;}
+        .btn-theme:hover{background:var(--sena-green-dim);color:var(--sena-green);border-color:var(--sena-green);}
+        .topbar-avatar{width:36px;height:36px;border-radius:50%;background:var(--sena-green);color:#fff;font-family:'Outfit',sans-serif;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .btn-back{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:.8rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s;}
+        .btn-back:hover{background:var(--sena-green-dim);color:var(--sena-green);border-color:var(--sena-green);}
+
+        /* Hero */
+        .hero{padding:48px 24px 32px;text-align:center;max-width:720px;margin:0 auto;}
+        .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--sena-green-dim);border:1px solid var(--sena-green);color:var(--sena-green);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:99px;margin-bottom:16px;}
+        .hero-title{font-size:2.2rem;font-weight:800;color:var(--text-primary);margin-bottom:10px;line-height:1.2;}
+        .hero-title span{color:var(--sena-green);}
+        .hero-sub{font-size:1rem;color:var(--text-secondary);line-height:1.6;}
+
+        /* Alert */
+        .alert-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:14px 18px;color:var(--accent-red);font-size:.85rem;display:flex;align-items:center;gap:10px;margin:0 24px 24px;max-width:720px;margin-inline:auto;}
+
+        /* Grid de sedes */
+        .sedes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding:0 24px 48px;max-width:960px;margin:0 auto;}
+        .sede-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:16px;transition:transform .2s,box-shadow .2s,border-color .2s;cursor:default;}
+        .sede-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(57,169,0,.15);border-color:var(--sena-green);}
+        .sede-icon{width:52px;height:52px;border-radius:16px;background:var(--sena-green-dim);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--sena-green);}
+        .sede-nombre{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-primary);}
+        .sede-ciudad{font-size:.8rem;color:var(--text-secondary);display:flex;align-items:center;gap:5px;margin-top:2px;}
+        .btn-ver-tienda{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;background:var(--sena-green);color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;border:none;cursor:pointer;text-decoration:none;transition:.2s;box-shadow:0 4px 16px var(--sena-green-glow);}
+        .btn-ver-tienda:hover{background:#2d8a00;transform:translateY(-2px);box-shadow:0 8px 24px var(--sena-green-glow);}
+
+        /* Empty */
+        .empty-state{text-align:center;padding:64px 24px;color:var(--text-muted);}
+        .empty-state i{font-size:2.8rem;display:block;margin-bottom:14px;color:var(--sena-green);opacity:.5;}
+        .empty-state p{font-size:.9rem;}
+
+        @@media(max-width:600px){.hero-title{font-size:1.6rem;}.sedes-grid{grid-template-columns:1fr;padding:0 16px 32px;}.hero{padding:32px 16px 20px;}}
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <a class="topbar-logo" href="#">
+        <svg viewBox="0 0 44 44" fill="none" width="28" height="28">
+            <circle cx="22" cy="22" r="22" fill="var(--sena-green)" fill-opacity=".12"/>
+            <circle cx="22" cy="14" r="5" fill="var(--sena-green)"/>
+            <path d="M10 34c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="var(--sena-green)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+        SenaPay
+    </a>
+    <div class="topbar-divider"></div>
+    <span class="topbar-title">Tienda SENA</span>
+    <div class="topbar-spacer"></div>
+    <a class="btn-back" href="@(esAprendiz ? "/Usuarios/PerfilAprendiz/Perfil" : "/Funcionarios/Funcionarios/AgregarUsuarios")">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+    <button class="btn-theme" id="btnTheme" title="Cambiar tema">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+    </button>
+    <div class="topbar-avatar">@iniciales</div>
+</header>
+
+@if (!string.IsNullOrEmpty(errorMsg))
+{
+    <div class="alert-error">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        @errorMsg
+    </div>
+}
+
+<div class="hero">
+    <div class="hero-badge"><i class="bi bi-shop-window"></i> Cafetería SENA</div>
+    <h1 class="hero-title">¿En qué <span>sede</span> estás hoy?</h1>
+    <p class="hero-sub">Selecciona tu sede para ver los productos disponibles y hacer tu pedido.</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <i class="bi bi-building-x"></i>
+        <p>No hay sedes disponibles en este momento.</p>
+    </div>
+}
+else
+{
+    <div class="sedes-grid">
+        @foreach (var sede in Model)
+        {
+            <div class="sede-card">
+                <div class="sede-icon"><i class="bi bi-building"></i></div>
+                <div>
+                    <div class="sede-nombre">@sede.Nombre</div>
+                    <div class="sede-ciudad"><i class="bi bi-geo-alt-fill"></i> @sede.Ciudad</div>
+                </div>
+                <a class="btn-ver-tienda" href="/Tienda/Catalogo?idSede=@sede.IdSede">
+                    <i class="bi bi-cart3"></i> Ver productos
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    (function(){
+        var t=localStorage.getItem('sp-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+        document.documentElement.setAttribute('data-theme',t);
+        var ico=document.getElementById('themeIcon');
+        if(ico) ico.className=t==='dark'?'bi bi-moon-fill':'bi bi-sun-fill';
+    })();
+    document.getElementById('btnTheme').addEventListener('click',function(){
+        var h=document.documentElement;
+        var n=h.getAttribute('data-theme')==='dark'?'light':'dark';
+        h.setAttribute('data-theme',n);
+        localStorage.setItem('sp-theme',n);
+        document.getElementById('themeIcon').className=n==='dark'?'bi bi-moon-fill':'bi bi-sun-fill';
+    });
+</script>
+</body>
+</html>

@@ -34,7 +34,7 @@ public class AccountController : Controller
         _crearReporteUseCase = crearReporteUseCase;
         _env = env;
     }
-
+    public IActionResult Index() => View();
     public IActionResult Login() => View();
 
     // ── VALIDAR ACCESO ────────────────────────────────────────

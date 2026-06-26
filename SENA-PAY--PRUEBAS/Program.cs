@@ -156,6 +156,6 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{area=Account}/{controller=Account}/{action=Login}/{id?}");
+    pattern: "{area=Account}/{controller=Account}/{action=Index}/{id?}");
 
 app.Run();

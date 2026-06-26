@@ -269,4 +269,7 @@ public class AccountController : Controller
         return $"/uploads/reportes/{nombreUnico}";
     }
     public IActionResult Soporte() => View();
+
+    // ── ACCESO DENEGADO ───────────────────────────────────────────
+    public IActionResult AccesoDenegado() => View();
 }

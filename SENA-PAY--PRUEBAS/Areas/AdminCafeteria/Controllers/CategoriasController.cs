@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace SENA_PAY__PRUEBAS.Areas.AdminCafeteria.Controllers;
 
 [Area("AdminCafeteria")]
-[Authorize(AuthenticationSchemes = "SenaPayCookies")]
+[Authorize(Roles = "3")]
 public class CategoriasController : Controller
 {
     private readonly GestionarCategoriasTiendaUseCase _categoriasUC;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.DTOs.Usuarios;
 using SENA_PAY__PRUEBAS.Filters;
 using SenaPay.Application.UseCases.Usuarios;
@@ -7,7 +8,8 @@ using SenaPay.Application.UseCases.Reportes;
 namespace SENA_PAY__PRUEBAS.Areas.Funcionarios.Controllers;
 
 [Area("Funcionarios")]
-
+[Authorize(Roles = "2")]
+[NoCache]
 public class FuncionariosController : Controller
 {
     private readonly AgregarUsuarioUseCase _agregarUseCase;

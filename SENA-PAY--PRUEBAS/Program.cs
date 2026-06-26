@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Infrastructure.Data;
+using SENA_PAY__PRUEBAS.Middleware;
 using SenaPay.Application.UseCases.Aprendiz;
 using SenaPay.Application.UseCases.Account;
 using SenaPay.Infrastructure.Services;
@@ -61,11 +62,12 @@ builder.Services.AddAuthentication("SenaPayCookies")
     .AddCookie("SenaPayCookies", options =>
     {
         options.LoginPath = "/Account/Account/Login";
-        options.AccessDeniedPath = "/Account/Account/Login";
+        options.AccessDeniedPath = "/Account/Account/AccesoDenegado";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        // SameAsRequest: HTTPS en producción, HTTP en desarrollo local
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
 builder.Services.AddAuthorization();
@@ -145,8 +147,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();        // ← debe ir después de UseRouting
-app.UseAuthentication(); // ← debe ir antes de UseAuthorization
+app.UseSession();
+app.UseAuthentication();
+app.UseMiddleware<RoleGuardMiddleware>(); // ← intercepta roles ANTES de los controladores
 app.UseAuthorization();
 
 app.MapControllerRoute(

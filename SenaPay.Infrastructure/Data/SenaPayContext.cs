@@ -234,7 +234,7 @@ public partial class SenaPayContext : DbContext
             entity.Property(e => e.Nombre).IsUnicode(false);
             entity.Property(e => e.Ubicacion).IsUnicode(false);
             entity.Property(e => e.TotalIngresos)
-                .HasColumnName("Total_Ingresos")
+                .HasColumnName("TotalIngresos")
                 .HasColumnType("decimal(18, 2)")
                 .HasDefaultValue(0m);
 

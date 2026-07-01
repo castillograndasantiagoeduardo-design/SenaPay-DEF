@@ -9,4 +9,14 @@ public interface ITransaccionRepository
         decimal total,
         DateTime fecha,
         List<(int IdProducto, int Cantidad, decimal PrecioUnitario)> detalles);
+
+    Task<int> CrearCompraAtomicaAsync(
+        int idAprendiz,
+        int idUsuario,
+        decimal saldoActual,
+        decimal total,
+        DateTime fecha,
+        List<(int IdProducto, int Cantidad, decimal PrecioUnitario)> detalles);
+
+    Task<List<Transaccione>> ObtenerPorTiendaAsync(int idTienda);
 }

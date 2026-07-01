@@ -16,6 +16,7 @@ using SenaPay.Application.UseCases.RecuperacionContraseña;
 using SenaPay.Application.UseCases.Categorias;
 using SenaPay.Domain.Interfaces;
 using SenaPay.Application.UseCases.AdminTienda;
+using SenaPay.Infrastructure.Repositories.Funcionarios;
 using System.Text.Json.Serialization;
 using SenaPay.Application.Interfaces;
 using SenaPay.Infrastructure.Repositories;
@@ -84,7 +85,7 @@ builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ITiendaCategoriaRepository, TiendaCategoriaRepository>();
 builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
 builder.Services.AddScoped<ITransaccionRepository, TransaccionRepository>();
-
+builder.Services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
 
 // ── Casos de Uso: Aprendiz ────────────────────────────────────────────────────
 builder.Services.AddScoped<GetPerfilAprendizUseCase>();
@@ -124,6 +125,12 @@ builder.Services.AddScoped<ObtenerDetalleProductoUseCase>();
 // ── Casos de Uso: Tienda pública (Aprendiz + Funcionario) ─────────────────────
 builder.Services.AddScoped<ObtenerProductosPorSedeUseCase>();
 builder.Services.AddScoped<RealizarCompraUseCase>();
+builder.Services.AddScoped<GetPerfilFuncionarioUseCase>();
+builder.Services.AddScoped<VerificarCompradorUseCase>();
+
+// ── Casos de Uso: Saldo / Ventas (AdminCafeteria) ────────────────────────────
+builder.Services.AddScoped<RecargaSaldoUseCase>();
+builder.Services.AddScoped<ObtenerVentasTiendaUseCase>();
 
 // ── Casos de Uso: Categorías ──────────────────────────────────────────────────
 builder.Services.AddScoped<CrearCategoriaUseCase>();
@@ -161,7 +168,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "tienda",
     pattern: "Tienda/{action=Index}/{id?}",
-    defaults: new { controller = "Tienda" });
+    defaults: new { controller = "Tienda", area = "Tiendas" });
 
 app.MapControllerRoute(
     name: "areas",

@@ -989,6 +989,12 @@
                     Mi Tienda
                 </a>
 
+                <a asp-area="AdminCafeteria" asp-controller="Cobro" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Cobro" ? "active" : "")">
+                    <i class="bi bi-cart-check-fill"></i>
+                    Cobrar
+                </a>
+
                 <a asp-area="AdminCafeteria" asp-controller="Inventario" asp-action="Index"
                    class="nav-link-item @(controlActual == "Inventario" ? "active" : "")">
                     <i class="bi bi-box-seam-fill"></i>

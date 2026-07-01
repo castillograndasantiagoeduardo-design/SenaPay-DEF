@@ -31,6 +31,7 @@ public class ActualizarCarritoRequest
 public class PagarRequest
 {
     public DateTime? FechaReserva { get; set; }
+    public int? DocumentoComprador { get; set; }
 }
 
 public class ResultadoPagoDto

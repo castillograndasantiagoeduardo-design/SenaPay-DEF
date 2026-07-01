@@ -90,7 +90,7 @@ public class AccountController : Controller
         return resultado.IdRol switch
         {
             1 => RedirectToAction("Perfil", "PerfilAprendiz", new { area = "Usuarios" }),
-            2 => RedirectToAction("AgregarUsuarios", "Funcionarios", new { area = "Funcionarios" }),
+            2 => RedirectToAction("Index", "SeleccionarModo", new { area = "Funcionarios" }),
             3 => RedirectToAction("SeleccionarTienda", "AccesoTienda", new { area = "AdminCafeteria" }),
             _ => View("Login")
         };

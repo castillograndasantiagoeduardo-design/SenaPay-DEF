@@ -42,6 +42,7 @@ public partial class SenaPayContext : DbContext
     public virtual DbSet<Sede> Sedes { get; set; }
     public virtual DbSet<Reporte> Reportes { get; set; }
     public virtual DbSet<TiendaCategoria> TiendaCategoria { get; set; }
+    public virtual DbSet<MovimientoSaldo> MovimientoSaldos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -360,6 +361,36 @@ public partial class SenaPayContext : DbContext
             entity.HasKey(e => new { e.IdTienda, e.IdCategoria });
             entity.HasOne(e => e.IdTiendaNavigation).WithMany().HasForeignKey(e => e.IdTienda);
             entity.HasOne(e => e.IdCategoriaNavigation).WithMany().HasForeignKey(e => e.IdCategoria);
+        });
+
+        modelBuilder.Entity<MovimientoSaldo>(entity =>
+        {
+            entity.HasKey(e => e.IdMovimiento).HasName("PK_MovimientoSaldo");
+            entity.ToTable("MovimientoSaldo");
+            entity.Property(e => e.IdMovimiento).HasColumnName("Id_Movimiento");
+            entity.Property(e => e.IdUsuario).HasColumnName("Id_Usuario");
+            entity.Property(e => e.TipoMovimiento).HasMaxLength(10).IsUnicode(false).HasColumnName("Tipo_Movimiento");
+            entity.Property(e => e.Monto).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.SaldoResultante).HasColumnType("decimal(18,2)").HasColumnName("Saldo_Resultante");
+            entity.Property(e => e.Fecha).HasColumnType("datetime");
+            entity.Property(e => e.Descripcion).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.IdAdminRealizador).HasColumnName("Id_Admin_Realizador");
+            entity.Property(e => e.IdTransaccion).HasColumnName("Id_Transaccion");
+
+            entity.HasOne(e => e.IdUsuarioNavigation).WithMany()
+                .HasForeignKey(e => e.IdUsuario)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MovSaldo_Usuarios");
+
+            entity.HasOne(e => e.IdAdminRealizadorNavigation).WithMany()
+                .HasForeignKey(e => e.IdAdminRealizador)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MovSaldo_Admin");
+
+            entity.HasOne(e => e.IdTransaccionNavigation).WithMany()
+                .HasForeignKey(e => e.IdTransaccion)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_MovSaldo_Transaccion");
         });
 
         OnModelCreatingPartial(modelBuilder);

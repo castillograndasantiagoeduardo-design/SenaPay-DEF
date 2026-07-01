@@ -947,10 +947,16 @@
 
                 <div class="nav-section-label">Servicios</div>
 
-                <a href="/Tienda"
-                    class="nav-link-item">
-                    <i class="bi bi-shop-window"></i>
-                    Ir a la Tienda
+                <a asp-area="Funcionarios" asp-controller="Recargas" asp-action="Index"
+                    class="nav-link-item @(controlActual == "Recargas" ? "active" : "")">
+                    <i class="bi bi-wallet2"></i>
+                    Recargar saldo
+                </a>
+
+                <a asp-area="Funcionarios" asp-controller="SeleccionarModo" asp-action="Index"
+                    style="display:flex;align-items:center;justify-content:center;gap:10px;background:var(--c);color:#fff;border:none;border-radius:12px;padding:13px 16px;font-size:.88rem;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s,transform .15s;width:100%;font-family:'Outfit',sans-serif;margin-top:4px;">
+                    <i class="bi bi-arrow-left-right"></i>
+                    Cambiar modo
                 </a>
 
                 <div class="nav-section-label">Sistema</div>

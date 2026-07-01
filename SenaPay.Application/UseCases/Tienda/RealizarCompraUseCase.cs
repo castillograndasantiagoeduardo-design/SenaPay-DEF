@@ -51,26 +51,28 @@ public class RealizarCompraUseCase
 
         var fecha = fechaReserva ?? DateTime.Now;
         var detalles = carrito.Select(i => (i.IdProducto, i.Cantidad, i.Precio)).ToList();
-
-        // Descontar saldo antes de crear la transacción
-        await _aprendizRepo.DescontarSaldoAsync(aprendiz.IdAprendiz, total);
-
-        // Crear transacción y reducir stock
-        var transaccion = await _transaccionRepo.CrearAsync(
-            aprendiz.IdAprendiz, total, fecha, detalles);
-
-        var saldoRestante = aprendiz.Saldo - total;
-        var esReserva = fechaReserva.HasValue;
         var ci = new CultureInfo("es-CO");
+
+        // Calcular antes del atomic call: EF Core modifica el objeto aprendiz durante la transacción
+        var saldoRestante = aprendiz.Saldo - total;
+
+        var idTransaccion = await _transaccionRepo.CrearCompraAtomicaAsync(
+            aprendiz.IdAprendiz,
+            aprendiz.IdUsuarioNavigation.IdUsuario,
+            aprendiz.Saldo,
+            total,
+            fecha,
+            detalles);
+        var esReserva = fechaReserva.HasValue;
 
         return new ResultadoPagoDto
         {
             Ok = true,
             Mensaje = esReserva
-                ? $"¡Reserva confirmada! Puedes recoger tu pedido el {fecha.ToString("dd/MM/yyyy", ci)} a las {fecha.ToString("HH:mm", ci)}."
+                ? $"¡Reserva confirmada! Recoge tu pedido el {fecha.ToString("dd/MM/yyyy", ci)} a las {fecha.ToString("HH:mm", ci)}."
                 : "¡Compra realizada con éxito!",
             SaldoRestante = saldoRestante,
-            IdTransaccion = transaccion.IdTransaccion,
+            IdTransaccion = idTransaccion,
             EsReserva = esReserva,
             FechaReservaFormateada = esReserva ? fecha.ToString("dd/MM/yyyy HH:mm", ci) : null
         };

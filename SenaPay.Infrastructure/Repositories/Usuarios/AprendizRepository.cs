@@ -72,7 +72,6 @@ public class AprendizRepository : IAprendizRepository //Een esta clase el sistem
 
     public async Task<bool> ActualizarPerfilAsync(int documento, string correo, string? telefono)
     {
-        // Busca el aprendiz por documento del usuario dueño del perfil
         var aprendiz = await _context.Aprendices
             .Include(a => a.IdUsuarioNavigation)
             .FirstOrDefaultAsync(a => a.IdUsuarioNavigation.Documento == documento);
@@ -84,5 +83,36 @@ public class AprendizRepository : IAprendizRepository //Een esta clase el sistem
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<decimal> RecargarSaldoAtomicoAsync(int idAprendiz, int idUsuario, decimal monto, string descripcion)
+    {
+        await using var tx = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var aprendiz = await _context.Aprendices.FindAsync(idAprendiz)
+                ?? throw new InvalidOperationException("Aprendiz no encontrado.");
+
+            aprendiz.Saldo += monto;
+
+            _context.MovimientoSaldos.Add(new SenaPay.Domain.Entities.MovimientoSaldo
+            {
+                IdUsuario = idUsuario,
+                TipoMovimiento = "RECARGA",
+                Monto = monto,
+                SaldoResultante = aprendiz.Saldo,
+                Fecha = DateTime.Now,
+                Descripcion = descripcion
+            });
+
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return aprendiz.Saldo;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 }

@@ -29,6 +29,11 @@
     <style>
         :root,[data-theme="dark"]{--bg-base:#0d0d18;--bg-surface:#13131f;--bg-card:#1a1a2e;--bg-input:#1e1e30;--border:rgba(255,255,255,.07);--border-strong:rgba(255,255,255,.14);--text-primary:#e8eaf0;--text-secondary:#94a3b8;--text-muted:#5a6478;--sena-green:#39A900;--sena-green-dim:rgba(57,169,0,.15);--sena-green-glow:rgba(57,169,0,.35);--accent-red:#ef4444;--accent-amber:#f59e0b;--card-shadow:0 4px 24px rgba(0,0,0,.45);}
         [data-theme="light"]{--bg-base:#f0f4f0;--bg-surface:#fff;--bg-card:#fff;--bg-input:#f3f6f3;--border:rgba(0,0,0,.08);--border-strong:rgba(0,0,0,.15);--text-primary:#1a2e1a;--text-secondary:#4a6741;--text-muted:#8aab84;--sena-green:#2d8a00;--sena-green-dim:rgba(45,138,0,.10);--sena-green-glow:rgba(45,138,0,.25);--accent-red:#dc2626;--accent-amber:#d97706;--card-shadow:0 2px 16px rgba(57,169,0,.10);}
+        @if (!esAprendiz) {<text>
+        /* Paleta morada — Funcionario en modo tienda */
+        :root,[data-theme="dark"]{--sena-green:#7C3AED;--sena-green-dim:rgba(124,58,237,.15);--sena-green-glow:rgba(124,58,237,.35);}
+        [data-theme="light"]{--bg-base:#f4f3ff;--text-primary:#1a1535;--text-secondary:#5b4fa8;--text-muted:#8a82b8;--sena-green:#6D28D9;--sena-green-dim:rgba(109,40,217,.10);--sena-green-glow:rgba(109,40,217,.25);--card-shadow:0 2px 16px rgba(109,40,217,.12);}
+        </text>}
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:'Inter',sans-serif;background:var(--bg-base);color:var(--text-primary);min-height:100vh;overflow:hidden;transition:background .3s,color .3s;}
         h1,h2,h3,h4{font-family:'Outfit',sans-serif;}
@@ -380,10 +385,36 @@
 
             @if (!esAprendiz)
             {
-                <div style="background:rgba(57,169,0,.08);border:1px solid var(--sena-green-dim);border-radius:10px;padding:10px 14px;font-size:.78rem;color:var(--text-secondary);">
-                    <i class="bi bi-info-circle-fill" style="color:var(--sena-green);"></i>
-                    Como funcionario, tu pedido quedará registrado para que lo recojas en tienda. No se descuenta saldo.
+                <text>
+                <!-- Scan comprador (solo Funcionario) -->
+                <div style="margin-top:14px;">
+                    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px;">
+                        Escanear carnet del comprador (opcional)
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <input id="scanComprador" type="number"
+                               style="flex:1;background:var(--card-bg);border:1.5px solid var(--border-color);border-radius:10px;padding:10px 14px;font-size:.9rem;color:var(--text-primary);font-family:'Courier New',monospace;outline:none;"
+                               placeholder="Cédula del aprendiz..." autocomplete="off" />
+                        <button onclick="verificarComprador()"
+                                style="background:var(--sena-green);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-size:.85rem;cursor:pointer;">
+                            <i class="bi bi-upc-scan"></i>
+                        </button>
+                    </div>
+                    <div id="compradorInfo" style="display:none;margin-top:8px;background:var(--sena-green-dim);border-radius:10px;padding:10px 14px;font-size:.82rem;">
+                        <i class="bi bi-person-check-fill" style="color:var(--sena-green);"></i>
+                        <span id="compradorNombre" style="font-weight:700;color:var(--text-primary);"></span>
+                        — Saldo: <strong id="compradorSaldo" style="color:var(--sena-green);"></strong>
+                    </div>
+                    <div id="compradorError" style="display:none;margin-top:8px;background:rgba(239,68,68,.1);border-radius:10px;padding:10px 14px;font-size:.82rem;color:#b91c1c;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span id="compradorErrorMsg"></span>
+                    </div>
                 </div>
+                <div style="background:rgba(57,169,0,.08);border:1px solid var(--sena-green-dim);border-radius:10px;padding:10px 14px;font-size:.78rem;color:var(--text-secondary);margin-top:12px;">
+                    <i class="bi bi-info-circle-fill" style="color:var(--sena-green);"></i>
+                    Sin escanear: el pedido queda como reserva. Con escaneo: se cobra al saldo del aprendiz.
+                </div>
+                </text>
             }
         </div>
         <div class="modal-footer">
@@ -624,6 +655,37 @@
         }
     }
 
+    var _documentoComprador = null;
+
+    async function verificarComprador() {
+        var doc = parseInt(document.getElementById('scanComprador').value);
+        document.getElementById('compradorInfo').style.display = 'none';
+        document.getElementById('compradorError').style.display = 'none';
+        _documentoComprador = null;
+        if (!doc) return;
+
+        var res = await fetch('/Tienda/VerificarComprador?doc=' + doc);
+        var data = await res.json();
+        if (data.encontrado) {
+            var cop = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+            document.getElementById('compradorNombre').textContent = data.nombre;
+            document.getElementById('compradorSaldo').textContent = cop.format(data.saldo);
+            document.getElementById('compradorInfo').style.display = 'block';
+            _documentoComprador = doc;
+        } else {
+            document.getElementById('compradorErrorMsg').textContent = 'No se encontró el aprendiz con ese documento.';
+            document.getElementById('compradorError').style.display = 'block';
+        }
+    }
+
+    // Scan automático al presionar Enter en el campo
+    document.addEventListener('DOMContentLoaded', function () {
+        var sc = document.getElementById('scanComprador');
+        if (sc) sc.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') verificarComprador();
+        });
+    });
+
     async function realizarPago() {
         var btn = document.getElementById('btnPay');
         var chk = document.getElementById('chkReserva').checked;
@@ -637,7 +699,10 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
 
-        var payload = { fechaReserva: chk && fechaVal ? fechaVal : null };
+        var payload = {
+            fechaReserva: chk && fechaVal ? fechaVal : null,
+            documentoComprador: _documentoComprador ?? null
+        };
 
         try {
             var res = await fetch('/Tienda/Pagar', {
@@ -656,12 +721,14 @@
                 var titulo = data.esReserva ? '¡Reserva confirmada!' : '¡Compra exitosa!';
                 showToast('success', titulo, data.mensaje);
 
-                // Si es aprendiz, mostrar saldo restante
-                if (ES_APRENDIZ && data.saldoRestante !== null && data.saldoRestante !== undefined) {
+                // Mostrar saldo restante (aprendiz propio o aprendiz escaneado)
+                if (data.saldoRestante !== null && data.saldoRestante !== undefined) {
+                    var cop = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
                     setTimeout(function () {
-                        showToast('success', 'Saldo actualizado', 'Tu saldo disponible es ' + cop.format(data.saldoRestante));
+                        showToast('success', 'Saldo descontado', 'Saldo restante: ' + cop.format(data.saldoRestante));
                     }, 3200);
                 }
+                _documentoComprador = null;
             } else {
                 showToast('error', 'No se pudo completar', data.mensaje || 'Inténtalo de nuevo.');
             }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SenaPay.Infrastructure.Data;
+using SENA_PAY__PRUEBAS.Middleware;
 using SenaPay.Application.UseCases.Aprendiz;
 using SenaPay.Application.UseCases.Account;
 using SenaPay.Infrastructure.Services;
@@ -15,8 +16,10 @@ using SenaPay.Application.UseCases.RecuperacionContraseña;
 using SenaPay.Application.UseCases.Categorias;
 using SenaPay.Domain.Interfaces;
 using SenaPay.Application.UseCases.AdminTienda;
+using SenaPay.Infrastructure.Repositories.Funcionarios;
 using System.Text.Json.Serialization;
 using SenaPay.Application.Interfaces;
+using SenaPay.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,11 +64,12 @@ builder.Services.AddAuthentication("SenaPayCookies")
     .AddCookie("SenaPayCookies", options =>
     {
         options.LoginPath = "/Account/Account/Login";
-        options.AccessDeniedPath = "/Account/Account/Login";
+        options.AccessDeniedPath = "/Account/Account/AccesoDenegado";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        // SameAsRequest: HTTPS en producción, HTTP en desarrollo local
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
 builder.Services.AddAuthorization();
@@ -80,7 +84,8 @@ builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ITiendaCategoriaRepository, TiendaCategoriaRepository>();
 builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
-
+builder.Services.AddScoped<ITransaccionRepository, TransaccionRepository>();
+builder.Services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
 
 // ── Casos de Uso: Aprendiz ────────────────────────────────────────────────────
 builder.Services.AddScoped<GetPerfilAprendizUseCase>();
@@ -118,6 +123,18 @@ builder.Services.AddScoped<GestionarCategoriasTiendaUseCase>();
 builder.Services.AddScoped<ObtenerProductosUseCase>();
 builder.Services.AddScoped<ObtenerDetalleProductoUseCase>();
 
+// ── Casos de Uso: Tienda pública (Aprendiz + Funcionario) ─────────────────────
+builder.Services.AddScoped<ObtenerProductosPorSedeUseCase>();
+builder.Services.AddScoped<RealizarCompraUseCase>();
+builder.Services.AddScoped<GetPerfilFuncionarioUseCase>();
+builder.Services.AddScoped<VerificarCompradorUseCase>();
+
+// ── Casos de Uso: Saldo / Ventas (AdminCafeteria) ────────────────────────────
+builder.Services.AddScoped<RecargaSaldoUseCase>();
+builder.Services.AddScoped<ObtenerVentasTiendaUseCase>();
+builder.Services.AddScoped<ObtenerReservasTiendaUseCase>();
+builder.Services.AddScoped<CambiarEstadoReservaUseCase>();
+
 // ── Casos de Uso: Categorías ──────────────────────────────────────────────────
 builder.Services.AddScoped<CrearCategoriaUseCase>();
 builder.Services.AddScoped<ObtenerCategoriasUseCase>();
@@ -146,9 +163,15 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();        // ← debe ir después de UseRouting
-app.UseAuthentication(); // ← debe ir antes de UseAuthorization
+app.UseSession();
+app.UseAuthentication();
+app.UseMiddleware<RoleGuardMiddleware>(); // ← intercepta roles ANTES de los controladores
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "tienda",
+    pattern: "Tienda/{action=Index}/{id?}",
+    defaults: new { controller = "Tienda", area = "Tiendas" });
 
 app.MapControllerRoute(
     name: "areas",

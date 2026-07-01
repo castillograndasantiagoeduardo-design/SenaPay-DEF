@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace SENA_PAY__PRUEBAS.Areas.AdminCafeteria.Controllers;
 
 [Area("AdminCafeteria")]
-[Authorize(AuthenticationSchemes = "SenaPayCookies")]
+[Authorize(Roles = "3")]
 public class InventarioController : Controller
 {
     private readonly GestionarProductoUseCase _productoUC;
@@ -61,7 +61,8 @@ public class InventarioController : Controller
 
         if (!ModelState.IsValid) return RedirectToAction(nameof(Index));
 
-        await _productoUC.CrearAsync(request);
+        var error = await _productoUC.CrearAsync(request);
+        if (error != null) { TempData["Error"] = error; return RedirectToAction(nameof(Index)); }
         TempData["Exito"] = "Producto creado correctamente.";
         return RedirectToAction(nameof(Index));
     }
@@ -73,7 +74,8 @@ public class InventarioController : Controller
             request.Imagen = await GuardarImagenAsync(ImagenFile);
 
         if (!ModelState.IsValid) return RedirectToAction(nameof(Index));
-        await _productoUC.EditarAsync(request);
+        var error = await _productoUC.EditarAsync(request);
+        if (error != null) { TempData["Error"] = error; return RedirectToAction(nameof(Index)); }
         TempData["Exito"] = "Producto actualizado.";
         return RedirectToAction(nameof(Index));
     }

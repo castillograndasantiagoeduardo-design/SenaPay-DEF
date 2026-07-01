@@ -367,16 +367,27 @@
 
     <div class="kpi-card">
         <div class="kpi-icon green"><i class="bi bi-wallet2"></i></div>
-        <div class="kpi-value green">@Model.SaldoTienda.ToString("C0")</div>
-        <div class="kpi-label">Saldo tienda</div>
-        <div class="kpi-sub"><i class="bi bi-clock"></i> Actualizado hoy</div>
+        <div class="kpi-value green">@Model.TotalIngresos.ToString("C0")</div>
+        <div class="kpi-label">Ingresos totales</div>
+        <div class="kpi-sub"><i class="bi bi-arrow-up-circle"></i> Acumulado histórico</div>
     </div>
 
     <div class="kpi-card">
         <div class="kpi-icon blue"><i class="bi bi-receipt"></i></div>
         <div class="kpi-value">@Model.TransaccionesHoy</div>
         <div class="kpi-label">Transacciones hoy</div>
-        <div class="kpi-sub"><i class="bi bi-dash"></i> Sin datos aún</div>
+        <div class="kpi-sub">
+            @if (Model.TransaccionesHoy > 0)
+            {
+                <i class="bi bi-check-circle" style="color:#16a34a"></i>
+                <span style="color:#16a34a">Activo hoy</span>
+            }
+            else
+            {
+                <i class="bi bi-dash"></i>
+                <span>Sin movimiento hoy</span>
+            }
+        </div>
     </div>
 
     <div class="kpi-card">
@@ -433,6 +444,15 @@
         <div>
             <div class="quick-title">Mis Ventas</div>
             <div class="quick-sub">Historial de transacciones</div>
+        </div>
+        <i class="bi bi-chevron-right quick-arrow"></i>
+    </a>
+
+    <a asp-area="AdminCafeteria" asp-controller="Reservas" asp-action="Index" class="quick-card">
+        <div class="quick-icon"><i class="bi bi-calendar-check-fill"></i></div>
+        <div>
+            <div class="quick-title">Reservas</div>
+            <div class="quick-sub">Pedidos programados para recoger</div>
         </div>
         <i class="bi bi-chevron-right quick-arrow"></i>
     </a>

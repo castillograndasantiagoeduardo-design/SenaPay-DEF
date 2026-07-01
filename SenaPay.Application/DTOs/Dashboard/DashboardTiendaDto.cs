@@ -9,6 +9,7 @@ public class DashboardTiendaDto
     public string NombreAdmin { get; set; } = null!;
     public decimal VentasHoy { get; set; }
     public decimal SaldoTienda { get; set; }
+    public decimal TotalIngresos { get; set; }
     public int TransaccionesHoy { get; set; }
     public int ProductosBajoStock { get; set; }
     public bool TieneCategorias { get; set; }

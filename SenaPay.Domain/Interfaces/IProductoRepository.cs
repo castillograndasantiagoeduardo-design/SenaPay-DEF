@@ -17,6 +17,8 @@ namespace SenaPay.Domain.Interfaces;
         Task AgregarAsync(Producto producto);
         Task ActualizarAsync(Producto producto);
         Task EliminarAsync(int id);
+        Task<Producto?> ObtenerPorCodigoBarrasAsync(string codigo);
+        Task<bool> CodigoBarrasExisteAsync(string codigo, int? excluirId = null);
 
     // ── Métodos para Administración ────────────────────────────────
     //Task<IEnumerable<Producto>> ObtenerTodosAdminAsync(); // Incluye inactivos

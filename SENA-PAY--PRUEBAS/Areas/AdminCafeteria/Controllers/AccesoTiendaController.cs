@@ -1,4 +1,5 @@
 ﻿// Areas/Tienda/Controllers/AccesoTiendaController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.UseCases.Tienda;
 using System.Security.Claims;
@@ -6,6 +7,7 @@ using System.Security.Claims;
 namespace SENA_PAY__PRUEBAS.Areas.AdminCafeteria.Controllers;
 
 [Area("AdminCafeteria")]
+[Authorize(Roles = "3")]
 public class AccesoTiendaController : Controller
 {
     private readonly ObtenerTiendasDeAdminUseCase _obtenerTiendasUseCase;

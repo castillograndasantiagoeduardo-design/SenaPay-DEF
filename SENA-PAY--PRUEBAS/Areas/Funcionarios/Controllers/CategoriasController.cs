@@ -1,4 +1,5 @@
 ﻿// Areas/Funcionarios/Controllers/CategoriasController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.DTOs.Categorias;
 using SenaPay.Application.UseCases.Categorias;
@@ -6,6 +7,7 @@ using SenaPay.Application.UseCases.Categorias;
 namespace SenaPay.Presentation.Areas.Funcionarios.Controllers;
 
 [Area("Funcionarios")]
+[Authorize(Roles = "2")]
 public class CategoriasController : Controller
 {
     private readonly CrearCategoriaUseCase _crearCategoria;

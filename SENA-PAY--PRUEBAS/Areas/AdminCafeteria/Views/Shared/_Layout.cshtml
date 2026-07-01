@@ -41,62 +41,71 @@
             --sidebar-w: 240px;
         }
 
-        /* ─── DARK MODE ──────────────────────────────────────────── */
+        /* ─── DARK MODE (sistema + manual) ──────────────────────── */
         @@media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]) {
                 --bg: #080810;
                 --surface: #13131f;
                 --border: rgba(255,255,255,.06);
                 --text-main: #f0f0ff;
                 --text-muted: #6b7a99;
             }
-
-            .navbar {
-                background: #0d0d1a !important;
-                border-color: rgba(255,255,255,.05) !important;
-            }
-
-            .sidebar {
-                background: #0d0d1a !important;
-                border-color: rgba(255,255,255,.05) !important;
-            }
-
-            .card {
-                background: #13131f !important;
-                border-color: rgba(255,255,255,.05) !important;
-            }
-
-            .stat-card {
-                background: #13131f !important;
-                border-color: rgba(255,255,255,.05) !important;
-            }
-
-            .form-control, .form-select {
-                background: #1c1c2e !important;
-                border-color: #2a2a3e !important;
-                color: #e2e8f0 !important;
-            }
-
-            .field-label {
-                color: #4a5578;
-            }
-
-            .nav-link-item {
-                color: #8899bb;
-            }
-
-                .nav-link-item:hover,
-                .nav-link-item.active {
-                    background: rgba(232,108,0,.18) !important;
-                    color: #fb923c !important;
-                }
-
-            .toast-panel {
-                background: #1c1c2e;
-                border-color: rgba(255,255,255,.08);
-                color: #e2e8f0;
-            }
         }
+
+        [data-theme="dark"] {
+            --bg: #080810;
+            --surface: #13131f;
+            --border: rgba(255,255,255,.06);
+            --text-main: #f0f0ff;
+            --text-muted: #6b7a99;
+        }
+
+        [data-theme="light"] {
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --border: rgba(0,0,0,.06);
+            --text-main: #0f0f1a;
+            --text-muted: #64748b;
+        }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .navbar { background: #0d0d1a !important; border-color: rgba(255,255,255,.05) !important; } }
+        [data-theme="dark"] .navbar { background: #0d0d1a !important; border-color: rgba(255,255,255,.05) !important; }
+        [data-theme="light"] .navbar { background: #fff !important; border-color: rgba(0,0,0,.06) !important; }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sidebar { background: #0d0d1a !important; border-color: rgba(255,255,255,.05) !important; } }
+        [data-theme="dark"] .sidebar { background: #0d0d1a !important; border-color: rgba(255,255,255,.05) !important; }
+        [data-theme="light"] .sidebar { background: #fff !important; border-color: rgba(0,0,0,.06) !important; }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .card, :root:not([data-theme="light"]) .stat-card { background: #13131f !important; border-color: rgba(255,255,255,.05) !important; } }
+        [data-theme="dark"] .card, [data-theme="dark"] .stat-card { background: #13131f !important; border-color: rgba(255,255,255,.05) !important; }
+        [data-theme="light"] .card, [data-theme="light"] .stat-card { background: #fff !important; border-color: rgba(0,0,0,.06) !important; }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .form-control, :root:not([data-theme="light"]) .form-select { background: #1c1c2e !important; border-color: #2a2a3e !important; color: #e2e8f0 !important; } }
+        [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background: #1c1c2e !important; border-color: #2a2a3e !important; color: #e2e8f0 !important; }
+        [data-theme="light"] .form-control, [data-theme="light"] .form-select { background: #fafbfc !important; border-color: #e9edf3 !important; color: #0f0f1a !important; }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav-link-item { color: #8899bb; } :root:not([data-theme="light"]) .nav-link-item:hover, :root:not([data-theme="light"]) .nav-link-item.active { background: rgba(232,108,0,.18) !important; color: #fb923c !important; } }
+        [data-theme="dark"] .nav-link-item { color: #8899bb; }
+        [data-theme="dark"] .nav-link-item:hover, [data-theme="dark"] .nav-link-item.active { background: rgba(232,108,0,.18) !important; color: #fb923c !important; }
+
+        @@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .toast-panel { background: #1c1c2e; border-color: rgba(255,255,255,.08); color: #e2e8f0; } }
+        [data-theme="dark"] .toast-panel { background: #1c1c2e; border-color: rgba(255,255,255,.08); color: #e2e8f0; }
+
+        /* ─── BTN THEME ──────────────────────────────────────────── */
+        .btn-theme {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background .2s, color .2s;
+        }
+        .btn-theme:hover { background: rgba(232,108,0,.1); color: var(--c); }
 
         /* ─── BASE ───────────────────────────────────────────────── */
         html, body {
@@ -954,6 +963,7 @@
     </style>
 
     @await RenderSectionAsync("Styles", required: false)
+    <script>(function(){ var t=localStorage.getItem('sp-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();</script>
 </head>
 
 <body>
@@ -979,6 +989,12 @@
                     Mi Tienda
                 </a>
 
+                <a asp-area="AdminCafeteria" asp-controller="Cobro" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Cobro" ? "active" : "")">
+                    <i class="bi bi-cart-check-fill"></i>
+                    Cobrar
+                </a>
+
                 <a asp-area="AdminCafeteria" asp-controller="Inventario" asp-action="Index"
                    class="nav-link-item @(controlActual == "Inventario" ? "active" : "")">
                     <i class="bi bi-box-seam-fill"></i>
@@ -1001,10 +1017,16 @@
                     Mis Ventas
                 </a>
 
+                <a asp-area="AdminCafeteria" asp-controller="Reservas" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Reservas" ? "active" : "")">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Reservas
+                </a>
+
                 <div class="nav-section-label">Sistema</div>
 
-                <a asp-area="Account" asp-controller="Account" asp-action="Login" 
-                   class="nav-link-item @(controlActual == "Account" ? "active" : "")"
+                <a asp-area="Account" asp-controller="Account" asp-action="Logout"
+                   class="nav-link-item"
                    style="color:#ef4444; margin-top:8px;"
                    onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
                     <i class="bi bi-box-arrow-left"></i>
@@ -1046,8 +1068,11 @@
                     <div class="status-dot"></div>
                     Sistema operativo
                 </div>
-                <a asp-area="Account" asp-controller="Account" asp-action="Login" 
-                   class="btn-logout @(controlActual == "Account" ? "active" : "")"
+                <button class="btn-theme" id="btnTheme" title="Cambiar tema">
+                    <i class="bi bi-moon-fill" id="themeIcon"></i>
+                </button>
+                <a asp-area="Account" asp-controller="Account" asp-action="Logout"
+                   class="btn-logout"
                    onclick="return confirm('¿Confirmas que deseas cerrar sesión?')">
                    <i class="bi bi-box-arrow-right"></i>
                    <span>Cerrar sesión</span>
@@ -1099,6 +1124,22 @@
         function hideToast() {
             document.getElementById('toastPanel').classList.remove('show');
         }
+
+        /* ── Theme toggle ── */
+        (function(){
+            var t = localStorage.getItem('sp-theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', t);
+            var icon = document.getElementById('themeIcon');
+            if (icon) icon.className = t === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        })();
+        document.getElementById('btnTheme').addEventListener('click', function(){
+            var html = document.documentElement;
+            var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('sp-theme', next);
+            document.getElementById('themeIcon').className = next === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        });
 
         /* ── TempData toast automático ── */
         @if (TempData["Exito"] != null)

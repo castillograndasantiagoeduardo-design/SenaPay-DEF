@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SenaPay.Application.UseCases.Aprendiz;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.DTOs.Aprendiz;
+using SenaPay.Application.UseCases.Aprendiz;
+using SENA_PAY__PRUEBAS.Filters;
+using System.Security.Claims;
 
 namespace SENA_PAY__PRUEBAS.Areas.Usuarios.Controllers;
 
@@ -12,6 +14,7 @@ namespace SENA_PAY__PRUEBAS.Areas.Usuarios.Controllers;
 /// </summary>
 [Area("Usuarios")]
 [Authorize(Roles = "1")]
+[NoCache]
 public class PerfilAprendizController : Controller
 {
     private readonly GetPerfilAprendizUseCase _getPerfilUseCase;
@@ -66,15 +69,9 @@ public class PerfilAprendizController : Controller
     }
 
     // GET /Usuarios/PerfilAprendiz/CerrarSesion
-    public IActionResult CerrarSesion()
+    public async Task<IActionResult> CerrarSesion()
     {
-        Response.Cookies.Delete("sp-auth", new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Path = "/"
-        });
+        await HttpContext.SignOutAsync("SenaPayCookies");
         HttpContext.Session.Clear();
         return RedirectToAction("Login", "Account", new { area = "Account" });
     }

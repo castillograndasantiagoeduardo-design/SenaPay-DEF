@@ -29,16 +29,16 @@ public class TiendaViewModel
 public class ProductoCardDto
 {
     public int IdProducto { get; init; }
+    public int IdTienda { get; init; }
     public string NombreProducto { get; init; } = string.Empty;
     public decimal Precio { get; init; }
     public int Stock { get; init; }
-    public bool Disponible { get; init; }    // Estado && Stock > 0
+    public bool Disponible { get; init; }
+    public string? Imagen { get; init; }
 
-    // Navegación ya resuelta — la vista no toca IdCategoriaNavigation
     public string NombreCategoria { get; init; } = string.Empty;
     public string NombreTienda { get; init; } = string.Empty;
 
-    // Stock calculado en el caso de uso, no en la vista
     public string StockCssClass { get; init; } = "stock-ok";
     public string StockIconCss { get; init; } = "bi-check-circle-fill";
     public string StockLabel { get; init; } = string.Empty;

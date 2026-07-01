@@ -1,0 +1,548 @@
+@{
+    ViewData["Title"] = "Cobrar";
+    ViewData["Breadcrumb"] = "Cobrar";
+    Layout = "~/Areas/AdminCafeteria/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+.pos-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    height: calc(100vh - 120px);
+    animation: slideUp .5s cubic-bezier(.22,1,.36,1) both;
+}
+@@media (max-width: 860px) {
+    .pos-grid { grid-template-columns: 1fr; height: auto; }
+}
+
+/* ── Panel izquierdo: búsqueda ── */
+.pos-search-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    overflow: hidden;
+}
+.pos-search-row {
+    display: flex;
+    gap: 8px;
+}
+.pos-search-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: .95rem;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color .2s;
+    font-family: 'Inter', sans-serif;
+}
+.pos-search-input:focus { border-color: var(--c); }
+
+.pos-results {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    align-content: start;
+}
+.prod-card {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color .18s, transform .15s, box-shadow .18s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.prod-card:hover {
+    border-color: var(--c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+.prod-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--surface);
+}
+.prod-img-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--text-muted);
+}
+.prod-nombre {
+    font-family: 'Outfit', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.3;
+}
+.prod-precio {
+    font-size: .9rem;
+    font-weight: 800;
+    color: var(--c);
+    font-family: 'Outfit', sans-serif;
+}
+.prod-stock {
+    font-size: .7rem;
+    color: var(--text-muted);
+}
+.pos-empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-muted);
+    font-size: .9rem;
+}
+.pos-empty i { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+
+/* ── Panel derecho: pedido ── */
+.pos-order-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.pos-order-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.pos-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: .9rem;
+    color: var(--text-main);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pos-card-title i { color: var(--c); }
+
+.order-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 10px 12px;
+    animation: slideUp .2s cubic-bezier(.22,1,.36,1) both;
+}
+.order-item-name {
+    flex: 1;
+    font-size: .84rem;
+    font-weight: 600;
+    color: var(--text-main);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.qty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-main);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+}
+.qty-btn:hover { background: var(--c); color: #fff; border-color: var(--c); }
+.qty-num { font-size: .85rem; font-weight: 700; color: var(--text-main); min-width: 18px; text-align: center; }
+.item-subtotal { font-size: .82rem; font-weight: 700; color: var(--c); min-width: 60px; text-align: right; font-family: 'Outfit', sans-serif; }
+
+.order-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 0;
+    border-top: 1.5px solid var(--border);
+    margin-top: 8px;
+}
+.order-total-label { font-size: .82rem; color: var(--text-muted); font-weight: 600; }
+.order-total-value { font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--c); }
+
+/* ── Aprendiz scan ── */
+.scan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+}
+.scan-row { display: flex; gap: 8px; }
+.scan-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: .9rem;
+    color: var(--text-main);
+    font-family: 'Courier New', monospace;
+    outline: none;
+    transition: border-color .2s;
+}
+.scan-input:focus { border-color: var(--c); }
+.btn-scan {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+}
+.btn-scan:hover { border-color: var(--c); color: var(--c); }
+.comprador-info {
+    display: none;
+    margin-top: 10px;
+    background: rgba(57,169,0,.08);
+    border: 1px solid rgba(57,169,0,.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.comprador-nombre { font-weight: 700; color: var(--text-main); font-size: .9rem; }
+.comprador-saldo  { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
+.comprador-saldo strong { color: var(--c); }
+.comprador-error {
+    display: none;
+    margin-top: 10px;
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .82rem;
+    color: #b91c1c;
+}
+
+.btn-cobrar {
+    width: 100%;
+    background: var(--c);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-cobrar:hover { opacity: .88; transform: translateY(-1px); }
+.btn-cobrar:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+.alert-cobro {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: .88rem;
+    font-weight: 600;
+    display: none;
+    margin-top: 8px;
+}
+.alert-ok  { background: rgba(34,197,94,.1); color: #15803d; border: 1px solid rgba(34,197,94,.3); }
+.alert-err { background: rgba(239,68,68,.1); color: #b91c1c; border: 1px solid rgba(239,68,68,.3); }
+</style>
+}
+
+<div class="pos-grid">
+
+    <!-- ══ PANEL IZQUIERDO: búsqueda de productos ══ -->
+    <div class="pos-search-panel">
+        <div class="pos-card-title">
+            <i class="bi bi-upc-scan"></i> Buscar producto
+        </div>
+        <div class="pos-search-row">
+            <input id="inputBuscar" class="pos-search-input"
+                   type="text" placeholder="Escanea el código o escribe el nombre del producto..."
+                   autocomplete="off" autofocus />
+        </div>
+        <div class="pos-results" id="resultados">
+            <div class="pos-empty">
+                <i class="bi bi-search"></i>
+                Escribe o escanea para buscar productos
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ PANEL DERECHO: pedido + scan aprendiz ══ -->
+    <div class="pos-order-panel">
+
+        <!-- Pedido actual -->
+        <div class="pos-order-card">
+            <div class="pos-card-title"><i class="bi bi-receipt"></i> Pedido actual</div>
+            <div class="order-list" id="orderList">
+                <div class="pos-empty" id="emptyOrder" style="padding:20px 0;">
+                    <i class="bi bi-cart"></i>
+                    Sin productos
+                </div>
+            </div>
+            <div class="order-total-row">
+                <span class="order-total-label">Total</span>
+                <span class="order-total-value" id="orderTotal">$0</span>
+            </div>
+        </div>
+
+        <!-- Scan aprendiz -->
+        <div class="scan-card">
+            <div class="pos-card-title"><i class="bi bi-person-badge"></i> Carnet del aprendiz</div>
+            <div class="scan-row">
+                <input id="inputAprendiz" class="scan-input" type="number"
+                       placeholder="Escanea o escribe la cédula..." autocomplete="off" />
+                <button class="btn-scan" onclick="verificarAprendiz()">
+                    <i class="bi bi-upc-scan"></i>
+                </button>
+            </div>
+            <div class="comprador-info" id="compradorInfo">
+                <div class="comprador-nombre" id="compradorNombre"></div>
+                <div class="comprador-saldo">Saldo disponible: <strong id="compradorSaldo"></strong></div>
+            </div>
+            <div class="comprador-error" id="compradorError"></div>
+        </div>
+
+        <!-- Botón cobrar -->
+        <button id="btnCobrar" class="btn-cobrar" onclick="cobrar()" disabled>
+            <i class="bi bi-check-circle-fill"></i> Cobrar
+        </button>
+        <div id="alertCobro" class="alert-cobro"></div>
+
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const cop = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+
+let pedido = {};          // { idProducto: { nombre, precio, cantidad } }
+let docAprendiz = null;
+let buscarTimer = null;
+
+// ── Búsqueda con debounce ─────────────────────────────────────────────────
+document.getElementById('inputBuscar').addEventListener('input', function () {
+    clearTimeout(buscarTimer);
+    const q = this.value.trim();
+    if (!q) {
+        mostrarResultados([]);
+        return;
+    }
+    buscarTimer = setTimeout(() => buscarProducto(q), 280);
+});
+
+document.getElementById('inputBuscar').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        clearTimeout(buscarTimer);
+        buscarProducto(this.value.trim());
+    }
+});
+
+document.getElementById('inputAprendiz').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') verificarAprendiz();
+});
+
+async function buscarProducto(q) {
+    if (!q) return;
+    const res = await fetch(`/AdminCafeteria/Cobro/BuscarProducto?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    // Código de barras encontrado → agregar directo y limpiar
+    if (data.length === 1 && data[0].esEscaneo) {
+        agregarAlPedido(data[0].idProducto, data[0].nombreProducto, data[0].precio);
+        document.getElementById('inputBuscar').value = '';
+        mostrarResultados([]);
+        return;
+    }
+
+    mostrarResultados(data);
+}
+
+function mostrarResultados(productos) {
+    const contenedor = document.getElementById('resultados');
+    if (!productos.length) {
+        contenedor.innerHTML = '<div class="pos-empty"><i class="bi bi-emoji-frown"></i>Sin resultados</div>';
+        return;
+    }
+    contenedor.innerHTML = productos.map(p => `
+        <div class="prod-card" onclick="agregarAlPedido(${p.idProducto}, '${p.nombreProducto.replace(/'/g,"\\'")}', ${p.precio})">
+            ${p.imagen
+                ? `<img class="prod-img" src="${p.imagen}" alt="${p.nombreProducto}" onerror="this.style.display='none'">`
+                : `<div class="prod-img-placeholder"><i class="bi bi-cup-hot-fill"></i></div>`}
+            <div class="prod-nombre">${p.nombreProducto}</div>
+            <div class="prod-precio">${cop.format(p.precio)}</div>
+            <div class="prod-stock">Stock: ${p.stock}</div>
+        </div>
+    `).join('');
+}
+
+// ── Pedido ────────────────────────────────────────────────────────────────
+function agregarAlPedido(id, nombre, precio) {
+    if (pedido[id]) {
+        pedido[id].cantidad++;
+    } else {
+        pedido[id] = { id, nombre, precio, cantidad: 1 };
+    }
+    renderPedido();
+}
+
+function cambiarCantidad(id, delta) {
+    if (!pedido[id]) return;
+    pedido[id].cantidad += delta;
+    if (pedido[id].cantidad <= 0) delete pedido[id];
+    renderPedido();
+}
+
+function renderPedido() {
+    const lista = document.getElementById('orderList');
+    const empty = document.getElementById('emptyOrder');
+    const items = Object.values(pedido);
+
+    if (!items.length) {
+        lista.innerHTML = '<div class="pos-empty" id="emptyOrder" style="padding:20px 0;"><i class="bi bi-cart"></i>Sin productos</div>';
+        document.getElementById('orderTotal').textContent = '$0';
+        actualizarBtnCobrar();
+        return;
+    }
+
+    lista.innerHTML = items.map(item => `
+        <div class="order-item">
+            <span class="order-item-name" title="${item.nombre}">${item.nombre}</span>
+            <div class="qty-controls">
+                <button class="qty-btn" onclick="cambiarCantidad(${item.id}, -1)">−</button>
+                <span class="qty-num">${item.cantidad}</span>
+                <button class="qty-btn" onclick="cambiarCantidad(${item.id}, +1)">+</button>
+            </div>
+            <span class="item-subtotal">${cop.format(item.precio * item.cantidad)}</span>
+        </div>
+    `).join('');
+
+    const total = items.reduce((s, i) => s + i.precio * i.cantidad, 0);
+    document.getElementById('orderTotal').textContent = cop.format(total);
+    actualizarBtnCobrar();
+}
+
+// ── Aprendiz ──────────────────────────────────────────────────────────────
+async function verificarAprendiz() {
+    const doc = parseInt(document.getElementById('inputAprendiz').value);
+    document.getElementById('compradorInfo').style.display = 'none';
+    document.getElementById('compradorError').style.display = 'none';
+    docAprendiz = null;
+    if (!doc) return;
+
+    const res  = await fetch(`/AdminCafeteria/Cobro/VerificarComprador?doc=${doc}`);
+    const data = await res.json();
+
+    if (data.encontrado) {
+        document.getElementById('compradorNombre').textContent = data.nombre;
+        document.getElementById('compradorSaldo').textContent  = cop.format(data.saldo);
+        document.getElementById('compradorInfo').style.display = 'block';
+        docAprendiz = doc;
+    } else {
+        document.getElementById('compradorError').textContent  = 'No se encontró el aprendiz con ese documento.';
+        document.getElementById('compradorError').style.display = 'block';
+    }
+    actualizarBtnCobrar();
+}
+
+function actualizarBtnCobrar() {
+    const tieneItems    = Object.keys(pedido).length > 0;
+    const tieneAprendiz = docAprendiz !== null;
+    document.getElementById('btnCobrar').disabled = !(tieneItems && tieneAprendiz);
+}
+
+// ── Cobrar ────────────────────────────────────────────────────────────────
+async function cobrar() {
+    const items = Object.values(pedido).map(i => ({
+        idProducto:     i.id,
+        cantidad:       i.cantidad,
+        nombreProducto: i.nombre
+    }));
+
+    if (!items.length || !docAprendiz) return;
+
+    const btn = document.getElementById('btnCobrar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+    ocultarAlerta();
+
+    const res = await fetch('/AdminCafeteria/Cobro/Cobrar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items, documentoComprador: docAprendiz })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+        mostrarAlerta(data.mensaje + (data.saldoRestante != null ? ` Saldo restante: ${cop.format(data.saldoRestante)}.` : ''), true);
+        // Limpiar pedido
+        pedido = {};
+        docAprendiz = null;
+        renderPedido();
+        document.getElementById('inputAprendiz').value = '';
+        document.getElementById('compradorInfo').style.display = 'none';
+        document.getElementById('inputBuscar').value = '';
+        mostrarResultados([]);
+    } else {
+        mostrarAlerta(data.mensaje, false);
+    }
+
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Cobrar';
+    actualizarBtnCobrar();
+}
+
+function mostrarAlerta(msg, ok) {
+    const el = document.getElementById('alertCobro');
+    el.textContent  = msg;
+    el.className    = 'alert-cobro ' + (ok ? 'alert-ok' : 'alert-err');
+    el.style.display = 'block';
+    if (ok) setTimeout(() => el.style.display = 'none', 5000);
+}
+function ocultarAlerta() {
+    document.getElementById('alertCobro').style.display = 'none';
+}
+</script>
+}

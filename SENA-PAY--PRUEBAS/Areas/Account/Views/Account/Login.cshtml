@@ -28,72 +28,55 @@
         --speed: .55s
     }
 
-    /* REF-40: Adaptabilidad Modo Oscuro */
+    /* REF-40: Adaptabilidad Modo Oscuro — sistema */
     @@media (prefers-color-scheme: dark) {
-        body {
-            background: #060608;
-        }
-
-        .l-panel {
-            background: #111114 !important;
-            border-color: #222 !important;
-        }
-
-        .card {
-            background: #1a1a1e !important;
-            border-color: rgba(255,255,255,.05) !important;
-            color: #fff;
-        }
-
-        .brand-text h1 {
-            color: #fff !important;
-        }
-
-        .r-text h2 {
-            color: #fff !important;
-        }
-
-        .form-control, .form-select {
-            background: #252529 !important;
-            border-color: #333 !important;
-            color: #eee !important;
-        }
-
-        .role-tabs {
-            background: #252529 !important;
-        }
-
-        .tab-glider {
-            background: #333 !important;
-        }
-
-        .field-label {
-            color: #64748b;
-        }
-
-        .card-footer {
-            border-top-color: #252529;
-        }
-        /* Cambios para el panel derecho en modo oscuro */
-
-        .r-panel {
-            background: #060608 !important;
-        }
-
-        .r-text p {
-            color: rgba(255,255,255,.7);
-        }
-
-        .r-pill {
-            color: rgba(255,255,255,.8) !important;
-            background: rgba(255,255,255,.06) !important;
-            border-color: rgba(255,255,255,.1) !important;
-        }
-
-        .r-overlay {
-            background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(4,4,6,.6) 80%), linear-gradient(180deg,transparent 45%,rgba(4,4,6,.92)) !important;
-        }
+        :root:not([data-theme="light"]) body { background: #060608; }
+        :root:not([data-theme="light"]) .l-panel { background: #111114 !important; border-color: #222 !important; }
+        :root:not([data-theme="light"]) .card { background: #1a1a1e !important; border-color: rgba(255,255,255,.05) !important; color: #fff; }
+        :root:not([data-theme="light"]) .brand-text h1 { color: #fff !important; }
+        :root:not([data-theme="light"]) .r-text h2 { color: #fff !important; }
+        :root:not([data-theme="light"]) .form-control, :root:not([data-theme="light"]) .form-select { background: #252529 !important; border-color: #333 !important; color: #eee !important; }
+        :root:not([data-theme="light"]) .role-tabs { background: #252529 !important; }
+        :root:not([data-theme="light"]) .tab-glider { background: #333 !important; }
+        :root:not([data-theme="light"]) .field-label { color: #64748b; }
+        :root:not([data-theme="light"]) .card-footer { border-top-color: #252529; }
+        :root:not([data-theme="light"]) .r-panel { background: #060608 !important; }
+        :root:not([data-theme="light"]) .r-text p { color: rgba(255,255,255,.7); }
+        :root:not([data-theme="light"]) .r-pill { color: rgba(255,255,255,.8) !important; background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.1) !important; }
+        :root:not([data-theme="light"]) .r-overlay { background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(4,4,6,.6) 80%), linear-gradient(180deg,transparent 45%,rgba(4,4,6,.92)) !important; }
     }
+
+    /* Modo oscuro manual ([data-theme="dark"]) */
+    [data-theme="dark"] body, html[data-theme="dark"] body { background: #060608; }
+    [data-theme="dark"] .l-panel { background: #111114 !important; border-color: #222 !important; }
+    [data-theme="dark"] .card { background: #1a1a1e !important; border-color: rgba(255,255,255,.05) !important; color: #fff; }
+    [data-theme="dark"] .brand-text h1 { color: #fff !important; }
+    [data-theme="dark"] .r-text h2 { color: #fff !important; }
+    [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background: #252529 !important; border-color: #333 !important; color: #eee !important; }
+    [data-theme="dark"] .role-tabs { background: #252529 !important; }
+    [data-theme="dark"] .tab-glider { background: #333 !important; }
+    [data-theme="dark"] .field-label { color: #64748b; }
+    [data-theme="dark"] .card-footer { border-top-color: #252529; }
+    [data-theme="dark"] .r-panel { background: #060608 !important; }
+    [data-theme="dark"] .r-text p { color: rgba(255,255,255,.7); }
+    [data-theme="dark"] .r-pill { color: rgba(255,255,255,.8) !important; background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.1) !important; }
+    [data-theme="dark"] .r-overlay { background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(4,4,6,.6) 80%), linear-gradient(180deg,transparent 45%,rgba(4,4,6,.92)) !important; }
+
+    /* Modo claro forzado ([data-theme="light"]) */
+    [data-theme="light"] body, html[data-theme="light"] body { background: #f8fafc !important; }
+    [data-theme="light"] .l-panel { background: #ffffff !important; border-color: rgba(0,0,0,.08) !important; }
+    [data-theme="light"] .card { background: #ffffff !important; border-color: rgba(0,0,0,.06) !important; color: #0f0f1a; }
+    [data-theme="light"] .brand-text h1 { color: #0f0f1a !important; }
+    [data-theme="light"] .r-text h2 { color: #0f0f0f !important; }
+    [data-theme="light"] .form-control, [data-theme="light"] .form-select { background: #fafbfc !important; border-color: #e9edf3 !important; color: #0f0f1a !important; }
+    [data-theme="light"] .role-tabs { background: #f1f5f9 !important; }
+    [data-theme="light"] .tab-glider { background: #ffffff !important; }
+    [data-theme="light"] .field-label { color: #94a3b8; }
+    [data-theme="light"] .card-footer { border-top-color: #e9edf3; }
+    [data-theme="light"] .r-panel { background: #f8fafc !important; }
+    [data-theme="light"] .r-text p { color: #64748b; }
+    [data-theme="light"] .r-pill { color: #475569 !important; background: rgba(0,0,0,.04) !important; border-color: rgba(0,0,0,.08) !important; }
+    [data-theme="light"] .r-overlay { background: radial-gradient(ellipse 65% 55% at 65% 35%,transparent,rgba(255,255,255,.4) 80%), linear-gradient(180deg,transparent 45%,rgba(255,255,255,.95)) !important; }
 
     body, html {
         height: 100%;
@@ -498,8 +481,36 @@
         }
     }
 
+    /* ─── BTN THEME LOGIN ── */
+    .btn-theme-login {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 999;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(0,0,0,.1);
+        background: rgba(255,255,255,.85);
+        backdrop-filter: blur(8px);
+        color: #64748b;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background .2s, color .2s, transform .2s;
+        box-shadow: 0 2px 12px rgba(0,0,0,.1);
+    }
+    .btn-theme-login:hover { background: #fff; color: var(--c); transform: scale(1.1); }
+    [data-theme="dark"] .btn-theme-login { background: rgba(30,30,48,.85); border-color: rgba(255,255,255,.1); color: #94a3b8; }
+    [data-theme="dark"] .btn-theme-login:hover { color: var(--c); }
 </style>
+<script>(function(){ var t=localStorage.getItem('sp-theme'); if(t) document.documentElement.setAttribute('data-theme',t); })();</script>
 <body>
+
+    <button class="btn-theme-login" id="btnTheme" title="Cambiar tema">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+    </button>
 
     <div class="shell">
         <div class="l-panel" id="lPanel">
@@ -757,7 +768,7 @@
     
 
         <style>
-        
+
         @@keyframes rip {
             to
 
@@ -766,7 +777,24 @@
             opacity: 0
         }
 
-        }</style>
-        
+        }
+    </style>
+    <script>
+        /* ── Theme toggle login ── */
+        (function(){
+            var t = localStorage.getItem('sp-theme') ||
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', t);
+            var icon = document.getElementById('themeIcon');
+            if (icon) icon.className = t === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        })();
+        document.getElementById('btnTheme').addEventListener('click', function(){
+            var html = document.documentElement;
+            var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('sp-theme', next);
+            document.getElementById('themeIcon').className = next === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        });
+    </script>
 </body>
 </html>

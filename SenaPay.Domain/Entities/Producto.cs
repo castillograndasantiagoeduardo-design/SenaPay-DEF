@@ -15,6 +15,8 @@ public partial class Producto
 
     public string? Imagen { get; set; }
 
+    public string? CodigoBarras { get; set; }
+
     public bool Estado { get; set; }
 
     public int? IdTienda { get; set; }

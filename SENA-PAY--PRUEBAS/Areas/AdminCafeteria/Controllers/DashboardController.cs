@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.UseCases.AdminTienda;
+using SENA_PAY__PRUEBAS.Filters;
 using System.Security.Claims;
 
 namespace SENA_PAY__PRUEBAS.Areas.AdminCafeteria.Controllers;
 
 [Area("AdminCafeteria")]
-[Authorize(AuthenticationSchemes = "SenaPayCookies")]
+[Authorize(Roles = "3")]
+[NoCache]
 public class DashboardController : Controller
 {
     private readonly ObtenerDashboardTiendaUseCase _dashboardUC;

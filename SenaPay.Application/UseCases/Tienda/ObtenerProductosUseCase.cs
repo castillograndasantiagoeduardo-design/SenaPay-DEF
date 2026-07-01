@@ -85,10 +85,12 @@ public class ObtenerProductosUseCase
         return new ProductoCardDto
         {
             IdProducto = p.IdProducto,
+            IdTienda = p.IdTienda ?? 0,
             NombreProducto = p.NombreProducto ?? string.Empty,
             Precio = p.Precio,
             Stock = p.Stock,
             Disponible = p.Estado && p.Stock > 0,
+            Imagen = p.Imagen,
             NombreCategoria = p.IdCategoriaNavigation?.Nombre_Categoria ?? string.Empty,
             NombreTienda = p.IdTiendaNavigation?.Nombre ?? string.Empty,
             StockCssClass = cssClass,

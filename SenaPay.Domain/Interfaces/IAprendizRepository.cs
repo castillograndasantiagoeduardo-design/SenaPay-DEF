@@ -22,5 +22,6 @@ namespace SenaPay.Domain.Interfaces
         Task<decimal> ConsultarSaldoAsync(int idAprendiz);
         Task<Aprendix> ObtenerPerfilCompletoAsync(int documento, int cantidadTransacciones = 10);
         Task<bool> ActualizarPerfilAsync(int documento, string correo, string? telefono);
+        Task<decimal> RecargarSaldoAtomicoAsync(int idAprendiz, int idUsuario, decimal monto, string descripcion);
     }
 }

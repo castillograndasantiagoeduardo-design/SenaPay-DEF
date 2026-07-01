@@ -1,4 +1,5 @@
 ﻿// Areas/Funcionarios/Controllers/TiendasController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SenaPay.Application.DTOs.Tienda;
 using SenaPay.Application.UseCases.Sedes;
@@ -7,6 +8,7 @@ using SenaPay.Application.UseCases.Tienda;
 namespace SENA_PAY__PRUEBAS.Areas.Funcionarios.Controllers;
 
 [Area("Funcionarios")]
+[Authorize(Roles = "2")]
 public class TiendasController : Controller
 {
     private readonly CrearTiendaUseCase _crearTiendaUseCase;

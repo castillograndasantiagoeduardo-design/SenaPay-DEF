@@ -7,6 +7,7 @@ public class EditarProductoRequest
     public decimal Precio { get; set; }
     public int Stock { get; set; }
     public string? Imagen { get; set; }
+    public string? CodigoBarras { get; set; }
     public bool Estado { get; set; }
     public int? IdCategoria { get; set; }
 }

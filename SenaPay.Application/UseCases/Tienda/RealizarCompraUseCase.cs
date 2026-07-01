@@ -52,6 +52,8 @@ public class RealizarCompraUseCase
         var fecha = fechaReserva ?? DateTime.Now;
         var detalles = carrito.Select(i => (i.IdProducto, i.Cantidad, i.Precio)).ToList();
         var ci = new CultureInfo("es-CO");
+        var esReserva = fechaReserva.HasValue;
+        var idTienda = carrito[0].IdTienda;
 
         // Calcular antes del atomic call: EF Core modifica el objeto aprendiz durante la transacción
         var saldoRestante = aprendiz.Saldo - total;
@@ -62,8 +64,9 @@ public class RealizarCompraUseCase
             aprendiz.Saldo,
             total,
             fecha,
-            detalles);
-        var esReserva = fechaReserva.HasValue;
+            detalles,
+            esReserva,
+            idTienda);
 
         return new ResultadoPagoDto
         {

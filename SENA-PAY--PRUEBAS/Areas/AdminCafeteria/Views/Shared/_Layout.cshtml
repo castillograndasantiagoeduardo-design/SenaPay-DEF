@@ -1017,6 +1017,12 @@
                     Mis Ventas
                 </a>
 
+                <a asp-area="AdminCafeteria" asp-controller="Reservas" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Reservas" ? "active" : "")">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Reservas
+                </a>
+
                 <div class="nav-section-label">Sistema</div>
 
                 <a asp-area="Account" asp-controller="Account" asp-action="Logout"

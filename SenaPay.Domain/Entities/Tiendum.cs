@@ -17,5 +17,6 @@ public partial class Tiendum
 
     public virtual ICollection<Producto> Productos { get; set; } = new List<Producto>();
     public int? IdSede { get; set; }
+    public decimal TotalIngresos { get; set; }
     public virtual Sede IdSedeNavigation { get; set; } = null!;
 }

@@ -16,7 +16,13 @@ public interface ITransaccionRepository
         decimal saldoActual,
         decimal total,
         DateTime fecha,
-        List<(int IdProducto, int Cantidad, decimal PrecioUnitario)> detalles);
+        List<(int IdProducto, int Cantidad, decimal PrecioUnitario)> detalles,
+        bool esReserva,
+        int idTienda);
 
     Task<List<Transaccione>> ObtenerPorTiendaAsync(int idTienda);
+    Task<List<Transaccione>> ObtenerReservasPorTiendaAsync(int idTienda);
+    Task CambiarEstadoReservaAsync(int idTransaccion, string nuevoEstado, int idTienda);
+    Task<decimal> ObtenerTotalVentasHoyAsync(int idTienda);
+    Task<int> ObtenerConteoTransaccionesHoyAsync(int idTienda);
 }

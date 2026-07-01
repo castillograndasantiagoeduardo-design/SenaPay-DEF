@@ -233,6 +233,10 @@ public partial class SenaPayContext : DbContext
             entity.Property(e => e.IdSede).HasColumnName("Id_Sede");
             entity.Property(e => e.Nombre).IsUnicode(false);
             entity.Property(e => e.Ubicacion).IsUnicode(false);
+            entity.Property(e => e.TotalIngresos)
+                .HasColumnName("Total_Ingresos")
+                .HasColumnType("decimal(18, 2)")
+                .HasDefaultValue(0m);
 
             entity.HasOne(d => d.IdAdminCafeteriaNavigation)
                 .WithMany(p => p.Tienda)
@@ -255,6 +259,9 @@ public partial class SenaPayContext : DbContext
             entity.Property(e => e.Fecha).HasColumnType("datetime");
             entity.Property(e => e.IdAprendiz).HasColumnName("Id_Aprendiz");
             entity.Property(e => e.Total).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.EsReserva).HasColumnName("Es_Reserva").HasDefaultValue(false);
+            entity.Property(e => e.FechaRetiro).HasColumnName("Fecha_Retiro").HasColumnType("datetime");
+            entity.Property(e => e.EstadoReserva).HasColumnName("Estado_Reserva").HasMaxLength(20);
 
             entity.HasOne(d => d.IdAprendizNavigation).WithMany(p => p.Transacciones)
                 .HasForeignKey(d => d.IdAprendiz)

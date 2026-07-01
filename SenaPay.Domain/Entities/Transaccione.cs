@@ -13,6 +13,10 @@ public partial class Transaccione
 
     public int IdAprendiz { get; set; }
 
+    public bool EsReserva { get; set; }
+    public DateTime? FechaRetiro { get; set; }
+    public string? EstadoReserva { get; set; }
+
     public virtual ICollection<DetalleTransaccion> DetalleTransaccions { get; set; } = new List<DetalleTransaccion>();
 
     public virtual Aprendix IdAprendizNavigation { get; set; } = null!;

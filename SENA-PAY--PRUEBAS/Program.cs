@@ -131,6 +131,8 @@ builder.Services.AddScoped<VerificarCompradorUseCase>();
 // ── Casos de Uso: Saldo / Ventas (AdminCafeteria) ────────────────────────────
 builder.Services.AddScoped<RecargaSaldoUseCase>();
 builder.Services.AddScoped<ObtenerVentasTiendaUseCase>();
+builder.Services.AddScoped<ObtenerReservasTiendaUseCase>();
+builder.Services.AddScoped<CambiarEstadoReservaUseCase>();
 
 // ── Casos de Uso: Categorías ──────────────────────────────────────────────────
 builder.Services.AddScoped<CrearCategoriaUseCase>();

@@ -88,6 +88,17 @@ public class ProductoRepository : IProductoRepository
         }
     }
 
+    public async Task<Producto?> ObtenerPorCodigoBarrasAsync(string codigo)
+        => await _context.Productos
+            .Include(p => p.IdCategoriaNavigation)
+            .Include(p => p.IdTiendaNavigation)
+            .FirstOrDefaultAsync(p => p.CodigoBarras == codigo);
+
+    public async Task<bool> CodigoBarrasExisteAsync(string codigo, int? excluirId = null)
+        => await _context.Productos.AnyAsync(p =>
+            p.CodigoBarras == codigo &&
+            (!excluirId.HasValue || p.IdProducto != excluirId.Value));
+
     // ── Stock ─────────────────────────────────────────────────────
 
     public async Task<bool> ReducirStockAsync(int idProducto, int cantidad)

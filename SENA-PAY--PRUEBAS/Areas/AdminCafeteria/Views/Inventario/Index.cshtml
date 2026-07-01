@@ -604,7 +604,15 @@
                                     }
                                     <div>
                                         <div class="prod-name">@p.NombreProducto</div>
-                                        <div class="prod-id">#@p.IdProducto</div>
+                                        <div class="prod-id">
+                                            #@p.IdProducto
+                                            @if (!string.IsNullOrEmpty(p.CodigoBarras))
+                                            {
+                                                <span style="margin-left:6px; font-family:'Courier New',monospace; color:var(--c)">
+                                                    <i class="bi bi-upc"></i> @p.CodigoBarras
+                                                </span>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -642,7 +650,8 @@
                                                 @p.Stock,
                                                 @(p.IdCategoria?.ToString() ?? "null"),
                                                 '@(p.Imagen ?? "")',
-                                                @(p.Estado ? "true" : "false"))">
+                                                @(p.Estado ? "true" : "false"),
+                                                '@(p.CodigoBarras ?? "")')">
                                         <i class="bi bi-pencil-fill"></i> Editar
                                     </button>
 
@@ -716,6 +725,16 @@
                         <label class="modal-label" for="crear_nombre">Nombre del producto *</label>
                         <input id="crear_nombre" name="NombreProducto" type="text"
                                class="modal-input" placeholder="Ej: Café americano" required />
+                    </div>
+
+                    <!-- Código de barras -->
+                    <div class="mfg-full">
+                        <label class="modal-label" for="crear_barcode">
+                            <i class="bi bi-upc-scan"></i> Código de barras
+                        </label>
+                        <input id="crear_barcode" name="CodigoBarras" type="text"
+                               class="modal-input" placeholder="Escanea o escribe el código..."
+                               autocomplete="off" />
                     </div>
 
                     <!-- Precio -->
@@ -814,6 +833,16 @@
                                class="modal-input" required />
                     </div>
 
+                    <!-- Código de barras -->
+                    <div class="mfg-full">
+                        <label class="modal-label" for="edit_barcode">
+                            <i class="bi bi-upc-scan"></i> Código de barras
+                        </label>
+                        <input id="edit_barcode" name="CodigoBarras" type="text"
+                               class="modal-input" placeholder="Escanea o escribe el código..."
+                               autocomplete="off" />
+                    </div>
+
                     <!-- Precio -->
                     <div>
                         <label class="modal-label" for="edit_precio">Precio (COP) *</label>
@@ -878,13 +907,14 @@
             document.body.style.overflow = '';
         }
 
-        function abrirModalEditar(id, nombre, precio, stock, idCat, imagen, estado) {
+        function abrirModalEditar(id, nombre, precio, stock, idCat, imagen, estado, barcode) {
             document.getElementById('edit_id').value            = id;
             document.getElementById('edit_nombre').value        = nombre;
             document.getElementById('edit_precio').value        = precio;
             document.getElementById('edit_stock').value         = stock;
             document.getElementById('edit_estado').value        = estado ? 'true' : 'false';
             document.getElementById('edit_imagenActual').value  = imagen;
+            document.getElementById('edit_barcode').value       = barcode ?? '';
 
             const catSelect = document.getElementById('edit_cat');
             catSelect.value = idCat ?? '';

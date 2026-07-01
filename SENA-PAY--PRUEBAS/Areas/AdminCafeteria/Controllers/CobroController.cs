@@ -34,12 +34,33 @@ public class CobroController : Controller
         if (idTienda == null || string.IsNullOrWhiteSpace(q))
             return Json(Array.Empty<object>());
 
-        var todos = await _productoRepo.ObtenerPorTiendaAsync(idTienda.Value);
+        var todos = (await _productoRepo.ObtenerPorTiendaAsync(idTienda.Value))
+            .Where(p => p.Estado && p.Stock > 0).ToList();
 
-        var filtrados = int.TryParse(q.Trim(), out int idBusq)
-            ? todos.Where(p => p.Estado && p.Stock > 0 && p.IdProducto == idBusq)
-            : todos.Where(p => p.Estado && p.Stock > 0 &&
-                p.NombreProducto.Contains(q.Trim(), StringComparison.OrdinalIgnoreCase));
+        var q2 = q.Trim();
+        IEnumerable<SenaPay.Domain.Entities.Producto> filtrados;
+        bool esEscaneo = false;
+
+        // 1. Exact barcode match → auto-add
+        var porCodigo = todos.FirstOrDefault(p =>
+            !string.IsNullOrEmpty(p.CodigoBarras) &&
+            p.CodigoBarras.Equals(q2, StringComparison.OrdinalIgnoreCase));
+        if (porCodigo != null)
+        {
+            filtrados = new[] { porCodigo };
+            esEscaneo = true;
+        }
+        // 2. Numeric → search by IdProducto
+        else if (int.TryParse(q2, out int idBusq))
+        {
+            filtrados = todos.Where(p => p.IdProducto == idBusq);
+        }
+        // 3. Partial name search
+        else
+        {
+            filtrados = todos.Where(p =>
+                p.NombreProducto.Contains(q2, StringComparison.OrdinalIgnoreCase));
+        }
 
         return Json(filtrados.Select(p => new
         {
@@ -47,7 +68,8 @@ public class CobroController : Controller
             p.NombreProducto,
             p.Precio,
             p.Stock,
-            p.Imagen
+            p.Imagen,
+            esEscaneo
         }));
     }
 

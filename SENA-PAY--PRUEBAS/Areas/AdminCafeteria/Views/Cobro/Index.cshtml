@@ -389,6 +389,15 @@ async function buscarProducto(q) {
     if (!q) return;
     const res = await fetch(`/AdminCafeteria/Cobro/BuscarProducto?q=${encodeURIComponent(q)}`);
     const data = await res.json();
+
+    // Código de barras encontrado → agregar directo y limpiar
+    if (data.length === 1 && data[0].esEscaneo) {
+        agregarAlPedido(data[0].idProducto, data[0].nombreProducto, data[0].precio);
+        document.getElementById('inputBuscar').value = '';
+        mostrarResultados([]);
+        return;
+    }
+
     mostrarResultados(data);
 }
 

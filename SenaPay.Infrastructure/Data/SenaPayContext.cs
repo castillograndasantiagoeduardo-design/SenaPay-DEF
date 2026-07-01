@@ -161,6 +161,9 @@ public partial class SenaPayContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("Nombre_Producto");
             entity.Property(e => e.Precio).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CodigoBarras)
+                .HasMaxLength(100)
+                .HasColumnName("Codigo_Barras");
 
             entity.HasOne(d => d.IdCategoriaNavigation).WithMany(p => p.Productos)
                 .HasForeignKey(d => d.IdCategoria)

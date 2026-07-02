@@ -1023,6 +1023,14 @@
                     Reservas
                 </a>
 
+                <div class="nav-section-label">Servicios</div>
+
+                <a asp-area="AdminCafeteria" asp-controller="Recargas" asp-action="Index"
+                   class="nav-link-item @(controlActual == "Recargas" ? "active" : "")">
+                    <i class="bi bi-wallet2"></i>
+                    Recargar saldo
+                </a>
+
                 <div class="nav-section-label">Sistema</div>
 
                 <a asp-area="Account" asp-controller="Account" asp-action="Logout"

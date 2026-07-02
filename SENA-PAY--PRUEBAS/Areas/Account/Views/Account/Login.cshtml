@@ -64,7 +64,7 @@
 
     /* Modo claro forzado ([data-theme="light"]) */
     [data-theme="light"] body, html[data-theme="light"] body { background: #f8fafc !important; }
-    [data-theme="light"] .l-panel { background: #ffffff !important; border-color: rgba(0,0,0,.08) !important; }
+    [data-theme="light"] .l-panel { background: #f8fafc !important; border-color: rgba(0,0,0,.08) !important; }
     [data-theme="light"] .card { background: #ffffff !important; border-color: rgba(0,0,0,.06) !important; color: #0f0f1a; }
     [data-theme="light"] .brand-text h1 { color: #0f0f1a !important; }
     [data-theme="light"] .r-text h2 { color: #0f0f0f !important; }
@@ -91,17 +91,26 @@
         display: none;
     }
 
+    .r-panel-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+    }
+
     .shell {
         display: flex;
         height: 100vh;
         width: 100%; /* Asegura que ocupe todo el ancho */
-        background-color: white;
+        background-color: #94a3b8;
     }
 
     .l-panel {
         width: 42%;
         min-width: 420px;
-        background: #fff;
+        background: #94a3b8;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -621,10 +630,11 @@
 
         <div class="r-panel" id="rPanel">
             <svg id="geo-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+            <img src="/images/imagenSenaPay.jpeg" class="r-panel-bg" alt=""/>
             <div class="r-spotlight" id="spotlight"></div>
             <div class="r-overlay"></div>
             <div class="r-text">
-                <div class="r-pill"><div class="r-pill-dot"></div> SENA · Colombia</div>
+                
                 <h2>Transformación<br><em id="heroWord">digital</em> SENA</h2>
                 <p>Gestiona tu identidad y realiza tus pagos en una sola plataforma segura y moderna.</p>
             </div>

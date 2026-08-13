@@ -22,7 +22,7 @@ En el comedor del CIMM (SENA, Regional Boyacá), los pagos en efectivo generan f
 |---|---|
 | Backend | C# · ASP.NET Core |
 | Base de datos | SQL Server (17 tablas relacionales normalizadas) — Entity Framework |
-| Frontend | TypeScript · HTML · CSS · Bootstrap |
+| Frontend | JavaScript · HTML · CSS · Bootstrap |
 | Control de versiones | Git / GitHub |
 | Metodología | Scrum |
 
@@ -34,7 +34,7 @@ Lideré el proyecto como **líder de equipo y desarrollador full stack**, junto 
 - Distribuí tareas por módulo y resolví bloqueos técnicos de forma continua.
 - Diseñé desde cero el modelo de datos en SQL Server.
 - Desarrollé el panel de aprendiz y el panel de tienda (backend y frontend).
-- Integré el flujo completo de pagos a través de la API REST propia.
+
 
 
 
